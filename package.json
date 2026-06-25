@@ -3,6 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "test:coverage-check": "node --test scripts/coverage-check/"
+    "test:coverage-check": "node --test scripts/coverage-check/**/*.test.js"
   }
 }
