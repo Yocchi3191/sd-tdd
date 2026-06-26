@@ -1,4 +1,4 @@
-// scripts/coverage-check/coverage.test.js
+// plugins/sd-tdd/scripts/coverage-check/coverage.test.js
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { findCoveredReqIds, computeCoverage } = require('./coverage');
