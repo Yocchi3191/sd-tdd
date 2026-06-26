@@ -1,18 +1,18 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "sd-tdd",
-  "description": "Marketplace for the sd-tdd plugin: spec-driven TDD workflow for Claude Code",
+  "description": "sd-tddプラグイン用マーケットプレイス: Claude Code向けのスペック駆動TDDワークフロー",
   "owner": {
-    "name": "donchan3191"
+    "name": "Yocchi3191"
   },
   "plugins": [
     {
       "name": "sd-tdd",
-      "description": "Spec-driven TDD: tighten requirements into a testable REQ ledger, generate REQ-traceable failing tests, verify coverage, then hand off to superpowers TDD for implementation.",
+      "description": "スペック駆動TDD: 要件をテスト可能なREQ台帳に落とし込み、REQと対応付けた失敗テストを生成し、カバレッジを検証した上でsuperpowersのTDDに実装を引き渡す。",
       "version": "0.1.0",
       "source": "./",
       "author": {
-        "name": "donchan3191"
+        "name": "Yocchi3191"
       }
     }
   ]
