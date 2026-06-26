@@ -1,4 +1,4 @@
-// scripts/coverage-check/parse.test.js
+// plugins/sd-tdd/scripts/coverage-check/parse.test.js
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { parseRequirements } = require('./parse');

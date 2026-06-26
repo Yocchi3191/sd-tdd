@@ -1,4 +1,4 @@
-// scripts/coverage-check/coverage.js
+// plugins/sd-tdd/scripts/coverage-check/coverage.js
 function findCoveredReqIds(testFileContents, issueNumber) {
   const re = new RegExp(`issue-${issueNumber}_REQ-(\\d+)`, 'g');
   const covered = new Set();

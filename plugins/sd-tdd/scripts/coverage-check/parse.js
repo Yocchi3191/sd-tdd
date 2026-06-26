@@ -1,4 +1,4 @@
-// scripts/coverage-check/parse.js
+// plugins/sd-tdd/scripts/coverage-check/parse.js
 const REQ_LINE_RE = /^REQ-(\d+):\s*(.+)$/gm;
 const SUPERSEDED_RE = /\[superseded by REQ-(\d+)\]/i;
 
