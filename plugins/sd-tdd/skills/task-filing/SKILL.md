@@ -5,7 +5,7 @@ description: Use after spec-interview has confirmed a REQ ledger (new or appende
 
 # Task Filing
 
-Owns all reads and writes to the project's task tracker. `spec-interview` decides *what* the REQ ledger says; this skill decides *where and how* it gets recorded, using `task-template.md` so every filed task carries enough context for anyone to pick it up.
+Owns creating and updating the ledger's home, and fetching it back for append sessions. `spec-interview` decides *what* the REQ ledger says; this skill decides *where and how* it gets recorded, using `task-template.md` so every filed task carries enough context for anyone to pick it up. (`spec-to-tests` and `coverage-check` still read the tracker directly to pull the ledger for test generation and verification — this skill owns the ledger's writes, not every read in the pipeline.)
 
 Default tracker: GitHub issues via the `gh` CLI. Nothing here hardcodes "GitHub" in the skill's purpose — a future tracker backend would only need new commands in the three operations below, not a rewrite of `spec-interview`.
 
@@ -23,7 +23,7 @@ Return the raw body text to the caller. `spec-interview` parses the `REQ-<id>:` 
 
 1. Read `task-template.md` (this skill's directory) and fill it in:
    - **背景・課題**, **やること・要件**, **完了条件** are required — always fill them.
-   - Copy the confirmed REQ-N lines into **やること・要件** verbatim — do not reword, summarize, or renumber them.
+   - Copy the confirmed REQ-N lines into **やること・要件** verbatim — do not reword, summarize, or renumber them. Replace the template's placeholder `REQ-1: ...` / `REQ-2: ...` lines entirely; never leave them in alongside the real REQ lines.
    - **決定事項**, **設計・実装方針**, **注意点・既知のトレードオフ** are optional — include a section only when it's actually relevant to this task; don't leave empty headers.
 2. Create the task:
 
