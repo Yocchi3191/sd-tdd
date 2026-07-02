@@ -6,7 +6,7 @@
 
 sd-tddプラグインは `test-infra-setup` → `spec-interview` → `task-filing` → `spec-to-tests` → `coverage-check` → (`superpowers:test-driven-development`) という5つの独立したskillの連鎖として設計されている(`docs/superpowers/specs/2026-06-25-sd-tdd-plugin-design.md`)。各skillのdescriptionが「次はこれを呼んで」と手渡しする形でチェーンをつないでおり、意図的にオーケストレーター的な単一skillは作られていなかった。
 
-この設計は「1skill=1責務」を貫く一方、人間側から見ると「どこから始めればよいか分かりにくい」「各stageを手動で呼び進める必要がある」という2つの摩擦を生んでいた。本設計はこれを解消する、既存5skillを一切変更しない**追加のみ**の対応である。
+この設計は「1skill=1責務」を貫く一方、人間側から見ると「どこから始めればよいか分かりにくい」「各stageを手動で呼び進める必要がある」という2つの摩擦を生んでいた。本設計はこれを解消する。既存5skillの内部ロジックには手を入れないが、後述する通り「単なる次段案内」のプローズのみ削り、skill同士の疎結合化を行う。
 
 ## 目的
 
@@ -21,7 +21,23 @@ sd-tddプラグインは `test-infra-setup` → `spec-interview` → `task-filin
 - **配置**: `plugins/sd-tdd/skills/run/SKILL.md`
 - **呼び出し名**: `sd-tdd:run`(plugin名:skill名記法。明示的に`/sd-tdd:run`とも呼べる)
 - **description**: このプロジェクトでファイル変更を伴う機能開発・バグ修正を行うタスクに限定してトリガーする。単なる質問・読み取り専用の分析では発火しないよう明示的に除外文言を入れる。専用の「タスク割り振りskill」は追加しない — 既存の`using-superpowers`ゲートと役割が重複するため、description自体の精度で対応する。
-- 既存5skill(`spec-interview`, `task-filing`, `spec-to-tests`, `coverage-check`, `test-infra-setup`)は無変更。単独起動の経路(実装中のREQ追記など)はそのまま維持される。
+- 既存5skill(`spec-interview`, `task-filing`, `spec-to-tests`, `coverage-check`, `test-infra-setup`)は内部ロジック無変更。単独起動の経路(実装中のREQ追記など)はそのまま維持される。ただし後述の「既存skillの疎結合化」の通り、一部のプローズは削る。
+
+### 既存skillの疎結合化
+
+各skillの説明文には「次はXを呼んで」という参照が混在しているが、性質が異なる2種類に分けられる。
+
+- **本物の依存(残す)**: 他のskillでなければ代替できない参照。
+  - `spec-interview` → `task-filing`: 継続セッションでの台帳取得(fetch)、および承認後の台帳記録(spec-interview自身はどこにも書き込まない設計のため)
+  - `spec-to-tests` → `test-infra-setup`: テスト基盤が無ければ停止するという前提条件チェック
+  - `spec-to-tests`/`coverage-check` → `spec-interview`+`task-filing`: 実装中に未記載のケースを発見した際のREQ追記(台帳を更新できるのはこの2skillだけ)
+  - `coverage-check`の失敗時メッセージ内の`spec-to-tests`への言及: 自分の失敗結果を解釈するために必要
+- **単なる次段案内(削る)**: パイプライン上の「次のstage」を教えるだけの一文。`sd-tdd:run`が一元的に持つ情報になったため重複を排除する。
+  - `spec-interview` step4: 「task-filingを呼んで」の後に続く「then run test-infra-setup… and spec-to-tests」の部分
+  - `spec-to-tests` step7の「Hand off: Invoke coverage-check」の一文
+  - `coverage-check`の成功時メッセージ内の「hand off to superpowers:test-driven-development」の一文
+
+判断基準: 「自分の仕事を完了させる/自分の出力を解釈するのに必要な参照は残す、単なる次段案内は削る」。
 
 ### 自動進行の粒度
 
@@ -65,7 +81,7 @@ sd-tddプラグインは `test-infra-setup` → `spec-interview` → `task-filin
 ## スコープ外
 
 - 専用の「タスク割り振り/トリアージskill」の新設(`using-superpowers`ゲートとの重複を避けるため見送り)
-- 既存5skillの内部ロジック変更
+- 既存5skillの内部ロジック(判定処理・出力形式・ゲート条件など)の変更 — 変更するのは「単なる次段案内」のプローズのみ
 - test-infra-setupのCI変更・依存追加の前に確認を挟む挙動(ユーザーが明示的に不要と判断)
 
 ## 検証方法
