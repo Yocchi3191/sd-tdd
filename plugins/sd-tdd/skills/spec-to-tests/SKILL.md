@@ -1,6 +1,6 @@
 ---
 name: spec-to-tests
-description: Use after spec-interview has written a REQ ledger to an issue — generates one or more failing tests per active REQ-ID, named with an issue-N_REQ-XX compound key for traceability. Requires a test framework to already exist (see test-infra-setup).
+description: Use after spec-interview has confirmed a REQ ledger and task-filing has recorded it on the tracker — generates one or more failing tests per active REQ-ID, named with an issue-N_REQ-XX compound key for traceability. Requires a test framework to already exist (see test-infra-setup).
 ---
 
 # Spec to Tests
@@ -35,11 +35,11 @@ A REQ may need more than one test (happy path, edge cases) — give each the sam
 
 ## Step 4: Decide where the "why" goes, per test
 
-If the reason a REQ holds is a single sentence derivable from the code/domain itself, put it in the test name or a one-line comment. If it needs the longer treatment (alternatives considered, external context, multi-sentence) it belongs on the ledger, not here — if it isn't already on the ledger, invoke `spec-interview` to append it, then add a short pointer comment in the test (e.g. `// see issue #12`).
+If the reason a REQ holds is a single sentence derivable from the code/domain itself, put it in the test name or a one-line comment. If it needs the longer treatment (alternatives considered, external context, multi-sentence) it belongs on the ledger, not here — if it isn't already on the ledger, invoke `spec-interview` to draft the new REQ and `task-filing` to append it to the ledger, then add a short pointer comment in the test (e.g. `// see issue #12`).
 
 ## Step 5: Discovered a case the ledger doesn't mention?
 
-Don't silently add a test for it. Invoke `spec-interview` to append a new REQ first (this is what keeps the ledger honest), then write the test against the new REQ-ID.
+Don't silently add a test for it. Invoke `spec-interview` to draft a new REQ, then `task-filing` to append it to the ledger (this is what keeps the ledger honest), then write the test against the new REQ-ID.
 
 ## Step 6: Confirm red for the right reason
 

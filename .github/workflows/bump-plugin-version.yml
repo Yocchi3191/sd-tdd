@@ -1,0 +1,45 @@
+name: Bump plugin version
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'plugins/sd-tdd/**'
+
+concurrency:
+  group: bump-plugin-version
+  cancel-in-progress: false
+
+# This workflow relies on the default GITHUB_TOKEN (not a PAT) for checkout/push.
+# Pushes made with the default GITHUB_TOKEN do not retrigger `on: push` workflows,
+# which is the sole guard against this workflow infinitely retriggering itself on
+# its own version-bump commits. Do NOT swap in a PAT or app token here.
+permissions:
+  contents: write
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Bump version
+        id: bump
+        run: node .github/scripts/bump-plugin-version/cli.js
+
+      - name: Commit version bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add plugins/sd-tdd/.claude-plugin/plugin.json plugins/sd-tdd/package.json .claude-plugin/marketplace.json
+          git commit -m "chore: sd-tdd v${{ steps.bump.outputs.version }}"
+          git push
+
+      - name: Tag release
+        run: |
+          git tag "sd-tdd--v${{ steps.bump.outputs.version }}"
+          git push origin "sd-tdd--v${{ steps.bump.outputs.version }}" || echo "tag already exists, skipping"
