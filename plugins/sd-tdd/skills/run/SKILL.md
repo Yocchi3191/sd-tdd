@@ -1,6 +1,6 @@
 ---
 name: run
-description: Use this first for any task in this project that adds, modifies, or deletes files — new features, bug fixes, refactors. This is the entry point and auto-driving orchestrator for the sd-tdd pipeline: test-infra-setup → spec-interview → task-filing → spec-to-tests → coverage-check → superpowers:test-driven-development. Also use to resume in-progress sd-tdd work on an existing GitHub issue (e.g. "issue #12の続き"). Do NOT use for read-only questions, explanations, or analysis that touches no files.
+description: Use this first for any task in this project that adds, modifies, or deletes files — new features, bug fixes, refactors. This is the entry point and auto-driving orchestrator for the sd-tdd pipeline (test-infra-setup → spec-interview → task-filing → spec-to-tests → coverage-check → superpowers:test-driven-development). Also use to resume in-progress sd-tdd work on an existing GitHub issue (e.g. "issue #12の続き"). Do NOT use for read-only questions, explanations, or analysis that touches no files.
 ---
 
 # sd-tdd:run
