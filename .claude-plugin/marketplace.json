@@ -14,6 +14,15 @@
       "author": {
         "name": "Yocchi3191"
       }
+    },
+    {
+      "name": "dev-dojo",
+      "description": "要件定義・ソフトウェア設計・テスト設計の意思決定の直前にソクラテス式で問い返し、判断力を鍛える修行用プラグイン。",
+      "version": "0.1.0",
+      "source": "./plugins/dev-dojo",
+      "author": {
+        "name": "Yocchi3191"
+      }
     }
   ]
 }

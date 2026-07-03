@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "dev-dojo",
+  "version": "0.1.0",
+  "description": "要件定義・ソフトウェア設計・テスト設計の意思決定の直前に割り込み、ソクラテス式に問い返して判断力を鍛える修行用skill集。",
+  "author": {
+    "name": "donchan3191"
+  }
+}
