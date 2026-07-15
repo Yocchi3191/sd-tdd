@@ -9,7 +9,7 @@
     {
       "name": "sd-tdd",
       "description": "スペック駆動TDD: 要件をテスト可能なREQ台帳に落とし込み、REQと対応付けた失敗テストを生成し、カバレッジを検証した上でsuperpowersのTDDに実装を引き渡す。",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "source": "./plugins/sd-tdd",
       "author": {
         "name": "Yocchi3191"

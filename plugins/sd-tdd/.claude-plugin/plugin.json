@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "sd-tdd",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Spec-driven TDD: tighten requirements into a testable REQ ledger, generate REQ-traceable failing tests, verify coverage, then hand off to superpowers TDD for implementation.",
   "author": {
     "name": "donchan3191"
