@@ -1,0 +1,44 @@
+{
+  "skill_name": "feedback",
+  "evals": [
+    {
+      "id": 0,
+      "name": "explicit-invoke-feature-request",
+      "prompt": "feedbackスキルを使って、sd-tddにフィードバックしたいです。coverage-checkについて、今は全体のカバレッジ率しか出ないんですが、どのREQにテストが紐づいているか・紐づいていないかをREQ単位で可視化する機能が欲しいです。種別としては機能要望です。前々から不便に感じていました。",
+      "expected_output": "coverage-checkの機能要望として、種別・状況を明確化した上でYocchi3191/sd-tddリポジトリに新規issueが作成される（または類似issueへのコメント）。feedback + enhancementラベルが付く。",
+      "files": [],
+      "assertions": [
+        {"name": "issue_or_comment_created", "description": "Yocchi3191/sd-tddに実際に新規issueが作成されたか、既存issueへのコメントが投稿されたこと"},
+        {"name": "feedback_label_applied", "description": "新規issueの場合、feedbackラベルが付与されていること"},
+        {"name": "enhancement_label_applied", "description": "新規issueの場合、enhancementラベルが付与されていること（機能要望のため）"},
+        {"name": "concrete_content", "description": "issue本文/コメントに「coverage-check」と、REQ単位の可視化という具体的な要望内容が含まれ、曖昧な訴えのまま終わっていないこと"},
+        {"name": "duplicate_check_performed", "description": "issue作成前にgh issue list等での重複検索が実行された形跡があること"}
+      ]
+    },
+    {
+      "id": 1,
+      "name": "natural-phrasing-usability-complaint",
+      "prompt": "sd-tddのspec-interviewを使っているけど、一問一答形式だと時間がかかってテンポが悪い。似たような質問はまとめて聞いてほしい。これフィードバックとして伝えたいんだけど。",
+      "expected_output": "spec-interviewの使い勝手の不満として状況を明確化した上でYocchi3191/sd-tddリポジトリに新規issueが作成される（または類似issueへのコメント）。feedback + enhancement（もしくはbug）ラベルが付く。",
+      "files": [],
+      "assertions": [
+        {"name": "issue_or_comment_created", "description": "Yocchi3191/sd-tddに実際に新規issueが作成されたか、既存issueへのコメントが投稿されたこと"},
+        {"name": "feedback_label_applied", "description": "新規issueの場合、feedbackラベルが付与されていること"},
+        {"name": "concrete_content", "description": "issue本文/コメントに「spec-interview」と「一問一答形式でテンポが悪い」という具体的な状況が含まれていること"},
+        {"name": "duplicate_check_performed", "description": "issue作成前にgh issue list等での重複検索が実行された形跡があること"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "bug-report-with-duplicate",
+      "prompt": "sd-tddのtask-filingでissueを起票しようとしたら、`gh issue create` コマンドが `HTTP 422` エラーで失敗しました。これはバグとしてsd-tddに報告したいです。再現手順としては、本文が長めのissueを作ろうとすると起きる気がします。",
+      "expected_output": "gh issue list等で既存issue #14（task-filingのghコマンドエラー）を発見し、重複としてユーザー（自己判断でシミュレート）に提示。既存issueへのコメント追加、または新規issue作成のいずれかが行われる。",
+      "files": [],
+      "assertions": [
+        {"name": "duplicate_detected", "description": "重複チェックで既存issue #14が発見され、summaryにその旨が記録されていること"},
+        {"name": "duplicate_aware_action", "description": "issue #14へのコメント追加、または重複を認識した上での新規issue作成のいずれかが行われていること（重複を無視して無関係に新規issueを作っていないこと）"},
+        {"name": "concrete_content", "description": "issue本文/コメントにHTTP 422エラーと再現手順（本文が長め）が具体的に含まれていること"}
+      ]
+    }
+  ]
+}
