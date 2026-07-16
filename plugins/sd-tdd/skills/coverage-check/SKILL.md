@@ -20,6 +20,14 @@ node scripts/coverage-check/cli.js --issue <N> --tests <path-to-test-dir>
 
 (Path is relative to the sd-tdd plugin root; adjust `--tests` to wherever the target project's tests live.)
 
+If the issue is being implemented as staged PR groups (see `task-filing`'s `## PRグループ` section), pass `--group <N>` to check only that group's REQ-IDs instead of the whole ledger:
+
+```bash
+node scripts/coverage-check/cli.js --issue <N> --tests <path-to-test-dir> --group <N>
+```
+
+Run it once per group as each is implemented; drop `--group` for a final full-ledger check once every group is done.
+
 ## Interpreting the result
 
 - **Exit 0, no output about missing/orphans:** every active REQ has a test. Proceed — hand off to `superpowers:test-driven-development` to implement against the now-failing tests.

@@ -19,11 +19,17 @@ gh issue view <N> --json body -q .body
 
 Parse the `REQ-<id>: ...` lines. Skip any line annotated `[superseded by REQ-<m>]` — only active (non-superseded) REQs need a test.
 
-## Step 2: Detect the project's test conventions
+## Step 2: If the ledger has a PR group breakdown, pick one group to target
+
+Check the body for a `## PRグループ` section (see `task-filing`'s `task-template.md`). If it's absent, skip this step — target every active REQ from Step 1, same as always.
+
+If it's present, ask the user which group to process this round (default to the first not-yet-implemented group in listed order, since groups are meant to be staged). Narrow the REQ set from Step 1 down to just that group's REQ-IDs — everything downstream (test generation, the red-check, `coverage-check`) operates on this narrowed set only, not the full ledger.
+
+## Step 3: Detect the project's test conventions
 
 Look at existing test files (naming, assertion style, `describe`/`it` vs. bare `test`, fixture setup patterns) and match them. Don't introduce a second test style into a project that already has one.
 
-## Step 3: Generate one test per REQ-ID, named with the compound key
+## Step 4: Generate one test per REQ-ID, named with the compound key
 
 ```ts
 it("issue-12_REQ-3_空文字を送信したら400を返す", () => {
@@ -33,15 +39,15 @@ it("issue-12_REQ-3_空文字を送信したら400を返す", () => {
 
 A REQ may need more than one test (happy path, edge cases) — give each the same `issue-N_REQ-XX` prefix; `coverage-check` only requires at least one match per REQ-ID, not exactly one.
 
-## Step 4: Decide where the "why" goes, per test
+## Step 5: Decide where the "why" goes, per test
 
 If the reason a REQ holds is a single sentence derivable from the code/domain itself, put it in the test name or a one-line comment. If it needs the longer treatment (alternatives considered, external context, multi-sentence) it belongs on the ledger, not here — if it isn't already on the ledger, invoke `spec-interview` to draft the new REQ and `task-filing` to append it to the ledger, then add a short pointer comment in the test (e.g. `// see issue #12`).
 
-## Step 5: Discovered a case the ledger doesn't mention?
+## Step 6: Discovered a case the ledger doesn't mention?
 
-Don't silently add a test for it. Invoke `spec-interview` to draft a new REQ, then `task-filing` to append it to the ledger (this is what keeps the ledger honest), then write the test against the new REQ-ID.
+Don't silently add a test for it. Invoke `spec-interview` to draft a new REQ, then `task-filing` to append it to the ledger (this is what keeps the ledger honest), then write the test against the new REQ-ID. If a PR group is targeted, add the new REQ to that group.
 
-## Step 6: Confirm red for the right reason
+## Step 7: Confirm red for the right reason
 
 Run the new tests once before handing off:
 
@@ -51,6 +57,6 @@ Run the new tests once before handing off:
 
 Expected: every new test FAILS with an assertion/not-implemented error — not a syntax error, import error, or setup crash. If it's failing for the wrong reason, fix the test itself before moving on.
 
-## Step 7: Hand off
+## Step 8: Hand off
 
-Invoke `coverage-check` to mechanically verify every active REQ now has a test before implementation starts.
+Invoke `coverage-check` to mechanically verify every REQ in scope now has a test before implementation starts. If Step 2 narrowed to a PR group, pass that group to `coverage-check` (`--group <N>`) so it only checks that subset — not the whole ledger.

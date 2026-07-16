@@ -36,6 +36,39 @@ EOF
 
 3. Report back to the caller: "Task filed as issue #<N>."
 
+## Operation: File a split as sub issues
+
+Called when `spec-interview` hands off a confirmed ledger with split mode = sub issue, plus a group → REQ-ID mapping.
+
+1. Ensure the `gh-sub-issue` extension is installed:
+
+```bash
+gh extension list | grep -q sub-issue || gh extension install yahsan2/gh-sub-issue
+```
+
+If the install fails (no network, etc.), stop and tell the user to install `yahsan2/gh-sub-issue` manually, then retry — don't fall back to plain issue creation silently.
+
+2. File the parent task as usual (see "File a new task"). Its **やること・要件** carries the full REQ ledger (every REQ-N line, verbatim, across all groups) so the parent stays the single source of truth; note next to each which group it belongs to.
+
+3. For each group, create a sub issue whose **やること・要件** contains only that group's REQ-N lines, still verbatim:
+
+```bash
+gh sub-issue create --parent <parent-N> --title "<group title>" --body "$(cat <<'EOF'
+<template filled in with just this group's REQ-N lines>
+EOF
+)"
+```
+
+4. Report back to the caller: "Filed as parent issue #<N> with <count> sub issue(s): #<a>, #<b>, ..." `spec-to-tests`/`coverage-check` are then run once per sub issue, same as any other task.
+
+## Operation: File as PR groups (single issue)
+
+Called when `spec-interview` hands off a confirmed ledger with split mode = PR group, plus a group → REQ-ID mapping.
+
+1. File the task as usual (see "File a new task").
+2. Add a `## PRグループ` section (see `task-template.md`) listing each group's name and its REQ-IDs, in the order they're meant to be implemented.
+3. Report back to the caller: "Task filed as issue #<N> with <count> PR group(s)."
+
 ## Operation: Append to an existing task
 
 1. Fetch the current body (see "Fetch current ledger" above).
@@ -55,3 +88,5 @@ EOF
 ## Constraint: REQ lines are verbatim
 
 `spec-to-tests` and `coverage-check` locate requirements by grepping the task body for lines matching `^REQ-(\d+):\s*(.+)$` (see `plugins/sd-tdd/scripts/coverage-check/parse.js`). This regex only cares about the line itself, not which section heading it sits under — so reordering surrounding prose is safe, but editing the text of a `REQ-<id>:` line is not. If a REQ turns out to be wrong, `spec-interview` supersedes it with a new line; this skill never edits an existing REQ line's text.
+
+When a ledger is split across sub issues, the same `REQ-N:` line is copied verbatim into both the parent (full ledger) and its sub issue (that group's subset) — `coverage-check` runs against whichever issue number it's pointed at, so this duplication is intentional, not a bug.
