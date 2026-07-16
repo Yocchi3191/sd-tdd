@@ -12,10 +12,14 @@ function findCoveredReqIds(testFileContents, issueNumber) {
   return covered;
 }
 
-function computeCoverage(requirements, coveredIds) {
-  const activeIds = requirements
+function computeCoverage(requirements, coveredIds, targetIds = null) {
+  let activeIds = requirements
     .filter((r) => r.supersededBy === null)
     .map((r) => r.id);
+  if (targetIds !== null) {
+    const targetSet = new Set(targetIds);
+    activeIds = activeIds.filter((id) => targetSet.has(id));
+  }
   const allDeclaredIds = new Set(requirements.map((r) => r.id));
 
   const missing = activeIds.filter((id) => !coveredIds.has(id)).sort((a, b) => a - b);

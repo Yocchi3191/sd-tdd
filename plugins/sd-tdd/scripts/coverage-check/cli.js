@@ -1,17 +1,18 @@
 #!/usr/bin/env node
 const { execFileSync } = require('node:child_process');
-const { parseRequirements } = require('./parse');
+const { parseRequirements, parsePrGroups } = require('./parse');
 const { findCoveredReqIds, computeCoverage } = require('./coverage');
 const { collectTestFileContents } = require('./files');
 
 function parseArgs(argv) {
-  const args = { issue: null, tests: null };
+  const args = { issue: null, tests: null, group: null };
   for (let i = 0; i < argv.length; i += 1) {
     if (argv[i] === '--issue') args.issue = Number(argv[i + 1]);
     if (argv[i] === '--tests') args.tests = argv[i + 1];
+    if (argv[i] === '--group') args.group = Number(argv[i + 1]);
   }
   if (!args.issue || !args.tests) {
-    throw new Error('Usage: coverage-check --issue <N> --tests <dir>');
+    throw new Error('Usage: coverage-check --issue <N> --tests <dir> [--group <N>]');
   }
   return args;
 }
@@ -24,13 +25,24 @@ function fetchIssueBody(issueNumber) {
   );
 }
 
+function resolveTargetIds(body, issue, group) {
+  if (group === null) return null;
+  const groups = parsePrGroups(body);
+  const target = groups.find((g) => g.groupNumber === group);
+  if (!target) {
+    throw new Error(`PR group ${group} not found in issue #${issue}'s "## PRグループ" section`);
+  }
+  return target.reqIds;
+}
+
 function main(argv) {
-  const { issue, tests } = parseArgs(argv);
+  const { issue, tests, group } = parseArgs(argv);
   const body = fetchIssueBody(issue);
   const requirements = parseRequirements(body);
   const testContents = collectTestFileContents(tests);
   const covered = findCoveredReqIds(testContents, issue);
-  const { missing, orphans } = computeCoverage(requirements, covered);
+  const targetIds = resolveTargetIds(body, issue, group);
+  const { missing, orphans } = computeCoverage(requirements, covered, targetIds);
 
   if (missing.length > 0) {
     console.error(`Missing tests for: ${missing.map((id) => `REQ-${id}`).join(', ')}`);
@@ -39,7 +51,8 @@ function main(argv) {
     console.warn(`Tests reference REQ-IDs not in the issue ledger: ${orphans.map((id) => `REQ-${id}`).join(', ')}`);
   }
   if (missing.length === 0 && orphans.length === 0) {
-    console.log(`Coverage OK for issue #${issue}: all active requirements have at least one test.`);
+    const scope = group !== null ? `group ${group} of ` : '';
+    console.log(`Coverage OK for ${scope}issue #${issue}: all active requirements have at least one test.`);
   }
 
   process.exitCode = missing.length > 0 ? 1 : 0;
