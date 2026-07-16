@@ -102,6 +102,8 @@ In either deletion case, if `git branch -d` refuses with "not fully merged", don
 git rev-list origin/<target-branch>..<target-branch>
 ```
 
+If this command itself errors (e.g. "unknown revision" because the remote branch was already auto-deleted and pruned) rather than cleanly producing output or not, treat that the same as "stop and ask the user" — don't assume safety in the absence of a clean answer.
+
 - **No output (local is not ahead of its last-pushed state):** the refusal is purely representational — a squash or rebase merge means the branch's commits are never literally an ancestor of the default branch, even though GitHub reports the PR as genuinely merged. Step 1 already obtained that authoritative proof from GitHub, which supersedes git's local ancestry heuristic here, so it's safe to fall back to `git branch -D <target-branch>`.
 - **Any output (local has commits beyond what was ever pushed):** stop — those specific commits were never part of what GitHub confirmed as merged, so forcing the delete would genuinely lose work. Report this to the user instead of deleting (e.g. "ブランチ `<target-branch>` にpush済みの状態より先のコミットが残っているため、削除しませんでした。").
 
