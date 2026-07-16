@@ -1,0 +1,195 @@
+{
+  "skill_name": "run",
+  "evals": [
+    {
+      "id": 0,
+      "name": "issue-22_REQ-1_natural-trigger-drives-full-pipeline-to-review",
+      "prompt": "「ユーザー認証にレート制限を追加して」というタスクをやってください。issueはまだありません。",
+      "expected_output": "runが起動し、spec-interview→task-filing→（必要なら）test-infra-setup→spec-to-tests→coverage-check→superpowers:test-driven-development→PR作成→superpowers:requesting-code-reviewまでを、REQ承認とsub issue分割エスカレーション以外は人間に逐一確認せず自動的に進める。マージは実行しない。",
+      "files": [],
+      "assertions": [
+        {"name": "full_pipeline_invoked", "description": "spec-interviewからレビューまでの各skill/ステップが呼び出し順に実行されていること"},
+        {"name": "no_unnecessary_pauses", "description": "REQ承認ゲートとsub issue分割エスカレーション以外で、フェーズの節目ごとに人間へ確認を求めていないこと"},
+        {"name": "no_merge_performed", "description": "PRのマージ操作（gh pr merge等）が一切実行されていないこと"}
+      ]
+    },
+    {
+      "id": 1,
+      "name": "issue-22_REQ-2_new-task-goes-through-spec-interview-and-new-issue",
+      "prompt": "「CSVエクスポート機能を追加して」というタスクをやってください。既存issueへの言及はありません。",
+      "expected_output": "既存issue番号の参照がないため、runはspec-interviewを呼び出して新規REQ台帳（REQ-1から開始）を作成させ、承認後にtask-filingの新規issue起票操作で新しいGitHub issueとして記録する。",
+      "files": [],
+      "assertions": [
+        {"name": "spec_interview_fresh_ledger", "description": "spec-interviewがREQ-1から始まる新規台帳としてヒアリングを行っていること（既存台帳の取得を試みていないこと）"},
+        {"name": "task_filing_new_issue", "description": "task-filingの『新規issue起票』操作が呼ばれ、新しいissue番号が発行されていること"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "issue-22_REQ-3_resume-existing-issue-skips-spec-interview-new-ledger",
+      "prompt": "issue #12の続きをやってください。",
+      "expected_output": "既存issue番号（#12）への参照があるため、runはtask-filingの『fetch current ledger』操作でREQ台帳を取得し、spec-interviewでの新規台帳作成はスキップして、test-infra-setup/spec-to-tests以降から再開する。",
+      "files": [],
+      "assertions": [
+        {"name": "fetch_ledger_called", "description": "task-filingのfetch current ledger操作でissue #12の本文が取得されていること"},
+        {"name": "no_fresh_spec_interview", "description": "REQ-1から始まる新規ヒアリング（新規台帳作成）が行われていないこと。既存REQ台帳がある前提でspec-to-tests以降に進んでいること"}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "issue-22_REQ-4_pr-group-split-auto-proceeds-through-all-groups",
+      "prompt": "「決済機能を追加して」というタスクをやってください。spec-interviewのStep4でPRグループ分割（グループ1: 基本決済 (REQ-1,2), グループ2: 返金処理 (REQ-3,4)）が提案され、ユーザーが承認したとします。",
+      "expected_output": "PRグループ分割が承認された場合、runはグループ1、グループ2の順に、各グループについてspec-to-tests→coverage-check→実装→PR作成→レビューを1セッション内で自動的に最後まで進行し、グループの切り替わりごとに人間へのエスカレーションは発生しない。",
+      "files": [],
+      "assertions": [
+        {"name": "all_groups_processed_in_order", "description": "提示された順序（グループ1→グループ2）で全グループが処理されていること"},
+        {"name": "no_escalation_between_groups", "description": "PRグループの切り替わり自体を理由にした人間へのエスカレーションが発生していないこと"}
+      ]
+    },
+    {
+      "id": 4,
+      "name": "issue-22_REQ-5_sub-issue-split-escalates-before-spec-to-tests",
+      "prompt": "「通知基盤を刷新して」というタスクをやってください。spec-interviewのStep4でsub issue分割（sub issue #31: メール通知, sub issue #32: プッシュ通知）が提案され、ユーザーが承認したとします。",
+      "expected_output": "sub issue分割が承認された場合、runはtask-filingでのsub issue起票（親issue+#31, #32の作成）までを実行した後、どのsub issueから着手するかを人間にエスカレーションして停止する。spec-to-tests以降には自動で進まない。",
+      "files": [],
+      "assertions": [
+        {"name": "sub_issues_filed", "description": "task-filingのsub issue起票操作が呼ばれ、親issueと各sub issueが作成されていること"},
+        {"name": "escalates_before_spec_to_tests", "description": "sub issue起票の直後に、どのsub issueから着手するかを問う形で人間にエスカレーションしており、spec-to-testsが自動的に呼ばれていないこと"}
+      ]
+    },
+    {
+      "id": 5,
+      "name": "issue-22_REQ-6_worktree-created-before-spec-to-tests-runs",
+      "prompt": "「検索フィルタを追加して」というタスクをやってください。REQ台帳の承認とissue起票までは完了しているとします。",
+      "expected_output": "runはspec-to-testsを呼び出す前にsuperpowers:using-git-worktreesで専用のgit worktreeを作成し、以降のテスト作成・実装・コミットは全てそのworktree内で行う。",
+      "files": [],
+      "assertions": [
+        {"name": "worktree_created_before_tests", "description": "using-git-worktrees（またはgit worktree add相当）の呼び出しが、spec-to-testsの呼び出しより前に発生していること"},
+        {"name": "subsequent_work_in_worktree", "description": "spec-to-tests・実装・コミットが、作成されたworktreeのパス内で行われていること（現在のブランチを直接汚していないこと）"}
+      ]
+    },
+    {
+      "id": 6,
+      "name": "issue-22_REQ-7_test_infra_setup_only_when_missing",
+      "prompt": "テストフレームワークが既に導入済みのプロジェクトで「バリデーション処理を追加して」というタスクをやってください。",
+      "expected_output": "test-infra-setupのStep 0相当の判定でテストフレームワークが既に検出されるため、runはtest-infra-setupを実行してもそのスキル自身が『何もしない（idempotent）』と報告するだけで、spec-to-tests実行を妨げない。テストフレームワーク未検出の別ケースでは、spec-to-testsを呼ぶ前にtest-infra-setupが実行される。",
+      "files": [],
+      "assertions": [
+        {"name": "test_infra_setup_invoked_idempotently", "description": "テストフレームワークが既にあるケースでtest-infra-setupが呼ばれても、新規インストール等の変更が発生していないこと"},
+        {"name": "missing_case_installs_before_spec_to_tests", "description": "テストフレームワーク未検出のケースを想定した記述で、spec-to-testsより前にtest-infra-setupの導入が行われる順序になっていること"}
+      ]
+    },
+    {
+      "id": 7,
+      "name": "issue-22_REQ-8_coverage_check_green_then_tdd_handoff",
+      "prompt": "spec-to-testsとcoverage-checkが完了し、対象issueの全REQに対応するテストが揃って coverage-check が green（missing/orphansなし）になった直後の状態です。runは次に何をしますか？",
+      "expected_output": "runはsuperpowers:test-driven-developmentにハンドオフし、生成された失敗テストが通るまで実装させる。対象issue番号・REQ-IDの範囲を明示して引き継ぐ。",
+      "files": [],
+      "assertions": [
+        {"name": "tdd_handoff_after_green_coverage", "description": "coverage-checkがgreenになった後に、superpowers:test-driven-developmentへのハンドオフが行われていること"},
+        {"name": "scope_passed_explicitly", "description": "ハンドオフ時に対象issue番号またはREQ-IDの範囲が明示されていること"}
+      ]
+    },
+    {
+      "id": 8,
+      "name": "issue-22_REQ-9_three-consecutive-tdd-failures-escalates",
+      "prompt": "同一REQ（REQ-5）に対する実装が、superpowers:test-driven-developmentによる修正を経ても3回連続でテストが通らなかったとします。runはどう振る舞いますか？",
+      "expected_output": "runは実装ループを打ち切り、REQ-5について3回失敗した旨と失敗内容（テスト名・エラー概要）を添えて人間にエスカレーションする。4回目の自動リトライは行わない。",
+      "files": [],
+      "assertions": [
+        {"name": "stops_after_third_failure", "description": "同一REQに対する4回目の自動実装リトライが行われず、3回目の失敗で打ち切られていること"},
+        {"name": "escalation_includes_failure_detail", "description": "人間へのエスカレーション内容に、対象REQ-IDと失敗内容（テスト名やエラー概要）が含まれていること"}
+      ]
+    },
+    {
+      "id": 9,
+      "name": "issue-22_REQ-10_draft-pr-created-against-default-branch-after-green",
+      "prompt": "対象スコープの全REQのテストが通過した直後の状態です。runは次に何をしますか？",
+      "expected_output": "runはリポジトリのデフォルトブランチ（例: main）を対象にDraft PR（`gh pr create --draft`）を作成する。PRタイトル・本文はissueとREQ台帳の内容から生成される。",
+      "files": [],
+      "assertions": [
+        {"name": "draft_pr_created", "description": "`gh pr create --draft`相当のDraft PR作成が行われていること（readyなPRではないこと）"},
+        {"name": "base_is_default_branch", "description": "PRのbaseがリポジトリのデフォルトブランチになっていること"},
+        {"name": "title_body_from_ledger", "description": "PRタイトルまたは本文が、対象issueおよびREQ台帳の内容に基づいて生成されていること"}
+      ]
+    },
+    {
+      "id": 10,
+      "name": "issue-22_REQ-11_requesting_code_review_invoked_as_is",
+      "prompt": "Draft PRの作成が完了した直後の状態です。runはレビューをどう実施しますか？",
+      "expected_output": "runはsuperpowers:requesting-code-reviewをそのまま呼び出し、DESCRIPTION（実装内容の要約）・PLAN_OR_REQUIREMENTS（対象issueのREQ台帳）・BASE_SHA・HEAD_SHAを渡してレビューsubagentをディスパッチする。run独自の新しいレビュープロンプトは使用しない。",
+      "files": [],
+      "assertions": [
+        {"name": "requesting_code_review_reused", "description": "superpowers:requesting-code-reviewスキルが呼び出されており、run独自のレビュープロンプトテンプレートが新設されていないこと"},
+        {"name": "plan_or_requirements_is_req_ledger", "description": "PLAN_OR_REQUIREMENTSとして対象issueのREQ台帳が渡されていること"},
+        {"name": "base_head_sha_provided", "description": "BASE_SHAとHEAD_SHAが具体的なコミットとして渡されていること"}
+      ]
+    },
+    {
+      "id": 11,
+      "name": "issue-22_REQ-12_critical_or_important_triggers_autofix_and_rereview",
+      "prompt": "superpowers:requesting-code-reviewの結果、Importantな指摘が1件返ってきました。runはどう対応しますか？",
+      "expected_output": "runはImportant指摘を自動的に修正し、修正後に再度superpowers:requesting-code-reviewを呼び出して再レビューを要求する。この修正→再レビューのサイクルを、指摘が解消されるまで（上限は3回）自律的に繰り返す。",
+      "files": [],
+      "assertions": [
+        {"name": "auto_fix_applied", "description": "Important指摘に対して人間の指示を待たずに自動修正が行われていること"},
+        {"name": "re_review_requested", "description": "修正後に再度requesting-code-reviewが呼び出されていること"}
+      ]
+    },
+    {
+      "id": 12,
+      "name": "issue-22_REQ-13_review_cycle_exhausted_after_three_rounds_escalates",
+      "prompt": "修正→再レビューのサイクルを3回実施しましたが、4回目のレビューでもCritical指摘が解消されませんでした。runはどう振る舞いますか？",
+      "expected_output": "runは4回目の自動修正・再レビューは行わず処理を打ち切り、未解決のCritical/Important指摘一覧とともに人間にエスカレーションする。",
+      "files": [],
+      "assertions": [
+        {"name": "no_fourth_autofix_cycle", "description": "3回のサイクルを超えて4回目の自動修正・再レビューが行われていないこと"},
+        {"name": "escalation_lists_unresolved_issues", "description": "人間へのエスカレーション内容に未解決のCritical/Important指摘一覧が含まれていること"}
+      ]
+    },
+    {
+      "id": 13,
+      "name": "issue-22_REQ-14_clean_review_converts_draft_to_ready_and_reports",
+      "prompt": "superpowers:requesting-code-reviewの結果、Critical/Importantの指摘がなく、Minorの指摘が1件だけありました。runはどう対応して終了しますか？",
+      "expected_output": "runはDraft PRをready for review（`gh pr ready`相当）に切り替え、PRのURLとレビューサマリ（Minor指摘を含む）を人間に報告して処理を終了する。PRのマージは実行しない。",
+      "files": [],
+      "assertions": [
+        {"name": "draft_converted_to_ready", "description": "Draft PRがready for reviewの状態に切り替えられていること"},
+        {"name": "report_includes_pr_url_and_summary", "description": "人間への最終報告にPR URLとレビューサマリ（Minor指摘を含む）が含まれていること"},
+        {"name": "no_merge", "description": "PRのマージ操作が実行されていないこと"}
+      ]
+    },
+    {
+      "id": 14,
+      "name": "issue-22_REQ-15_worktree_not_auto_deleted_after_pr",
+      "prompt": "Draft PRの作成、レビュー完了、ready化までが終わった直後の状態です。REQ-6で作成したgit worktreeはどうなりますか？",
+      "expected_output": "runはPR作成・レビュー完了後もgit worktreeを自動削除しない。worktreeの削除は人間の判断に委ねられ、runの完了報告にworktreeを残している旨、または削除方法が触れられていてもよいが、自動削除コマンドは実行されない。",
+      "files": [],
+      "assertions": [
+        {"name": "worktree_not_removed", "description": "`git worktree remove`等のworktree削除操作がrunによって自動実行されていないこと"}
+      ]
+    },
+    {
+      "id": 15,
+      "name": "issue-22_REQ-16_ambiguous-branch-during-implementation-invokes-spec-interview",
+      "prompt": "superpowers:test-driven-developmentによる実装中に、REQ台帳のどのREQからも一意に決まらない設計上の分岐（例: エラー時のリトライ回数をいくつにするか、REQに記載がない）に遭遇しました。runはどう振る舞いますか？",
+      "expected_output": "runは推測で実装を進めず、spec-interviewを呼び出して新規REQを追記し、task-filingでissueに反映してから実装を再開する。ambiguityを無視して独断で実装を続行しない。",
+      "files": [],
+      "assertions": [
+        {"name": "spec_interview_invoked_for_new_req", "description": "曖昧な分岐に遭遇した際、spec-interviewが呼ばれて新規REQを追記する形になっていること"},
+        {"name": "no_silent_assumption", "description": "REQに記載のない設計判断を人間確認なしに独断で実装していないこと"}
+      ]
+    },
+    {
+      "id": 16,
+      "name": "issue-22_REQ-17_skill_name_is_run",
+      "prompt": "issue #22のオーケストレーションskillの正式名称は何ですか？また、それはどのファイルに実装されていますか？",
+      "expected_output": "正式名称は `run`（`exec`ではない）であり、`plugins/sd-tdd/skills/run/SKILL.md` に実装されている。",
+      "files": ["plugins/sd-tdd/skills/run/SKILL.md"],
+      "assertions": [
+        {"name": "skill_file_named_run", "description": "plugins/sd-tdd/skills/run/SKILL.md が存在し、YAML frontmatterのnameが `run` であること"},
+        {"name": "no_exec_skill_created", "description": "plugins/sd-tdd/skills/exec/ のような別名のディレクトリ・skillが新設されていないこと"}
+      ]
+    }
+  ]
+}

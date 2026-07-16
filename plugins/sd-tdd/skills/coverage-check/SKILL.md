@@ -30,7 +30,7 @@ Run it once per group as each is implemented; drop `--group` for a final full-le
 
 ## Interpreting the result
 
-- **Exit 0, no output about missing/orphans:** every active REQ has a test. Proceed — hand off to `superpowers:test-driven-development` to implement against the now-failing tests.
+- **Exit 0, no output about missing/orphans:** every active REQ has a test.
 - **"Missing tests for: REQ-X, REQ-Y" (exit 1):** go back to the `spec-to-tests` skill and write tests for exactly those REQ-IDs. Do not edit the ledger to remove them — the ledger is append-only; if a REQ turns out to be wrong, it gets superseded (see `spec-interview`), not deleted.
 - **"Tests reference REQ-IDs not in the issue ledger" (warning, exit 0):** a test exists whose `issue-N_REQ-XX` key has no matching ledger line. Two valid resolutions:
   1. It's a genuinely new requirement discovered while writing tests or implementing — invoke `spec-interview` to draft it, then `task-filing` to append it to the ledger as a new REQ-N+1, then re-run this check.

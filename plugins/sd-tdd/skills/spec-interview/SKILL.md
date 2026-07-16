@@ -44,4 +44,4 @@ Before asking for final approval, weigh whether this ledger is large or varied e
 
 ## Step 5: Get explicit approval, then hand off
 
-Show the user the final REQ list before handing off — do not write it anywhere yourself, and do not run any tracker command. Once approved, tell them: "REQ ledger confirmed. Next: invoke `task-filing` to record it (new task, or append if this was a continuation of an existing one), then run `test-infra-setup` (if not already done for this project) and `spec-to-tests`." If a split was agreed in Step 4, also pass `task-filing` the chosen mode (sub issue / PR group) and the group→REQ-ID mapping.
+Show the user the final REQ list before handing off — do not write it anywhere yourself, and do not run any tracker command. Once approved, tell them: "REQ ledger confirmed. Next: invoke `task-filing` to record it (new task, or append if this was a continuation of an existing one)." If a split was agreed in Step 4, also pass `task-filing` the chosen mode (sub issue / PR group) and the group→REQ-ID mapping.

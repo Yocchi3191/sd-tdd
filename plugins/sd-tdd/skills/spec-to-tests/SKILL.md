@@ -56,7 +56,3 @@ Run the new tests once before handing off:
 ```
 
 Expected: every new test FAILS with an assertion/not-implemented error — not a syntax error, import error, or setup crash. If it's failing for the wrong reason, fix the test itself before moving on.
-
-## Step 8: Hand off
-
-Invoke `coverage-check` to mechanically verify every REQ in scope now has a test before implementation starts. If Step 2 narrowed to a PR group, pass that group to `coverage-check` (`--group <N>`) so it only checks that subset — not the whole ledger.
