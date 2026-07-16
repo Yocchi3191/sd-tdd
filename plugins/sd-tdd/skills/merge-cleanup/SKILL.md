@@ -63,7 +63,7 @@ git status --porcelain
 If Step 2 found a dedicated worktree for the target branch:
 
 - **That worktree is the current shell session's working directory:** do not remove it — git cannot remove a worktree that's the active cwd, and doing so out from under the running session would break it. Report that manual removal is needed once the user has moved elsewhere (e.g. "現在のカレントディレクトリのため、このworktreeは削除しませんでした。別ディレクトリに移動してから手動で削除してください。"). Continue to Step 6 for the branch itself — do not delete the branch either while its worktree is still in place and checked out.
-- **Otherwise:** remove it. If this worktree was created via a native worktree tool in the current or another live session (e.g. the harness's `EnterWorktree`), prefer that tool's removal action (e.g. `ExitWorktree` with a remove action) — it also tears down anything else the native tool set up (locks, session cwd, attached processes) that a raw git command won't. Only fall back to plain git when no native tool applies:
+- **Otherwise:** remove it. If *this session itself* entered this exact worktree via a native tool (e.g. it's the harness's `EnterWorktree`-created worktree the current session's cwd is or was in), prefer that tool's removal action (e.g. `ExitWorktree` with a remove action) instead of the raw git command below — it also tears down anything else the native tool set up (locks, session cwd, attached processes). Native worktree-removal tools like `ExitWorktree` are typically scoped to worktrees *their own session* created; they no-op (without actually removing anything) on a worktree from a different or earlier session, so never use them for a worktree this session didn't itself enter — go straight to the git commands below for those, including ones locked by another session:
 
 ```bash
 git worktree remove <path>
@@ -96,7 +96,14 @@ git checkout <default-branch>
 git branch -d <target-branch>
 ```
 
-In either deletion case, if `git branch -d` refuses with "not fully merged" (this happens after a squash or rebase merge, where the branch's commits are never literally an ancestor of the default branch, even though GitHub reports the PR as genuinely merged), fall back to `git branch -D`. Step 1 already obtained authoritative proof of the merge from GitHub itself, which supersedes git's local ancestry heuristic here.
+In either deletion case, if `git branch -d` refuses with "not fully merged", don't immediately force it — that refusal has two different causes and only one of them is safe to override:
+
+```bash
+git rev-list origin/<target-branch>..<target-branch>
+```
+
+- **No output (local is not ahead of its last-pushed state):** the refusal is purely representational — a squash or rebase merge means the branch's commits are never literally an ancestor of the default branch, even though GitHub reports the PR as genuinely merged. Step 1 already obtained that authoritative proof from GitHub, which supersedes git's local ancestry heuristic here, so it's safe to fall back to `git branch -D <target-branch>`.
+- **Any output (local has commits beyond what was ever pushed):** stop — those specific commits were never part of what GitHub confirmed as merged, so forcing the delete would genuinely lose work. Report this to the user instead of deleting (e.g. "ブランチ `<target-branch>` にpush済みの状態より先のコミットが残っているため、削除しませんでした。").
 
 On a full, unblocked success, report what happened, e.g.: "PR #N のマージを確認しました。main を最新化し、ブランチ `<target-branch>` とそのworktreeを削除しました。"
 
