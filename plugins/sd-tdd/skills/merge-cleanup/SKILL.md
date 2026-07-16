@@ -11,10 +11,13 @@ Cleans up local state after a PR is merged: refreshes the default branch, delete
 
 Treat any utterance that plausibly reports a merge as a trigger *candidate* (e.g. "merge done", "マージ完了しました", "マージ済みです", "PRマージしました"). An utterance with no such signal (e.g. "テストを直して", unrelated requests) is not a candidate — do nothing and don't proceed to the steps below.
 
-For a trigger candidate, do not perform any of the actions in Step 3 onward yet. First identify the PR tied to the current branch and check its actual state:
+For a trigger candidate, do not perform any of the actions in Step 3 onward yet. First identify the PR to check:
+
+- If the utterance (or the ongoing conversation) names a specific branch or issue number, resolve that PR explicitly: `gh pr view <branch>`, or resolve the named issue to its PR first.
+- Otherwise, default to the current branch (`gh pr view` with no argument) — but only after confirming the current branch is actually the one the user means. If the session's cwd has since moved to a different worktree/branch than the one the user is referring to, resolving against "current branch" would silently check the wrong PR; when in doubt, ask which branch/PR the user means rather than guessing.
 
 ```bash
-gh pr view --json state,mergedAt,headRefName
+gh pr view [<branch>] --json state,headRefName
 ```
 
 - **`state` is `MERGED`:** proceed to Step 2.
@@ -41,6 +44,8 @@ git fetch origin <default-branch>:<default-branch>
 
 If the default branch happens to be checked out elsewhere (another worktree), this still works safely since it only updates the ref, not a working tree. Do this regardless of what happens in the steps below — it is never blocked by uncommitted changes or worktree state.
 
+(If the current branch is itself the default branch — not the normal case here, since the target branch identified in Step 1 is the just-merged feature branch — a plain `git pull` in place is simpler and fine to use instead.)
+
 ## Step 4: Check for uncommitted changes before deleting anything
 
 In the target branch's working tree (its dedicated worktree if one exists, otherwise the location where it's checked out), check for staged, unstaged, and untracked changes:
@@ -58,9 +63,16 @@ git status --porcelain
 If Step 2 found a dedicated worktree for the target branch:
 
 - **That worktree is the current shell session's working directory:** do not remove it — git cannot remove a worktree that's the active cwd, and doing so out from under the running session would break it. Report that manual removal is needed once the user has moved elsewhere (e.g. "現在のカレントディレクトリのため、このworktreeは削除しませんでした。別ディレクトリに移動してから手動で削除してください。"). Continue to Step 6 for the branch itself — do not delete the branch either while its worktree is still in place and checked out.
-- **Otherwise:** remove it:
+- **Otherwise:** remove it. If this worktree was created via a native worktree tool in the current or another live session (e.g. the harness's `EnterWorktree`), prefer that tool's removal action (e.g. `ExitWorktree` with a remove action) — it also tears down anything else the native tool set up (locks, session cwd, attached processes) that a raw git command won't. Only fall back to plain git when no native tool applies:
 
 ```bash
+git worktree remove <path>
+```
+
+If this fails because the worktree is locked (`git worktree list` shows it as `locked`, or the command reports "is locked"), unlock it first, then retry:
+
+```bash
+git worktree unlock <path>
 git worktree remove <path>
 ```
 
@@ -83,6 +95,10 @@ git branch -d <target-branch>
 git checkout <default-branch>
 git branch -d <target-branch>
 ```
+
+In either deletion case, if `git branch -d` refuses with "not fully merged" (this happens after a squash or rebase merge, where the branch's commits are never literally an ancestor of the default branch, even though GitHub reports the PR as genuinely merged), fall back to `git branch -D`. Step 1 already obtained authoritative proof of the merge from GitHub itself, which supersedes git's local ancestry heuristic here.
+
+On a full, unblocked success, report what happened, e.g.: "PR #N のマージを確認しました。main を最新化し、ブランチ `<target-branch>` とそのworktreeを削除しました。"
 
 ## Step 7: Never reinstall dependencies
 
