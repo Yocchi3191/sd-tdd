@@ -23,6 +23,15 @@
       "author": {
         "name": "Yocchi3191"
       }
+    },
+    {
+      "name": "dev-knowledge",
+      "description": "他プロジェクトでも通用する設計・テスト・プロセスの知見を蓄積し、非自明な判断の場面で自然に参照するナレッジベース。",
+      "version": "0.1.0",
+      "source": "./plugins/dev-knowledge",
+      "author": {
+        "name": "Yocchi3191"
+      }
     }
   ]
 }
