@@ -9,3 +9,4 @@
 <!-- 以下に知見を1行ずつ追記していく -->
 - [layered-statefulness](references/design/layered-statefulness.md): レイヤーごとにステートフル/レスを判断し、Presentation層はステートレスに保つ
 - [layered-call-chain](references/design/layered-call-chain.md): レイヤーごとのオブジェクトの役割と呼び出し関係を図で固定し、配置の意思決定コストをなくす
+- [functional-core-imperative-shell](references/design/functional-core-imperative-shell.md): 副作用の有無でオブジェクトをFunctional Core(純粋)とImperative Shell(副作用)に分け、CQRSのオブジェクト版として配置判断に使う
