@@ -1,0 +1,147 @@
+{
+  "skill_name": "merge-cleanup",
+  "evals": [
+    {
+      "id": 0,
+      "name": "issue-21_REQ-1_natural-phrase-triggers-candidate",
+      "prompt": "ちょうど今のブランチのPRをマージしました。ユーザーが「マージ完了しました」とClaude Codeに伝えます。",
+      "expected_output": "merge-cleanupは「マージ完了」を示唆する発言をトリガー候補として認識し、発言だけを根拠に即座にクリーンアップ（ブランチ削除・worktree削除等）を実行せず、まず実際のgh/git上のマージ状態確認に進む。",
+      "files": [],
+      "assertions": [
+        {"name": "trigger_recognized", "description": "「マージ完了しました」という発言がマージ完了シグナルとして認識されていること"},
+        {"name": "verification_step_follows", "description": "発言のみを根拠にクリーンアップ処理（ブランチ削除・worktree削除等）を即座に実行せず、gh/git上の状態確認が後続すること"}
+      ]
+    },
+    {
+      "id": 1,
+      "name": "issue-21_REQ-1_unrelated-phrase-does-not-trigger",
+      "prompt": "「テストが落ちてるので直してください」とユーザーが発言します。マージや作業完了には一切言及していません。",
+      "expected_output": "merge-cleanupはこの発言をマージ完了のトリガーとして認識せず、クリーンアップ処理（gh/git状態確認・ブランチ削除・worktree削除等）を一切開始しない。",
+      "files": [],
+      "assertions": [
+        {"name": "no_trigger", "description": "マージ完了に関係ない発言でmerge-cleanupのクリーンアップフローが開始されていないこと"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "issue-21_REQ-2_verifies_actual_merge_state_before_cleanup",
+      "prompt": "ユーザーが「merge done」と発言しました。現在のブランチに紐づくPRを`gh pr view --json state,headRefName`で確認すると、実際にstateがMERGEDでした。",
+      "expected_output": "merge-cleanupは現在のブランチに紐づくPRの状態をghで確認し、実際にMERGED状態であることを確認できたことを根拠として、以降のクリーンアップ処理（既定ブランチ更新・ブランチ削除・worktree削除）を実行する。",
+      "files": [],
+      "assertions": [
+        {"name": "gh_state_checked", "description": "gh pr view相当のコマンドで現在のブランチのPR状態が確認されていること"},
+        {"name": "cleanup_executes_only_after_confirmed_merge", "description": "MERGED状態が確認された後にのみクリーンアップ処理が実行されていること"}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "issue-21_REQ-3_open_pr_reports_only_no_cleanup",
+      "prompt": "ユーザーが「merge done」と発言しましたが、現在のブランチに紐づくPRを`gh pr view`で確認すると、実際にはstateがOPEN（レビュー中でまだマージされていない）でした。",
+      "expected_output": "merge-cleanupはクリーンアップ処理（既定ブランチ更新・ブランチ削除・worktree削除）を一切実行せず、現在のPR状態（まだマージされていない旨）をユーザーに報告して終了する。",
+      "files": [],
+      "assertions": [
+        {"name": "reports_pr_status", "description": "PRがまだマージされていない状態であることがユーザーに報告されていること"},
+        {"name": "no_cleanup_actions_taken", "description": "既定ブランチ更新・ローカルブランチ削除・worktree削除のいずれも実行されていないこと"}
+      ]
+    },
+    {
+      "id": 4,
+      "name": "issue-21_REQ-4_updates_default_branch_without_switching_worktree",
+      "prompt": "マージが確認されました。ユーザーは現在、専用worktree内でブランチfeature-xの作業をしています。リポジトリの既定ブランチはmainです。",
+      "expected_output": "merge-cleanupは、現在作業中のworktree/ブランチ（feature-x）を切り替えることなく、既定ブランチ（main）の追跡ブランチを最新化する（例: `git fetch origin main:main`）。現在のカレントブランチはfeature-xのまま変わらない。",
+      "files": [],
+      "assertions": [
+        {"name": "default_branch_updated", "description": "既定ブランチ（main）のローカル追跡参照が最新化されていること"},
+        {"name": "current_worktree_branch_unchanged", "description": "現在のworktreeのカレントブランチ（feature-x）がmainへcheckout切り替えされていないこと"}
+      ]
+    },
+    {
+      "id": 5,
+      "name": "issue-21_REQ-5_detects_uncommitted_changes_in_target_branch",
+      "prompt": "マージが確認されました。対象ブランチ・worktreeにはステージ済みの変更1件と未ステージの変更1件が残っています。",
+      "expected_output": "merge-cleanupはブランチ・worktreeの削除を行う前に、staged/unstaged/untrackedいずれの種別も含めて未コミットの変更の有無を確認する。",
+      "files": [],
+      "assertions": [
+        {"name": "uncommitted_changes_check_performed", "description": "削除処理の前に未コミット変更の有無が確認されていること"},
+        {"name": "check_covers_staged_unstaged_untracked", "description": "確認範囲がstaged/unstaged/untrackedのいずれも含んでいること（例: git status相当で全種別を検出）"}
+      ]
+    },
+    {
+      "id": 6,
+      "name": "issue-21_REQ-6_uncommitted_changes_abort_deletion_but_not_default_branch_update",
+      "prompt": "マージが確認され、対象ブランチ・worktreeに未コミットの変更が残っていることが確認されました（REQ-5の状態）。",
+      "expected_output": "merge-cleanupはブランチ削除・worktree削除を中断し、「未コミットの変更が残っているため削除しませんでした」という趣旨をユーザーに報告する。一方で既定ブランチの更新はこの中断の影響を受けず実行される。",
+      "files": [],
+      "assertions": [
+        {"name": "deletion_aborted", "description": "ブランチ削除・worktree削除の両方が中断され実行されていないこと"},
+        {"name": "user_informed", "description": "未コミットの変更が理由で削除しなかった旨がユーザーに報告されていること"},
+        {"name": "default_branch_update_unaffected", "description": "既定ブランチの更新（REQ-4）はこの中断の影響を受けず実行されていること"}
+      ]
+    },
+    {
+      "id": 7,
+      "name": "issue-21_REQ-7_deletes_only_target_branch_not_other_merged_branches",
+      "prompt": "マージが確認され、未コミットの変更はありません。ローカルには今回対象のブランチ以外にも、数週間前に既にマージ済みの別ブランチold-feature-yが残っています。",
+      "expected_output": "merge-cleanupは今回マージが確認された対象ブランチ1本のみを削除し、old-feature-yなど他のマージ済みローカルブランチには一切触れない。",
+      "files": [],
+      "assertions": [
+        {"name": "target_branch_deleted", "description": "今回マージ確認された対象ブランチが削除されていること"},
+        {"name": "other_merged_branches_untouched", "description": "old-feature-y等、他のマージ済みローカルブランチが削除・変更されていないこと"}
+      ]
+    },
+    {
+      "id": 8,
+      "name": "issue-21_REQ-8_deletes_dedicated_worktree_when_found",
+      "prompt": "マージが確認され、未コミットの変更はありません。`git worktree list`を確認すると、対象ブランチをcheckoutしている専用worktreeが存在します。",
+      "expected_output": "merge-cleanupは`git worktree list`から検出した、対象ブランチに対応する専用worktreeを削除する（例: `git worktree remove`）。",
+      "files": [],
+      "assertions": [
+        {"name": "worktree_removed", "description": "対象ブランチに対応するworktreeが削除されていること"}
+      ]
+    },
+    {
+      "id": 9,
+      "name": "issue-21_REQ-9_no_dedicated_worktree_skips_worktree_step_only",
+      "prompt": "マージが確認され、未コミットの変更はありません。対象ブランチは専用worktreeを使っておらず、`git worktree list`にも対応するworktreeが見つかりません。",
+      "expected_output": "merge-cleanupはworktree削除ステップを（削除対象がないため）スキップするが、既定ブランチ更新とローカルブランチ削除は通常通り実行する。",
+      "files": [],
+      "assertions": [
+        {"name": "worktree_step_skipped_no_error", "description": "対応するworktreeが見つからないため、worktree削除ステップがエラーにならずスキップされていること"},
+        {"name": "branch_deletion_and_default_update_still_performed", "description": "既定ブランチ更新とローカルブランチ削除は実行されていること"}
+      ]
+    },
+    {
+      "id": 10,
+      "name": "issue-21_REQ-10_worktree_is_cwd_skips_removal_reports_manual",
+      "prompt": "マージが確認され、未コミットの変更はありません。ただし対象ブランチに対応するworktreeは、現在実行中のシェルセッションのカレントディレクトリそのものです。",
+      "expected_output": "merge-cleanupはそのworktreeの削除を行わず、「カレントディレクトリのため手動で削除してください」という趣旨をユーザーに報告する。既定ブランチ更新は引き続き実行される。",
+      "files": [],
+      "assertions": [
+        {"name": "worktree_removal_skipped_because_cwd", "description": "カレントディレクトリであることを理由にworktree削除が行われていないこと"},
+        {"name": "manual_removal_reported", "description": "手動での削除を促す報告がユーザーに対して行われていること"},
+        {"name": "default_branch_update_still_performed", "description": "既定ブランチの更新は引き続き実行されていること"}
+      ]
+    },
+    {
+      "id": 11,
+      "name": "issue-21_REQ-11_checks_out_default_branch_before_deleting_checked_out_branch",
+      "prompt": "マージが確認され、未コミットの変更はありません。対象ブランチは専用worktreeを使っておらず、現在のリポジトリ本体（メインの作業ディレクトリ）でcheckoutされたままの状態です（cwd自体が対象worktreeというケースではありません）。",
+      "expected_output": "merge-cleanupは対象ブランチを削除する前に、そのリポジトリ本体で既定ブランチへcheckoutを切り替え、チェックアウトが外れた対象ブランチを削除する。",
+      "files": [],
+      "assertions": [
+        {"name": "checks_out_default_branch_first", "description": "対象ブランチ削除の前に既定ブランチへのcheckout切り替えが行われていること"},
+        {"name": "then_deletes_branch", "description": "checkout切り替え後に対象ブランチの削除が行われていること"}
+      ]
+    },
+    {
+      "id": 12,
+      "name": "issue-21_REQ-12_never_reinstalls_dependencies",
+      "prompt": "マージが確認され、ブランチ削除・worktree削除を含むクリーンアップが実行されました。削除されたworktreeにはnpm installでインストールされたnode_modulesが含まれていました。",
+      "expected_output": "merge-cleanupはクリーンアップの一環として、あるいはクリーンアップ後に、依存関係の再インストールコマンド（例: npm install, pip install等）を一切実行しない。",
+      "files": [],
+      "assertions": [
+        {"name": "no_dependency_install_commands_run", "description": "npm install等の依存関係再インストールコマンドが一切実行されていないこと"}
+      ]
+    }
+  ]
+}
