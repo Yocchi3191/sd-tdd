@@ -1,0 +1,25 @@
+{
+  "skill_name": "spec-to-tests",
+  "evals": [
+    {
+      "id": 0,
+      "name": "issue-26_REQ-3_structural_req_no_test_generated",
+      "prompt": "対象issueのREQ台帳に[structural]タグ付きのREQ-3（例: REQ-3: [structural] namespaceがFoo.Barであること）が含まれています。spec-to-testsはこのREQに対してどう振る舞いますか？",
+      "expected_output": "spec-to-testsはREQ-3に対応するunit test/evalケースを生成しない。「原理的に失敗し得ないテスト」を防ぐため、構造的性質の確認はテスト生成の対象から外し、後続のPR作成時にレビュー確認事項として扱われることに委ねる。",
+      "files": [],
+      "assertions": [
+        {"name": "no_test_generated_for_structural_req", "description": "[structural]タグ付きREQに対応するテストファイル・evalケースが生成されていないこと"}
+      ]
+    },
+    {
+      "id": 1,
+      "name": "issue-26_REQ-3_non_structural_req_still_gets_test",
+      "prompt": "同じREQ台帳に[structural]タグの無い通常のREQ-4（例: REQ-4: 空文字を送信したら400を返す）も含まれています。spec-to-testsはREQ-4に対してどう振る舞いますか？",
+      "expected_output": "spec-to-testsはREQ-4に対しては従来通りunit test/evalケースを生成する。[structural]タグの有無以外でテスト生成方針は変わらない。",
+      "files": [],
+      "assertions": [
+        {"name": "test_generated_for_non_structural_req", "description": "[structural]タグの無いREQに対しては通常通りテスト・evalケースが生成されていること"}
+      ]
+    }
+  ]
+}
