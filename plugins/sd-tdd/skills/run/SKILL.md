@@ -68,7 +68,7 @@ The shared sequence for one unit of work — either the whole ledger (no split) 
 
 ## Implementing against the tests
 
-Invoke `superpowers:test-driven-development`, telling it which issue/REQ-IDs (scope) it's implementing against, inside the worktree from step 1.
+Invoke `superpowers:test-driven-development`, telling it which issue/REQ-IDs (scope) it's implementing against, inside the worktree from step 1. If any REQ in scope is tagged `[structural]`, say so explicitly in that same invocation: `spec-to-tests` generated no test for those (see its Step 4), and their implementation is exempt from the Iron Law — implement them directly, without a failing test first. This exemption applies only to `[structural]` REQs; every other REQ in scope still goes through the normal test-first cycle.
 
 Track failures **per REQ**, not per test run: if the test(s) for the same REQ-ID are still failing after 3 consecutive implementation attempts, stop — don't try a 4th time. Escalate to the human with the REQ-ID and a summary of the failure (test name, error). Otherwise, once every test in scope passes, go to "Creating the PR".
 
@@ -81,7 +81,7 @@ If implementation surfaces a design decision that no REQ in the ledger resolves 
 Once every test in scope passes:
 
 1. Push the worktree's branch: `git push -u origin <branch>`.
-2. Create a Draft PR: `gh pr create --draft --base <base-branch> --title "<title>" --body "<body>"`. `<base-branch>` is the repository's default branch, **except** for a PR-group step after the first, where it's the previous group's branch (see "Groups are dependent, so branches and PRs stack" above). Derive the title and body from the issue title and the REQ-IDs in scope — don't hand-wave; link the issue (e.g. `Closes #N` or `Part of #N` for a PR-group step that isn't the last). For a PR-group step, the title must include the `[group G]` tag (see "Handling a split") — "Resuming an existing issue" looks it up by this tag later.
+2. Create a Draft PR: `gh pr create --draft --base <base-branch> --title "<title>" --body "<body>"`. `<base-branch>` is the repository's default branch, **except** for a PR-group step after the first, where it's the previous group's branch (see "Groups are dependent, so branches and PRs stack" above). Derive the title and body from the issue title and the REQ-IDs in scope — don't hand-wave; link the issue (e.g. `Closes #N` or `Part of #N` for a PR-group step that isn't the last). For a PR-group step, the title must include the `[group G]` tag (see "Handling a split") — "Resuming an existing issue" looks it up by this tag later. If any REQ in scope is tagged `[structural]`, add a `## 構造的制約（テストによる担保なし、レビューで確認してください）` section to the PR body listing each such REQ's ID and text — this is the only place their correctness gets checked, since no test exists for them. Omit the section entirely (don't leave an empty header) when scope has no `[structural]` REQ.
 3. Go to "Requesting review".
 
 ## Requesting review

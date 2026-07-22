@@ -21,6 +21,7 @@ If there's no existing task, this is a fresh interview; the ledger starts at `RE
 - Each REQ must be a single falsifiable fact — one behavior, one expected outcome. Split anything joined by "and"/"or" into separate REQs.
 - Push back on vagueness. "Handle errors gracefully" is not a REQ. "If the input is empty, return a 400 with message X" is.
 - Keep asking until you can write the whole feature as a list of REQ lines with no ambiguity left.
+- If a REQ describes a structural property of the code (e.g. a namespace, a file layout, a naming rule) rather than an input→output behavior, tag it `[structural]` immediately after the `REQ-<id>:` prefix (e.g. `REQ-3: [structural] namespaceはFoo.Barであること`). `spec-to-tests` generates no test for a `[structural]` REQ and `coverage-check` doesn't require one — its correctness is left to code review instead. Reach for this tag when a behavioral test for the property would end up coupled to the same constraint it's supposed to verify (e.g. a namespace-reflection test whose own `using`/`import` must match the constraint to even compile), making it unable to fail once it compiles. Don't tag a REQ `[structural]` just because it's hard to test — only when it's describing shape, not behavior.
 
 ## Step 3: Decide where the "why" goes
 

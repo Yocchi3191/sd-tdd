@@ -190,6 +190,38 @@
         {"name": "skill_file_named_run", "description": "plugins/sd-tdd/skills/run/SKILL.md が存在し、YAML frontmatterのnameが `run` であること"},
         {"name": "no_exec_skill_created", "description": "plugins/sd-tdd/skills/exec/ のような別名のディレクトリ・skillが新設されていないこと"}
       ]
+    },
+    {
+      "id": 17,
+      "name": "issue-26_REQ-4_pr_body_lists_structural_reqs_needing_review",
+      "prompt": "対象issueのスコープに[structural]タグ付きREQ（例: REQ-3: [structural] namespaceがFoo.Barであること）が1件含まれる状態で、スコープ内の全REQのテストが通過し、Draft PRを作成する直前です。runはPR本文をどう構成しますか？",
+      "expected_output": "runはPR本文に「## 構造的制約（テストによる担保なし、レビューで確認してください）」というセクションを新設し、該当する[structural]タグ付きREQのREQ-IDと内容を列挙する。",
+      "files": [],
+      "assertions": [
+        {"name": "structural_section_added", "description": "PR本文に構造的制約を示すセクションが追加されていること"},
+        {"name": "structural_reqs_listed", "description": "該当する[structural]タグ付きREQのREQ-IDと内容がそのセクションに列挙されていること"}
+      ]
+    },
+    {
+      "id": 18,
+      "name": "issue-26_REQ-4_no_structural_reqs_omits_section",
+      "prompt": "対象issueのスコープに[structural]タグ付きREQが1件も含まれない場合、Draft PR作成時にrunはPR本文をどう構成しますか？",
+      "expected_output": "runはPR本文に構造的制約セクションを追加しない。空のheaderを残すこともしない。",
+      "files": [],
+      "assertions": [
+        {"name": "no_structural_section_when_absent", "description": "[structural]タグ付きREQがスコープに無い場合、構造的制約セクションがPR本文に含まれていないこと"}
+      ]
+    },
+    {
+      "id": 19,
+      "name": "issue-26_REQ-5_tdd_handoff_exempts_structural_reqs_from_test_first",
+      "prompt": "対象issueのスコープに[structural]タグ付きREQ（REQ-3）と通常のREQ（REQ-4）が両方含まれる状態で、runはsuperpowers:test-driven-developmentへどう引き継ぎますか？",
+      "expected_output": "runはtest-driven-developmentへの呼び出しプロンプト内で、REQ-3は[structural]タグ付きであり対応するテストが存在しないこと、その実装はテストファースト（TDDのIron Law）の対象外としてテストなしで直接進めてよいことを明記する。REQ-4は引き続き通常通りテストファーストで実装する対象として扱う。",
+      "files": [],
+      "assertions": [
+        {"name": "structural_req_exempted_explicitly", "description": "[structural]タグ付きREQについて、テストなしで直接実装してよい旨が呼び出しプロンプト内に明記されていること"},
+        {"name": "non_structural_req_still_test_first", "description": "[structural]タグの無いREQについては、引き続きテストファーストで実装する対象として扱われていること"}
+      ]
     }
   ]
 }

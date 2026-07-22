@@ -14,7 +14,7 @@ function findCoveredReqIds(testFileContents, issueNumber) {
 
 function computeCoverage(requirements, coveredIds, targetIds = null) {
   let activeIds = requirements
-    .filter((r) => r.supersededBy === null)
+    .filter((r) => r.supersededBy === null && !r.structural)
     .map((r) => r.id);
   if (targetIds !== null) {
     const targetSet = new Set(targetIds);

@@ -44,3 +44,24 @@ test('computeCoverage flags a covered id with no matching requirement at all', (
     orphans: [99],
   });
 });
+
+test('issue-26_REQ-2_computeCoverage does not require a test for a structural requirement', () => {
+  const requirements = [{ id: 5, supersededBy: null, structural: true }];
+  const covered = new Set();
+  assert.deepEqual(computeCoverage(requirements, covered), {
+    missing: [],
+    orphans: [],
+  });
+});
+
+test('issue-26_REQ-2_computeCoverage still flags a non-structural requirement with no test', () => {
+  const requirements = [
+    { id: 5, supersededBy: null, structural: true },
+    { id: 6, supersededBy: null, structural: false },
+  ];
+  const covered = new Set();
+  assert.deepEqual(computeCoverage(requirements, covered), {
+    missing: [6],
+    orphans: [],
+  });
+});

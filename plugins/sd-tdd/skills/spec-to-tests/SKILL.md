@@ -17,7 +17,7 @@ If the project has no detectable test framework, stop and say so — invoke `tes
 gh issue view <N> --json body -q .body
 ```
 
-Parse the `REQ-<id>: ...` lines. Skip any line annotated `[superseded by REQ-<m>]` — only active (non-superseded) REQs need a test.
+Parse the `REQ-<id>: ...` lines. Skip any line annotated `[superseded by REQ-<m>]` — only active (non-superseded) REQs need a test. Also note which active REQs are tagged `[structural]` (e.g. `REQ-3: [structural] namespaceはFoo.Barであること`) — see Step 4 for how those are handled differently.
 
 ## Step 2: If the ledger has a PR group breakdown, pick one group to target
 
@@ -30,6 +30,8 @@ If it's present, ask the user which group to process this round (default to the 
 Look at existing test files (naming, assertion style, `describe`/`it` vs. bare `test`, fixture setup patterns) and match them. Don't introduce a second test style into a project that already has one.
 
 ## Step 4: Generate one test per REQ-ID, named with the compound key
+
+**Except for `[structural]` REQs — generate no test for those.** A `[structural]` REQ describes a property of the code's shape (e.g. a namespace, a file layout, a naming rule) rather than an input→output behavior. This pipeline's tests exist to verify behavior; a structural property is typically only checkable by a test that is itself coupled to the same constraint it's supposed to verify (e.g. a namespace-reflection test whose own `using`/`import` must match the constraint to even compile) — once such a test compiles, it can no longer fail, defeating the point of having it. Leave a `[structural]` REQ's verification to code review instead: don't write a test or eval case for it, and don't count it against yourself in Step 7's red-check. (`run`'s "Creating the PR" step is what actually surfaces `[structural]` REQs to the reviewer, in the PR body — this skill's only job here is to not generate a test that can't fail.) This changes nothing for REQs without the tag — generate one test per REQ-ID for all of them, as below:
 
 ```ts
 it("issue-12_REQ-3_空文字を送信したら400を返す", () => {

@@ -13,8 +13,8 @@ test('parses plain REQ lines as not superseded', () => {
     'REQ-2: リトライは3回まで',
   ].join('\n');
   assert.deepEqual(parseRequirements(body), [
-    { id: 1, supersededBy: null },
-    { id: 2, supersededBy: null },
+    { id: 1, supersededBy: null, structural: false },
+    { id: 2, supersededBy: null, structural: false },
   ]);
 });
 
@@ -24,7 +24,32 @@ test('extracts supersededBy from a superseded annotation', () => {
     'REQ-12: リトライは5回まで — vendor APIの上限が5回だったため',
   ].join('\n');
   assert.deepEqual(parseRequirements(body), [
-    { id: 3, supersededBy: 12 },
-    { id: 12, supersededBy: null },
+    { id: 3, supersededBy: 12, structural: false },
+    { id: 12, supersededBy: null, structural: false },
+  ]);
+});
+
+test('issue-26_REQ-1_parses a [structural] tag on a REQ line', () => {
+  const body = 'REQ-3: [structural] namespaceがFoo.Barであること';
+  assert.deepEqual(parseRequirements(body), [
+    { id: 3, supersededBy: null, structural: true },
+  ]);
+});
+
+test('issue-26_REQ-1_a REQ line without the structural tag is not structural', () => {
+  const body = 'REQ-4: 空文字を送信したら400を返す';
+  assert.deepEqual(parseRequirements(body), [
+    { id: 4, supersededBy: null, structural: false },
+  ]);
+});
+
+test('issue-26_REQ-1_detects [structural] regardless of its position relative to [superseded by]', () => {
+  const body = [
+    'REQ-5: [structural] namespaceがFoo.Barであること [superseded by REQ-7]',
+    'REQ-6: [superseded by REQ-7] [structural] namespaceがFoo.Barであること',
+  ].join('\n');
+  assert.deepEqual(parseRequirements(body), [
+    { id: 5, supersededBy: 7, structural: true },
+    { id: 6, supersededBy: 7, structural: true },
   ]);
 });
