@@ -100,12 +100,14 @@ If Step 2 found no dedicated worktree at all, skip this step entirely (nothing t
 
 Delete only the target branch identified in Step 2. Never touch any other local branch, merged or not — this is not a general branch-sweep, it only ever removes the branch tied to the merge just confirmed.
 
-- **The branch had a dedicated worktree that was removed in Step 5 (including a worktree that used to be the current shell session's cwd — see Step 5's relocation handling):** the branch is no longer checked out anywhere; delete it directly:
+- **The branch had a dedicated worktree that Step 5 removed via `ExitWorktree`'s `remove` action:** nothing to do here — `ExitWorktree`'s `remove` action already deletes both the worktree *and* its branch. Do not run `git branch -d`; the branch no longer exists, and attempting it would fail with an error Step 6 has no reason to expect.
+- **The branch had a dedicated worktree that Step 5 removed via `git worktree remove`** (including a worktree that used to be the current shell session's cwd, once relocated — see Step 5's relocation handling): unlike `ExitWorktree`, this command does not delete the branch — it is no longer checked out anywhere, but still exists; delete it directly:
 
 ```bash
 git branch -d <target-branch>
 ```
 
+- **Step 5 could not remove the worktree** (the unmerged/lost-commits override was refused because of unpushed commits — see Step 5's "refused over unmerged/lost commits" section): don't delete the branch this run — it's still checked out in that worktree, and Step 5 already reported the reason to the user. Leave both for the user to resolve.
 - **The branch had no dedicated worktree and is currently checked out directly in the main repository working tree:** git refuses to delete a checked-out branch, so first switch that working tree to the default branch, then delete:
 
 ```bash
