@@ -112,14 +112,68 @@
     },
     {
       "id": 10,
-      "name": "issue-21_REQ-10_worktree_is_cwd_skips_removal_reports_manual",
-      "prompt": "マージが確認され、未コミットの変更はありません。ただし対象ブランチに対応するworktreeは、現在実行中のシェルセッションのカレントディレクトリそのものです。",
-      "expected_output": "merge-cleanupはそのworktreeの削除を行わず、「カレントディレクトリのため手動で削除してください」という趣旨をユーザーに報告する。既定ブランチ更新は引き続き実行される。",
+      "name": "issue-25_REQ-1_worktree_is_cwd_relocates_and_deletes",
+      "prompt": "マージが確認され(PR stateはMERGED)、未コミットの変更はありません。対象ブランチに対応するworktreeは、現在実行中のシェルセッションのカレントディレクトリそのものです。",
+      "expected_output": "merge-cleanupはそのworktreeの削除を保留せず、エージェント自身がカレントディレクトリをリポジトリ本体（メインの作業ディレクトリ）へ移動した上で、そのworktreeを削除する。既定ブランチ更新は引き続き実行される。",
       "files": [],
       "assertions": [
-        {"name": "worktree_removal_skipped_because_cwd", "description": "カレントディレクトリであることを理由にworktree削除が行われていないこと"},
-        {"name": "manual_removal_reported", "description": "手動での削除を促す報告がユーザーに対して行われていること"},
+        {"name": "relocates_to_repo_root_before_removal", "description": "worktree削除の前に、カレントディレクトリがリポジトリ本体（メインの作業ディレクトリ）へ移動されていること"},
+        {"name": "worktree_deleted_not_skipped", "description": "カレントディレクトリであることを理由にworktree削除がスキップ・保留されていないこと"},
         {"name": "default_branch_update_still_performed", "description": "既定ブランチの更新は引き続き実行されていること"}
+      ]
+    },
+    {
+      "id": 13,
+      "name": "issue-25_REQ-2_uses_exitworktree_when_own_session_created",
+      "prompt": "マージが確認され、未コミットの変更はありません。対象worktreeは、このセッション自身がEnterWorktreeで作成したものであり、現在のカレントディレクトリになっています。",
+      "expected_output": "merge-cleanupは既存Step5の区別ロジックどおり、ExitWorktree(action: \"remove\")相当のネイティブ削除手段を用いてカレントディレクトリの退避と削除を完結させる。",
+      "files": [],
+      "assertions": [
+        {"name": "exitworktree_remove_used", "description": "ExitWorktree(action: \"remove\")相当のネイティブ削除手段が使用されていること"}
+      ]
+    },
+    {
+      "id": 14,
+      "name": "issue-25_REQ-2_uses_git_worktree_remove_when_not_own_session",
+      "prompt": "マージが確認され、未コミットの変更はありません。対象worktreeは、別セッションが作成した（または手動でgit worktree addされた）ものであり、現在のシェルセッションのカレントディレクトリになっています。",
+      "expected_output": "merge-cleanupはExitWorktreeを使わず（自セッションが作成したworktreeではないためno-opになる）、カレントディレクトリをリポジトリ本体へ移動した上で`git worktree remove`により削除を完結させる。これは対象worktreeの作成元セッションを問わず適用される。",
+      "files": [],
+      "assertions": [
+        {"name": "exitworktree_not_used", "description": "自セッション作成でないworktreeに対してExitWorktreeが使用されていないこと"},
+        {"name": "git_worktree_remove_used_after_relocation", "description": "リポジトリ本体への移動後にgit worktree removeが実行されていること"}
+      ]
+    },
+    {
+      "id": 15,
+      "name": "issue-25_REQ-3_unmerged_commit_warning_confirms_with_user_then_deletes",
+      "prompt": "マージが確認され(squash mergeでPR stateはMERGED)、未コミットの変更はありません。対象worktreeはカレントディレクトリで、削除を試みるとExitWorktreeが「3コミットが失われます」という未マージコミットの警告を出しました。`git rev-list origin/<branch>..<branch>`を確認すると出力は空（pushされた内容を超えるコミットはない）でした。",
+      "expected_output": "merge-cleanupはgit rev-listでpush済みを超えるコミットが無いことを確認した上で、ユーザーに一言確認してから（例: discard_changes: true相当で）削除を完結させる。ユーザーへの確認なしに自動で強制削除はしない。",
+      "files": [],
+      "assertions": [
+        {"name": "rev_list_checked", "description": "git rev-list origin/<branch>..<branch>相当の安全性確認が行われていること"},
+        {"name": "user_confirmed_before_force_delete", "description": "強制削除の実行前にユーザーへの確認が行われていること"},
+        {"name": "deletion_completes_after_confirmation", "description": "ユーザー確認後に削除が完了すること"}
+      ]
+    },
+    {
+      "id": 16,
+      "name": "issue-25_REQ-3_unmerged_commit_with_unpushed_work_aborts",
+      "prompt": "マージが確認されましたが、対象worktreeの削除を試みるとExitWorktreeが未マージコミットの警告を出しました。`git rev-list origin/<branch>..<branch>`を確認すると、pushされていないコミットが1件残っていました。",
+      "expected_output": "merge-cleanupは削除を中断し、push済みの状態より先のコミットが残っているため削除しなかった旨をユーザーに報告する。強制削除は行わない。",
+      "files": [],
+      "assertions": [
+        {"name": "deletion_aborted_due_to_unpushed_commit", "description": "未push分のコミットが残っているため削除が中断されていること"},
+        {"name": "user_informed_of_unpushed_commit", "description": "未pushコミットが理由で削除しなかった旨がユーザーに報告されていること"}
+      ]
+    },
+    {
+      "id": 17,
+      "name": "issue-25_REQ-4_branch_deleted_after_cwd_worktree_removed",
+      "prompt": "マージが確認され、未コミットの変更はありません。対象worktreeはカレントディレクトリでしたが、リポジトリ本体への退避後に正常に削除されました。",
+      "expected_output": "worktree削除完了後、merge-cleanupは対象ブランチも通常のケースと同様に削除する（cwdだったことを理由にブランチ削除を保留しない）。",
+      "files": [],
+      "assertions": [
+        {"name": "branch_deleted_after_worktree_removal", "description": "worktree削除完了後に対象ブランチが削除されていること"}
       ]
     },
     {

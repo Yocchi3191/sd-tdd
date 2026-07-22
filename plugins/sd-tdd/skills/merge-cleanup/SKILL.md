@@ -58,12 +58,17 @@ git status --porcelain
 
 **No output (clean):** proceed to Step 5.
 
-## Step 5: Remove the worktree, if any — but never the one you're standing in
+## Step 5: Remove the worktree, if any — relocating first if you're standing in it
 
 If Step 2 found a dedicated worktree for the target branch:
 
-- **That worktree is the current shell session's working directory:** do not remove it — git cannot remove a worktree that's the active cwd, and doing so out from under the running session would break it. Report that manual removal is needed once the user has moved elsewhere (e.g. "現在のカレントディレクトリのため、このworktreeは削除しませんでした。別ディレクトリに移動してから手動で削除してください。"). Continue to Step 6 for the branch itself — do not delete the branch either while its worktree is still in place and checked out.
-- **Otherwise:** remove it. If *this session itself* entered this exact worktree via a native tool (e.g. it's the harness's `EnterWorktree`-created worktree the current session's cwd is or was in), prefer that tool's removal action (e.g. `ExitWorktree` with a remove action) instead of the raw git command below — it also tears down anything else the native tool set up (locks, session cwd, attached processes). Native worktree-removal tools like `ExitWorktree` are typically scoped to worktrees *their own session* created; they no-op (without actually removing anything) on a worktree from a different or earlier session, so never use them for a worktree this session didn't itself enter — go straight to the git commands below for those, including ones locked by another session:
+- **That worktree is the current shell session's working directory:** git cannot remove a worktree that's the active cwd — but Step 1 already confirmed the merge authoritatively, so this is not a reason to stop and hand off to the user. Relocate, then remove it via whichever removal method below applies:
+  - If the `ExitWorktree`/native-tool path below applies, just call it — its `remove` action already restores the session's working directory as part of removing the worktree, so no separate relocation step is needed.
+  - Otherwise, first move the session's current directory to the repository's main working tree (its root checkout — not any other directory), then run `git worktree remove` as below.
+  This applies regardless of who originally created the worktree — one from another session, or one created manually with `git worktree add`, is relocated-and-removed the same way once the merge is confirmed; it is not limited to worktrees this session itself entered.
+- **Otherwise (not the cwd):** remove it directly via whichever removal method below applies.
+
+**Removal method** (for either case above): if *this session itself* entered this exact worktree via a native tool (e.g. it's the harness's `EnterWorktree`-created worktree the current session's cwd is or was in), prefer that tool's removal action (e.g. `ExitWorktree` with a remove action) instead of the raw git command below — it also tears down anything else the native tool set up (locks, session cwd, attached processes). Native worktree-removal tools like `ExitWorktree` are typically scoped to worktrees *their own session* created; they no-op (without actually removing anything) on a worktree from a different or earlier session, so never use them for a worktree this session didn't itself enter — go straight to the git commands below for those, including ones locked by another session:
 
 ```bash
 git worktree remove <path>
@@ -76,19 +81,31 @@ git worktree unlock <path>
 git worktree remove <path>
 ```
 
+### If removal is refused over unmerged/lost commits (squash or rebase merges)
+
+Either removal path above can refuse on the grounds that the branch's commits aren't a literal ancestor of anything else on disk — `ExitWorktree` surfaces this by requiring `discard_changes: true` (and listing the commits it would lose), or `git worktree remove` may need `--force` for the equivalent reason. This is expected for a squash- or rebase-merged branch: the commits were never going to appear as an ancestor anywhere locally, even though Step 1 already got authoritative proof from GitHub that the PR was genuinely merged.
+
+Before overriding, verify no work would actually be lost — same check as Step 6's "not fully merged" case below:
+
+```bash
+git rev-list origin/<target-branch>..<target-branch>
+```
+
+- **No output (local is not ahead of what was pushed):** nothing beyond what GitHub already merged would be discarded. Confirm briefly with the user before overriding (e.g. "squash/rebaseマージのため削除時に〇コミット分の警告が出ていますが、push済み内容を超えるコミットはありません。worktreeを削除してよいですか？"). Once confirmed, retry with the override (`ExitWorktree` with `discard_changes: true`, or `git worktree remove --force <path>`).
+- **Any output, or the command itself errors:** stop — don't override. Report to the user that commits beyond what was ever pushed would be lost; do not remove the worktree.
+
 If Step 2 found no dedicated worktree at all, skip this step entirely (nothing to remove) and continue to Step 6.
 
 ## Step 6: Delete the merged branch — only this one
 
 Delete only the target branch identified in Step 2. Never touch any other local branch, merged or not — this is not a general branch-sweep, it only ever removes the branch tied to the merge just confirmed.
 
-- **The branch had a dedicated worktree that was removed in Step 5:** the branch is no longer checked out anywhere; delete it directly:
+- **The branch had a dedicated worktree that was removed in Step 5 (including a worktree that used to be the current shell session's cwd — see Step 5's relocation handling):** the branch is no longer checked out anywhere; delete it directly:
 
 ```bash
 git branch -d <target-branch>
 ```
 
-- **The branch had a dedicated worktree that Step 5 skipped (cwd case):** don't delete the branch this run — it's still checked out in that worktree. Leave it for the user to clean up alongside the manual worktree removal from Step 5.
 - **The branch had no dedicated worktree and is currently checked out directly in the main repository working tree:** git refuses to delete a checked-out branch, so first switch that working tree to the default branch, then delete:
 
 ```bash
