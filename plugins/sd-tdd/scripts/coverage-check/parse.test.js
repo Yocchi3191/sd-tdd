@@ -42,3 +42,14 @@ test('issue-26_REQ-1_a REQ line without the structural tag is not structural', (
     { id: 4, supersededBy: null, structural: false },
   ]);
 });
+
+test('issue-26_REQ-1_detects [structural] regardless of its position relative to [superseded by]', () => {
+  const body = [
+    'REQ-5: [structural] namespaceがFoo.Barであること [superseded by REQ-7]',
+    'REQ-6: [superseded by REQ-7] [structural] namespaceがFoo.Barであること',
+  ].join('\n');
+  assert.deepEqual(parseRequirements(body), [
+    { id: 5, supersededBy: 7, structural: true },
+    { id: 6, supersededBy: 7, structural: true },
+  ]);
+});

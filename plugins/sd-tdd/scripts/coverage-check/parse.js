@@ -1,7 +1,9 @@
 // plugins/sd-tdd/scripts/coverage-check/parse.js
 const REQ_LINE_RE = /^REQ-(\d+):\s*(.+)$/gm;
 const SUPERSEDED_RE = /\[superseded by REQ-(\d+)\]/i;
-const STRUCTURAL_RE = /^\[structural\]/i;
+// Matches anywhere in the line, not anchored — so `[structural]` and
+// `[superseded by REQ-N]` can appear in either order on the same REQ line.
+const STRUCTURAL_RE = /\[structural\]/i;
 const PR_GROUP_LINE_RE = /^グループ(\d+):\s*(.+?)\s*\(([^)]+)\)$/gm;
 
 function parseRequirements(issueBody) {

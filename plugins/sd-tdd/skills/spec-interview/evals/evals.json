@@ -1,0 +1,35 @@
+{
+  "skill_name": "spec-interview",
+  "evals": [
+    {
+      "id": 0,
+      "name": "issue-26_REQ-6_structural_property_gets_tagged",
+      "prompt": "ユーザーから「Unity側の12ファイルのnamespaceをFoo.Barに揃えたい」という依頼を受け、spec-interviewでREQを書き起こす場面です。このREQは、入力→出力の振る舞いではなく、コードのnamespaceという構造的性質を記述しています。spec-interviewはこのREQをどう記述しますか？",
+      "expected_output": "spec-interviewはREQ行の`REQ-<id>:`直後に`[structural]`タグを付与する（例: `REQ-3: [structural] namespaceがFoo.Barであること`）。",
+      "files": [],
+      "assertions": [
+        {"name": "structural_tag_applied", "description": "構造的性質を記述するREQ行にREQ番号直後の[structural]タグが付与されていること"}
+      ]
+    },
+    {
+      "id": 1,
+      "name": "issue-26_REQ-6_behavioral_req_not_tagged",
+      "prompt": "同じインタビューの中で、別のREQとして「空文字を送信したら400を返す」という振る舞いのREQも作成する場面です。spec-interviewはこのREQをどう記述しますか？",
+      "expected_output": "spec-interviewはこのREQに[structural]タグを付与せず、通常のREQ行として記述する。",
+      "files": [],
+      "assertions": [
+        {"name": "no_structural_tag_for_behavioral_req", "description": "振る舞いを記述するREQには[structural]タグが付与されていないこと"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "issue-26_REQ-6_hard_to_test_but_behavioral_req_not_tagged",
+      "prompt": "「ネットワーク障害のシミュレートが難しいが、3回リトライして失敗したらエラーを返す」という、テストの実装は難しいものの本質的には振る舞いを記述するREQを作成する場面です。spec-interviewはこのREQに[structural]タグを付与すべきですか？",
+      "expected_output": "付与すべきではない。[structural]タグは「テストが書きにくい」ことを理由に付与するものではなく、REQがコードの構造的性質（namespace、ファイル配置、命名規則等）を記述している場合にのみ使う。このREQは振る舞い（入力条件→出力結果）を記述しているため、タグを付けず通常通りテストを書く対象として扱う。",
+      "files": [],
+      "assertions": [
+        {"name": "not_tagged_merely_for_test_difficulty", "description": "テストが書きにくいことのみを理由に[structural]タグが付与されていないこと"}
+      ]
+    }
+  ]
+}
