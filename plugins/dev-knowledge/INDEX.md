@@ -13,3 +13,4 @@
 - [eca-pattern](references/design/eca-pattern.md): Entity-Effect-Conditionの入れ子構造はEvent-Condition-Action(ECA)パターンであり、Condition=Specification、Effect=Strategyの合成として理解すると汎用的に使える
 - [no-test-for-unverifiable-external-things](references/test/no-test-for-unverifiable-external-things.md): アプリケーション外の低評価対象(インフラ・外部サービス動作・ドキュメント正誤)はテストせず、アプリ内コードはテストで固める
 - [bind-mount-vs-named-volume-for-secrets](references/infra/bind-mount-vs-named-volume-for-secrets.md): 認証情報等の永続化キャッシュはbind mountでなくnamed volumeにして誤コミット・誤持ち出しリスクを構造的に無くす
+- [data-driven-content-as-master-data](references/design/data-driven-content-as-master-data.md): ゲーム上の「モノ」はマスタデータ(レジストリ)として記述し、コードは機能(振る舞い)のみを持つ
