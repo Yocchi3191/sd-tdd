@@ -12,3 +12,4 @@
 - [functional-core-imperative-shell](references/design/functional-core-imperative-shell.md): 副作用の有無でオブジェクトをFunctional Core(純粋)とImperative Shell(副作用)に分け、CQRSのオブジェクト版として配置判断に使う
 - [eca-pattern](references/design/eca-pattern.md): Entity-Effect-Conditionの入れ子構造はEvent-Condition-Action(ECA)パターンであり、Condition=Specification、Effect=Strategyの合成として理解すると汎用的に使える
 - [no-test-for-unverifiable-external-things](references/test/no-test-for-unverifiable-external-things.md): アプリケーション外の低評価対象(インフラ・外部サービス動作・ドキュメント正誤)はテストせず、アプリ内コードはテストで固める
+- [bind-mount-vs-named-volume-for-secrets](references/infra/bind-mount-vs-named-volume-for-secrets.md): 認証情報等の永続化キャッシュはbind mountでなくnamed volumeにして誤コミット・誤持ち出しリスクを構造的に無くす
