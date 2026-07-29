@@ -48,13 +48,13 @@
     },
     {
       "id": 4,
-      "name": "issue-22_REQ-5_sub-issue-split-escalates-before-spec-to-tests",
-      "prompt": "「通知基盤を刷新して」というタスクをやってください。spec-interviewのStep4でsub issue分割（sub issue #31: メール通知, sub issue #32: プッシュ通知）が提案され、ユーザーが承認したとします。",
-      "expected_output": "sub issue分割が承認された場合、runはtask-filingでのsub issue起票（親issue+#31, #32の作成）までを実行した後、どのsub issueから着手するかを人間にエスカレーションして停止する。spec-to-tests以降には自動で進まない。",
+      "name": "issue-22_REQ-5_multi-task-initiative-escalates-before-spec-to-tests",
+      "prompt": "「通知基盤を刷新して」というタスクをやってください。epic-filingが企画と判定し、epic-issue #30とtask-issue #31（メール通知）, #32（プッシュ通知）を起票したとします。",
+      "expected_output": "企画としてepic-issue+複数task-issueが起票された場合、runはどのtask-issueから着手するかを人間にエスカレーションして停止する。spec-to-tests以降には自動で進まない。",
       "files": [],
       "assertions": [
-        {"name": "sub_issues_filed", "description": "task-filingのsub issue起票操作が呼ばれ、親issueと各sub issueが作成されていること"},
-        {"name": "escalates_before_spec_to_tests", "description": "sub issue起票の直後に、どのsub issueから着手するかを問う形で人間にエスカレーションしており、spec-to-testsが自動的に呼ばれていないこと"}
+        {"name": "epic_filing_invoked_for_initiative", "description": "企画判定された依頼についてepic-filingが呼ばれ、epic-issueと複数task-issueが起票されていること"},
+        {"name": "escalates_before_spec_to_tests", "description": "起票の直後に、どのtask-issueから着手するかを問う形で人間にエスカレーションしており、spec-to-testsが自動的に呼ばれていないこと"}
       ]
     },
     {

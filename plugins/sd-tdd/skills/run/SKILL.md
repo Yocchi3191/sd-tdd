@@ -1,6 +1,6 @@
 ---
 name: run
-description: Use this first for any task in this project that adds, modifies, or deletes files — new features, bug fixes, refactors. This is the entry point and auto-driving orchestrator for the sd-tdd pipeline (test-infra-setup → spec-interview → task-filing → git worktree → spec-to-tests → coverage-check → superpowers:test-driven-development → Draft PR → superpowers:requesting-code-review), all the way to a review-clean PR. Human judgement is only asked for at REQ approval, a sub issue split decision, repeated implementation/review failure, or a design ambiguity mid-implementation — merging the PR always stays a human decision and this skill never performs it. Also use to resume in-progress sd-tdd work on an existing GitHub issue (e.g. "issue 12の続き"). Do NOT use for read-only questions, explanations, or analysis that touches no files.
+description: Use this first for any task in this project that adds, modifies, or deletes files — new features, bug fixes, refactors. This is the entry point and auto-driving orchestrator for the sd-tdd pipeline (test-infra-setup → spec-interview → task-filing → git worktree → spec-to-tests → coverage-check → superpowers:test-driven-development → Draft PR → superpowers:requesting-code-review), all the way to a review-clean PR. Human judgement is only asked for at REQ approval, a multi-task initiative split decision, repeated implementation/review failure, or a design ambiguity mid-implementation — merging the PR always stays a human decision and this skill never performs it. Also use to resume in-progress sd-tdd work on an existing GitHub issue (e.g. "issue 12の続き"). Do NOT use for read-only questions, explanations, or analysis that touches no files.
 ---
 
 # sd-tdd:run
@@ -12,18 +12,18 @@ This skill owns no logic of its own beyond sequencing, resume-point detection, a
 ## Escalation points — the only places this flow stops for a human
 
 1. REQ ledger approval (inside `spec-interview`, Step 5) — already a built-in stop.
-2. A sub issue split is confirmed (see "Handling a split") — which sub issue to start is a human call; `run` does not guess.
+2. `epic-filing` files a multi-task initiative as an epic issue with task-issues under it (see "Starting new work") — which task-issue to start with is a human call; `run` does not guess.
 3. The same REQ fails implementation 3 times in a row (see "Implementing against the tests").
 4. The same PR fails review (Critical/Important findings) on 3 review rounds in a row (see "Requesting review").
 5. A genuinely ambiguous design decision comes up mid-implementation that no REQ resolves (see "Ambiguity during implementation").
 
 Everywhere else, keep going without waiting for a response — a short status line between stages is enough (e.g. "REQ台帳を確定、issue #14として起票しました。次にテストを生成します。").
 
-## Step 1: Determine new task vs. resume
+## Step 1: Determine resume vs. new work
 
 - If the user's request references an existing issue number (e.g. "issue #12", "#12の続き"), this is a **resume** — go to "Resuming an existing issue" below with that issue number.
-- Otherwise, this is a **new task** — go to "Starting a new task" below.
-- If it's genuinely ambiguous (the request could plausibly be either), ask the user once which issue number to resume, or confirm it's new.
+- Otherwise, this is **new work** — go to "Starting new work" below. `run` does not itself judge whether the request is a single task or a multi-task initiative; that judgment, and the filing that follows from it, is `epic-filing`'s job (see "Starting new work").
+- If it's genuinely ambiguous whether the request is a resume or new work (the request could plausibly be either), ask the user once which issue number to resume, or confirm it's new work, before proceeding.
 
 ## Step 2: Track progress with TodoWrite
 
@@ -42,18 +42,18 @@ Before starting either path, create a TodoWrite list with these items (mark item
 
 For a PR-group split, repeat items 4–10 once per group. Mark each `in_progress` right before invoking the corresponding skill, and `completed` right after it returns successfully. Give one short status line between stages — this is a status update, not a checkpoint; do not wait for a response before continuing, except at the escalation points above.
 
-## Starting a new task
+## Starting new work
 
 1. Invoke the `test-infra-setup` skill. It is idempotent — if the project already has a test framework and mutation-testing tool wired up, it reports so and does nothing further.
-2. Invoke the `spec-interview` skill to interview the user and build the REQ ledger. **This is the first stopping point** — `spec-interview` itself asks the user to approve the final REQ list before handing back. Wait for that approval; do not skip it or approve on the user's behalf.
-3. If `spec-interview` reports that a split (sub issue or PR group) was proposed and approved in its Step 4, go to "Handling a split" below instead of continuing linearly. Otherwise continue to step 4.
-4. Invoke `task-filing`'s new-task operation to record the ledger as a GitHub issue. Note the issue number `N` from its "Task filed as issue #N" response — every later step needs it.
-5. Run "Implementing one scope" (below) for issue `N` with the full REQ ledger as the scope.
+2. Invoke `epic-filing` to judge whether this is a single work task or a multi-task initiative, and to handle filing accordingly:
+   - **Single work task**: `epic-filing` invokes `spec-interview` itself (its own approval gate still applies — wait for it) and files the result via `task-filing`'s "File a new task" operation, then reports back the filed issue number `N`. Continue to step 3 below with that `N`.
+   - **Multi-task initiative**: `epic-filing` interviews the user on background/goal/success criteria, breaks the initiative into task candidates, files an epic-issue, then files each candidate as its own task-issue (via `spec-interview` → `task-filing`'s "File a task under a parent epic" operation) as a sub-issue of the epic. Once every candidate is filed, `epic-filing` reports back the epic issue number and the list of filed task-issue numbers. **This is a stopping point** — escalate to the human, asking which task-issue to start with (this replaces the old "sub issue split" escalation point; the set of 5 escalation points in this skill's intro is unchanged in count, just relabeled here). Do not invoke `spec-to-tests` or anything past this point automatically until a task-issue is picked.
+   - If, inside the single-work-task path, `spec-interview` itself reports a Step 4 split because it discovered independent concerns mid-interview, `spec-interview` hands off to `epic-filing` directly (its Entry B) instead of returning to `run` — the multi-task initiative bullet above applies once `epic-filing` reports back.
+3. Once a single task-issue number `N` is in hand (either directly from the single-work-task path, or picked by the human after a multi-task initiative split), run "Implementing one scope" (below) for issue `N` with the full REQ ledger as the scope.
 
 ## Handling a split
 
 - **PR group split:** invoke `task-filing`'s "File as PR groups" operation to record the single issue with its `## PRグループ` section. Then, for each group in the order listed (do not reorder), run "Implementing one scope" narrowed to that group's REQ-IDs — `spec-to-tests` targets that group (its Step 2), `coverage-check` is run with `--group <G>`, and a separate Draft PR is created and reviewed per group. Move to the next group automatically once a group's PR reaches ready-for-review; do not escalate to a human just because a group finished. **Groups are dependent, so branches and PRs stack:** group 1's worktree branches off the repository's default branch as usual. Group 2's (and every later group's) worktree branches off **group (G−1)'s branch tip**, not the default branch — otherwise it would be missing the prior group's prerequisite code (see "Implementing one scope" step 1, which applies this rule). Correspondingly, group G's Draft PR (G ≥ 2) targets group (G−1)'s branch as its `--base`, not the default branch, so its diff shows only that group's own changes. **Tag every PR-group PR's title with `[group G]`** (e.g. `[group 2] <title>`) — this is not cosmetic, "Resuming an existing issue" step 2 depends on it to find each group's PR. Note the stacking in the PR body too (e.g. "Stacked on #<group G−1's PR number>; targets that branch, not `<default-branch>`, until it merges"). Do not wait for an earlier group's PR to merge before starting the next group — `run` keeps moving automatically per REQ-4, and rebasing/retargeting a later group's PR onto the default branch after an earlier one merges is left to the human, same as the merge itself.
-- **Sub issue split:** invoke `task-filing`'s "File a split as sub issues" operation to record the parent issue and every sub issue. Then **stop** — escalate to the human, asking which sub issue to start with. Do not invoke `spec-to-tests` or anything past this point automatically. Once a sub issue is picked, it already has its own filed REQ ledger (that group's subset, filed in this same step) — treat picking it as a **resume**, not a new task: go to "Resuming an existing issue" with that sub issue's number, which fetches its ledger and skips straight to `spec-to-tests`/coverage-check. Do not invoke `spec-interview` fresh for it; that would re-interview the user and risk a duplicate REQ-1.
 
 ## Implementing one scope
 
@@ -100,7 +100,7 @@ Once every test in scope passes:
 
 Given issue number `N`:
 
-1. Fetch the ledger: `gh issue view <N> --json body,state -q .body`. If the command fails or the issue has no `REQ-<id>:` lines, treat this as if no ledger exists yet: this case is otherwise identical to "Starting a new task," just filing into existing issue `N` instead of a new one — invoke `test-infra-setup` first (same as step 1 there; `spec-to-tests` only *tells you* to go run it if missing, it doesn't run it for you), then invoke `spec-interview` telling it this is a continuation of issue `N`, then once approved invoke `task-filing`'s **append** operation (not the new-task operation) for issue `N` (or its split operations, if a split was proposed and approved — see "Handling a split"), then run "Implementing one scope" for issue `N`.
+1. Fetch the ledger: `gh issue view <N> --json body,state -q .body`. If the command fails or the issue has no `REQ-<id>:` lines, treat this as if no ledger exists yet: this case is otherwise identical to "Starting a new task," just filing into existing issue `N` instead of a new one — invoke `test-infra-setup` first (same as step 1 there; `spec-to-tests` only *tells you* to go run it if missing, it doesn't run it for you), then invoke `spec-interview` telling it this is a continuation of issue `N`, then once approved invoke `task-filing`'s **append** operation (not the new-task operation) for issue `N` — or, if `spec-interview`'s Step 4 proposes and the user approves an independent-concerns split, hand off to `epic-filing` (Entry B) instead; or if a PR-group split is proposed and approved, see "Handling a split" — then run "Implementing one scope" for issue `N`.
 2. Detect the test directory (see "Detecting the test directory" below).
    - **No `## PRグループ` section:** just run `coverage-check` (see "Running coverage-check" below) for issue `N` with no `--group` flag, and go to step 3.
    - **Has a `## PRグループ` section:** find the group to resume by PR state, not by `coverage-check` alone — `coverage-check` only tells you whether tests exist for a REQ, not whether that group's implementation is finished, so a group with generated-but-still-failing tests would look identical to a genuinely finished one if you went by coverage alone. For each group `G` starting from 1, in listed order: `gh pr list --search "\"[group G]\" in:title" --state all --json state,isDraft,number` (per the `[group G]` title tag required in "Creating the PR"). The first group with **no matching PR**, or whose PR is still a **Draft**, is the group to resume — stop the loop there. (Groups whose PR is ready-for-review or merged are done; skip past them.) Once you have that group `G`, run `coverage-check --group <G>` for issue `N` to find out *how* far it got, and go to step 3.
