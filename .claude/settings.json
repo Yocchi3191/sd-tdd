@@ -1,6 +1,17 @@
 {
   "enabledPlugins": {
     "plugin-dev@claude-plugins-official": true,
-    "skill-creator@claude-plugins-official": true
+    "skill-creator@claude-plugins-official": true,
+    "sd-tdd@sd-tdd": true,
+    "dev-knowledge@sd-tdd": true
+  },
+  "extraKnownMarketplaces": {
+    "sd-tdd": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/Yocchi3191/sd-tdd.git"
+      },
+      "autoUpdate": true
+    }
   }
 }
