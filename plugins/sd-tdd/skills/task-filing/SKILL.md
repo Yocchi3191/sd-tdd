@@ -88,4 +88,4 @@ EOF
 
 `spec-to-tests` and `coverage-check` locate requirements by grepping the task body for lines matching `^REQ-(\d+):\s*(.+)$` (see `plugins/sd-tdd/scripts/coverage-check/parse.js`). This regex only cares about the line itself, not which section heading it sits under — so reordering surrounding prose is safe, but editing the text of a `REQ-<id>:` line is not. If a REQ turns out to be wrong, `spec-interview` supersedes it with a new line; this skill never edits an existing REQ line's text.
 
-When a ledger is split across sub issues, the same `REQ-N:` line is copied verbatim into both the parent (full ledger) and its sub issue (that group's subset) — `coverage-check` runs against whichever issue number it's pointed at, so this duplication is intentional, not a bug.
+A task-issue's parent is always an epic-issue (see `epic-filing`), which never carries `REQ-<id>:` lines at all. So a REQ line only ever lives on the task-issue itself — it is never duplicated up to the parent, and `coverage-check` is only ever pointed at a task-issue number.

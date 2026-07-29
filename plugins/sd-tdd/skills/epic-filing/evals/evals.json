@@ -74,6 +74,17 @@
       "assertions": [
         {"name": "no_req_lines_in_epic_body", "description": "epic-issue本文にREQ-<id>:形式の行が含まれていないこと"}
       ]
+    },
+    {
+      "id": 7,
+      "name": "scenario-8_entry-a-single-task-branch-abandoned-when-spec-interview-hands-off-to-entry-b",
+      "prompt": "epic-filingがEntry Aで依頼を単一taskと判定し、spec-interviewを呼びました。ところがそのspec-interviewが対話中に独立した関心事が2つあると判断し、Step5でepic-filingのEntry Bへ引き継ぎました。元のEntry A側（単一taskブランチ）は、確定したREQ台帳をtask-filingの『File a new task』operationで起票しますか？",
+      "expected_output": "起票しない。Entry Bへ引き継がれた時点で、Entry Aの単一taskブランチは完全に破棄する。『File a new task』を実行すると、Entry Bがepic-issue+各task-issueとして起票する内容と二重起票になるため。起票と呼び出し元への報告はEntry B側の呼び出しが担う。",
+      "files": [],
+      "assertions": [
+        {"name": "no_duplicate_file_a_new_task", "description": "Entry A側でtask-filingの『File a new task』operationが呼ばれていないこと（Entry Bの起票と二重にならないこと）"},
+        {"name": "entry_b_owns_filing_and_report", "description": "起票と呼び出し元への最終報告がEntry B側の呼び出しに委ねられていること"}
+      ]
     }
   ]
 }
