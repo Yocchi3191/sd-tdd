@@ -36,13 +36,14 @@ Default: leave rationale for the test code (`spec-to-tests` will embed it as a c
 Before asking for final approval, weigh whether this ledger is large or varied enough that a single issue/PR would be painful to review. There is no fixed REQ-count threshold — judge it the same way you'd judge any scope call: how many REQs, how unrelated they are, whether they touch disjoint parts of the codebase.
 
 - **Judge it not worth splitting:** say nothing about splitting — go straight to Step 5 with the full ledger.
-- **Judge it worth splitting:** propose a grouping of the REQs (which REQ-IDs belong together) and, for each candidate split, recommend one of:
-  - **sub issue split** — when the groups are independent concerns that can be reviewed and merged on their own (different components, unrelated features).
-  - **PR-group rollout** — when the groups are the same feature staged as dependent steps (e.g. base case → edge cases → error handling), so splitting into separate issues would be artificial.
-  Don't leave the choice to the user as an open question — state your recommendation and why, then let the user approve it or override it. Never ask "sub issue or PR group?" with no guidance; that just pushes the same ad-hoc judgment call the user is trying to get away from.
-- If the user approves a split, note which mode was chosen (sub issue vs. PR group) and the group→REQ-ID mapping — `task-filing` needs this when Step 5 hands off.
+- **Judge it worth splitting because the groups are independent concerns** (different components, unrelated features — each reviewable/mergeable on its own): propose the grouping (which REQ-IDs belong together), state that recommendation and why, and let the user approve or override it. If approved, this becomes an **independent-concerns split** — see Step 5 for the hand-off.
+- **Judge it worth splitting because the groups are the same feature staged as dependent steps** (e.g. base case → edge cases → error handling, where separate issues would be artificial): propose a **PR-group rollout** instead — state the recommendation and why, then let the user approve or override it. If approved, this becomes a **PR-group split** — see Step 5 for the hand-off.
+- Never ask "sub issue or PR group?" with no guidance; state one recommendation based on independence vs. dependency, as above. That just pushes the same ad-hoc judgment call the user is trying to get away from.
 - If the user declines a split (or you judged none needed), proceed as a single ledger.
 
 ## Step 5: Get explicit approval, then hand off
 
-Show the user the final REQ list before handing off — do not write it anywhere yourself, and do not run any tracker command. Once approved, tell them: "REQ ledger confirmed. Next: invoke `task-filing` to record it (new task, or append if this was a continuation of an existing one)." If a split was agreed in Step 4, also pass `task-filing` the chosen mode (sub issue / PR group) and the group→REQ-ID mapping.
+Show the user the final REQ list before handing off — do not write it anywhere yourself, and do not run any tracker command. Once approved:
+
+- **No split, or a PR-group split**: tell the user "REQ ledger confirmed. Next: invoke `task-filing` to record it (new task, or append if this was a continuation of an existing one)." If a PR-group split was agreed in Step 4, also pass `task-filing` the group→REQ-ID mapping for its "File as PR groups" operation.
+- **An independent-concerns split**: tell the user "REQ ledger confirmed. Next: hand off to `epic-filing` to file the epic-issue and each group as its own task-issue." Pass `epic-filing` the confirmed REQ ledger and the group→REQ-ID mapping — this is `epic-filing`'s Entry B.

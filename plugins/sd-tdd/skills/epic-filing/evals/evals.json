@@ -1,0 +1,90 @@
+{
+  "skill_name": "epic-filing",
+  "evals": [
+    {
+      "id": 0,
+      "name": "scenario-1_single_concrete_request_stays_a_task",
+      "prompt": "「ログイン画面のパスワードリセットリンクの有効期限を24時間から1時間に短縮して」という依頼を受けました。epic-filingはこれをどう扱いますか？",
+      "expected_output": "epic-filingはこれを単一の具体的な変更と判定し、epic-issueを作成しない。spec-interviewを呼んでREQ台帳を確定させ、task-filingの『File a new task』operationで通常のtask-issueとして起票して終わる。",
+      "files": [],
+      "assertions": [
+        {"name": "no_epic_created", "description": "epic-issueが作成されていないこと"},
+        {"name": "normal_task_filing_used", "description": "task-filingの『File a new task』operationが呼ばれていること"}
+      ]
+    },
+    {
+      "id": 1,
+      "name": "scenario-2_goal_only_request_becomes_epic",
+      "prompt": "「決済まわりのUXを全体的に改善したい」という依頼を受けました。具体的な実装対象は決まっていません。epic-filingはこれをどう扱いますか？",
+      "expected_output": "epic-filingはこれを企画と判定し、背景・ゴール・成功指標をヒアリングしたうえで作業タスク候補に分解し、ユーザーと合意した上でepic-issueを起票する。各候補は個別にspec-interview→task-filingでtask-issue化され、epic-issueのsub-issueとして紐づけられる。",
+      "files": [],
+      "assertions": [
+        {"name": "epic_issue_created", "description": "epic-issueが起票されていること"},
+        {"name": "candidates_become_sub_issues", "description": "分解された各作業タスク候補が、個別のspec-interview→task-filingを経てepic-issueのsub-issueとして起票されていること"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "scenario-3_single_candidate_still_becomes_epic",
+      "prompt": "企画のヒアリングと分解の結果、作業タスク候補が1つしか出てきませんでした。epic-filingはどう振る舞いますか？",
+      "expected_output": "候補が1つしかなくても、epic化を取りやめない。epic-issueとその1個のtask-issue（sub-issue）を起票する。",
+      "files": [],
+      "assertions": [
+        {"name": "epic_still_created_with_one_task", "description": "候補が1件のみでもepic-issueとtask-issueが両方起票されていること"}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "scenario-4_direct_phrase_without_run_stops_after_filing",
+      "prompt": "runを経由せず、ユーザーから直接「認証基盤の強化をタスクとして切っておいて」と言われました。epic-filingはどこまで実行しますか？",
+      "expected_output": "epic-filingは判定・ヒアリング・分解・起票（epic-issue、または単一taskならtask-issueのみ）までを実行して終了する。実装やPR作成のフェーズには進まない。",
+      "files": [],
+      "assertions": [
+        {"name": "stops_after_filing", "description": "issue起票の完了をもって処理が終了し、実装フェーズ（spec-to-tests以降）に進んでいないこと"}
+      ]
+    },
+    {
+      "id": 4,
+      "name": "scenario-5_spec_interview_step4_handoff_reuses_existing_reqs",
+      "prompt": "spec-interviewが対話中に、集めていたREQ群が実は独立した2つの関心事（グループ1: REQ-1,2、グループ2: REQ-3,4）に分かれると判断し、グループ分け案とともにepic-filingを呼びました。epic-filingは各グループのtask-issue化にあたって、新規spec-interviewを呼び直しますか？",
+      "expected_output": "呼び直さない。既に確定しているREQをそのままそれぞれのグループのtask-issueとしてtask-filingに渡す。ゴール・成功指標のみ簡略的に確認する。",
+      "files": [],
+      "assertions": [
+        {"name": "no_fresh_spec_interview_per_group", "description": "各グループについて新規spec-interview（REQ-1からの再ヒアリング）が呼ばれていないこと"},
+        {"name": "existing_reqs_reused", "description": "spec-interviewから渡された既存REQがそのままtask-issue化に使われていること"}
+      ]
+    },
+    {
+      "id": 5,
+      "name": "scenario-6_resume_by_epic_number_skips_already_filed_tasks",
+      "prompt": "epic-issue #40の起票は完了しており、3個の作業タスク候補のうち2個（#41, #42）はすでにtask-issueとして起票済みですが、3個目の起票中にセッションが中断しました。「epic #40の続きをやって」と言われた場合、epic-filingはどう振る舞いますか？",
+      "expected_output": "epic-filingはepic-issue #40の本文とsub-issue一覧を確認し、既に起票済みの#41, #42は再作成せず、残り1個の未起票候補についてのみspec-interview→task-filingを実行する。",
+      "files": [],
+      "assertions": [
+        {"name": "no_duplicate_task_issues", "description": "既に起票済みの#41, #42が重複して再作成されていないこと"},
+        {"name": "only_remaining_candidate_filed", "description": "未起票だった候補のみが新規に起票されていること"}
+      ]
+    },
+    {
+      "id": 6,
+      "name": "scenario-7_epic_body_has_no_req_lines",
+      "prompt": "epic-issueの本文を起票する際、epic-filingはREQ-<id>:形式の行を含めてよいですか？",
+      "expected_output": "含めない。epic-issueの本文にはREQ形式の行を一切書かず、ゴール・成功指標は自然文でepic-template.mdの各セクションに書く。spec-to-tests/coverage-checkがREQ-<id>:行をグレップしてテスト対象として誤検出することを防ぐため。",
+      "files": [],
+      "assertions": [
+        {"name": "no_req_lines_in_epic_body", "description": "epic-issue本文にREQ-<id>:形式の行が含まれていないこと"}
+      ]
+    },
+    {
+      "id": 7,
+      "name": "scenario-8_entry-a-single-task-branch-abandoned-when-spec-interview-hands-off-to-entry-b",
+      "prompt": "epic-filingがEntry Aで依頼を単一taskと判定し、spec-interviewを呼びました。ところがそのspec-interviewが対話中に独立した関心事が2つあると判断し、Step5でepic-filingのEntry Bへ引き継ぎました。元のEntry A側（単一taskブランチ）は、確定したREQ台帳をtask-filingの『File a new task』operationで起票しますか？",
+      "expected_output": "起票しない。Entry Bへ引き継がれた時点で、Entry Aの単一taskブランチは完全に破棄する。『File a new task』を実行すると、Entry Bがepic-issue+各task-issueとして起票する内容と二重起票になるため。起票と呼び出し元への報告はEntry B側の呼び出しが担う。",
+      "files": [],
+      "assertions": [
+        {"name": "no_duplicate_file_a_new_task", "description": "Entry A側でtask-filingの『File a new task』operationが呼ばれていないこと（Entry Bの起票と二重にならないこと）"},
+        {"name": "entry_b_owns_filing_and_report", "description": "起票と呼び出し元への最終報告がEntry B側の呼び出しに委ねられていること"}
+      ]
+    }
+  ]
+}

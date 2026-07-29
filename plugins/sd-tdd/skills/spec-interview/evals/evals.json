@@ -31,5 +31,25 @@
         {"name": "not_tagged_merely_for_test_difficulty", "description": "テストが書きにくいことのみを理由に[structural]タグが付与されていないこと"}
       ]
     }
+    ,{
+      "id": 3,
+      "name": "step4_independent_concerns_hands_off_to_epic_filing",
+      "prompt": "REQ台帳を集めている途中、実は互いに独立した2つの機能（決済ログの整備、通知テンプレートの追加）が混在していると判明しました。spec-interviewはStep4でどう振る舞いますか？",
+      "expected_output": "spec-interviewはグループ分け案（各REQ-IDがどちらのグループに属するか）を提示し、ユーザーが承認したら、task-filingのsub issue split操作ではなくepic-filing（Entry B）に確定REQ台帳とグループ分けを渡してハンドオフする。",
+      "files": [],
+      "assertions": [
+        {"name": "epic_filing_invoked_not_task_filing_split", "description": "独立した関心事の分割が承認された場合、task-filingのsub issue split相当ではなくepic-filingが呼ばれていること"}
+      ]
+    },
+    {
+      "id": 4,
+      "name": "step4_dependent_steps_still_use_pr_group",
+      "prompt": "REQ台帳を集めている途中、これは同じ機能の実装ステップ（基本ケース→エラーハンドリング）に分かれることがわかりました。spec-interviewはStep4でどう振る舞いますか？",
+      "expected_output": "spec-interviewはPR-groupのロールアウトを提案し、ユーザーが承認すればグループ→REQ-IDマッピングをtask-filingの『File as PR groups』operationに渡す。epic-filingは呼ばない。",
+      "files": [],
+      "assertions": [
+        {"name": "pr_group_stays_with_task_filing", "description": "依存したステップの分割の場合、epic-filingではなくtask-filingのFile as PR groups operationが使われていること"}
+      ]
+    }
   ]
 }

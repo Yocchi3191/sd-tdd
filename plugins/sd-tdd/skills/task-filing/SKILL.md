@@ -36,9 +36,9 @@ EOF
 
 3. Report back to the caller: "Task filed as issue #<N>."
 
-## Operation: File a split as sub issues
+## Operation: File a task under a parent epic
 
-Called when `spec-interview` hands off a confirmed ledger with split mode = sub issue, plus a group → REQ-ID mapping.
+Called by `epic-filing` when filing a task-issue as a sub-issue of an epic-issue (both its Entry A — a freshly decomposed initiative — and Entry B — concerns discovered mid-interview by `spec-interview`).
 
 1. Ensure the `gh-sub-issue` extension is installed:
 
@@ -48,18 +48,17 @@ gh extension list | grep -q sub-issue || gh extension install yahsan2/gh-sub-iss
 
 If the install fails (no network, etc.), stop and tell the user to install `yahsan2/gh-sub-issue` manually, then retry — don't fall back to plain issue creation silently.
 
-2. File the parent task as usual (see "File a new task"). Its **やること・要件** carries the full REQ ledger (every REQ-N line, verbatim, across all groups) so the parent stays the single source of truth; note next to each which group it belongs to.
-
-3. For each group, create a sub issue whose **やること・要件** contains only that group's REQ-N lines, still verbatim:
+2. Fill in `task-template.md` exactly as in "File a new task" (REQ-N lines copied verbatim, required/optional sections as usual).
+3. Create the task as a sub-issue of the given parent epic issue number `<epic-N>`:
 
 ```bash
-gh sub-issue create --parent <parent-N> --title "<group title>" --body "$(cat <<'EOF'
-<template filled in with just this group's REQ-N lines>
+gh sub-issue create --parent <epic-N> --title "<task title>" --body "$(cat <<'EOF'
+<filled-in template>
 EOF
 )"
 ```
 
-4. Report back to the caller: "Filed as parent issue #<N> with <count> sub issue(s): #<a>, #<b>, ..." `spec-to-tests`/`coverage-check` are then run once per sub issue, same as any other task.
+4. Report back to the caller: "Task filed as issue #<N> (sub-issue of epic #<epic-N>)."
 
 ## Operation: File as PR groups (single issue)
 
@@ -89,4 +88,4 @@ EOF
 
 `spec-to-tests` and `coverage-check` locate requirements by grepping the task body for lines matching `^REQ-(\d+):\s*(.+)$` (see `plugins/sd-tdd/scripts/coverage-check/parse.js`). This regex only cares about the line itself, not which section heading it sits under — so reordering surrounding prose is safe, but editing the text of a `REQ-<id>:` line is not. If a REQ turns out to be wrong, `spec-interview` supersedes it with a new line; this skill never edits an existing REQ line's text.
 
-When a ledger is split across sub issues, the same `REQ-N:` line is copied verbatim into both the parent (full ledger) and its sub issue (that group's subset) — `coverage-check` runs against whichever issue number it's pointed at, so this duplication is intentional, not a bug.
+A task-issue's parent is always an epic-issue (see `epic-filing`), which never carries `REQ-<id>:` lines at all. So a REQ line only ever lives on the task-issue itself — it is never duplicated up to the parent, and `coverage-check` is only ever pointed at a task-issue number.
