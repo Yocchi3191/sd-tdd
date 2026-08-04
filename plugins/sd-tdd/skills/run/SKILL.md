@@ -1,11 +1,11 @@
 ---
 name: run
-description: Use this first for any task in this project that adds, modifies, or deletes files — new features, bug fixes, refactors. This is the entry point and auto-driving orchestrator for the sd-tdd pipeline (test-infra-setup → spec-interview → task-filing → git worktree → spec-to-tests → coverage-check → superpowers:test-driven-development → Draft PR → superpowers:requesting-code-review), all the way to a review-clean PR. Human judgement is only asked for at REQ approval, a multi-task initiative split decision, repeated implementation/review failure, or a design ambiguity mid-implementation — merging the PR always stays a human decision and this skill never performs it. Also use to resume in-progress sd-tdd work on an existing GitHub issue (e.g. "issue 12の続き"). Do NOT use for read-only questions, explanations, or analysis that touches no files.
+description: Use this first for any task in this project that adds, modifies, or deletes files — new features, bug fixes, refactors. This is the entry point and auto-driving orchestrator for the sd-tdd pipeline (test-infra-setup → spec-interview → task-filing → git worktree → spec-to-tests → coverage-check → superpowers:test-driven-development → sd-tdd:submit → sd-tdd:review-pr), all the way to a review-clean PR. Human judgement is only asked for at REQ approval, a multi-task initiative split decision, repeated implementation/review failure, or a design ambiguity mid-implementation — merging the PR always stays a human decision and this skill never performs it. Also use to resume in-progress sd-tdd work on an existing GitHub issue (e.g. "issue 12の続き"). Do NOT use for read-only questions, explanations, or analysis that touches no files.
 ---
 
 # sd-tdd:run
 
-Drives the whole sd-tdd pipeline end to end — from a task description or issue reference through to a review-clean pull request — so nobody has to remember which skill to invoke next, in what order, or when to isolate work in a worktree. This skill calls the other sd-tdd skills (`test-infra-setup`, `spec-interview`, `task-filing`, `spec-to-tests`, `coverage-check`) and superpowers skills (`using-git-worktrees`, `test-driven-development`, `requesting-code-review`) in sequence, automatically. **Merging the PR is never this skill's job** — it always stops at a ready-for-review Draft PR and hands the merge decision to a human.
+Drives the whole sd-tdd pipeline end to end — from a task description or issue reference through to a review-clean pull request — so nobody has to remember which skill to invoke next, in what order, or when to isolate work in a worktree. This skill calls the other sd-tdd skills (`test-infra-setup`, `spec-interview`, `task-filing`, `spec-to-tests`, `coverage-check`, `submit`, `review-pr`) and superpowers skills (`using-git-worktrees`, `test-driven-development`) in sequence, automatically. **Merging the PR is never this skill's job** — it always stops at a ready-for-review Draft PR and hands the merge decision to a human.
 
 This skill owns no logic of its own beyond sequencing, resume-point detection, and the retry/escalation limits below. It never writes a REQ, generates a test, edits an issue directly, or reviews code itself — it only decides *which* skill to call *next*, and when to stop and ask a human instead.
 
@@ -36,8 +36,8 @@ Before starting either path, create a TodoWrite list with these items (mark item
 5. spec-to-tests — REQごとの失敗テスト生成
 6. coverage-check — REQとテストの対応検証
 7. 実装 — superpowers:test-driven-development
-8. PR作成 — Draft PR
-9. レビュー — superpowers:requesting-code-review、Critical/Important解消
+8. PR作成 — sd-tdd:submitでDraft PR
+9. レビュー — sd-tdd:review-prでCritical/Important解消
 10. ready化と完了報告
 
 For a PR-group split, repeat items 4–10 once per group. Mark each `in_progress` right before invoking the corresponding skill, and `completed` right after it returns successfully. Give one short status line between stages — this is a status update, not a checkpoint; do not wait for a response before continuing, except at the escalation points above.
@@ -79,23 +79,24 @@ If implementation surfaces a design decision that no REQ in the ledger resolves 
 
 ## Creating the PR
 
-Once every test in scope passes:
+Once every test in scope passes, invoke `sd-tdd:submit` to turn the worktree's committed work into a pushed branch and a Draft PR — don't run `git push`/`gh pr create` here directly; that logic lives in `submit` now, not in `run`. Pass it:
 
-1. Push the worktree's branch: `git push -u origin <branch>`.
-2. Create a Draft PR: `gh pr create --draft --base <base-branch> --title "<title>" --body "<body>"`. `<base-branch>` is the repository's default branch, **except** for a PR-group step after the first, where it's the previous group's branch (see "Groups are dependent, so branches and PRs stack" above). Derive the title and body from the issue title and the REQ-IDs in scope — don't hand-wave; link the issue (e.g. `Closes #N` or `Part of #N` for a PR-group step that isn't the last). For a PR-group step, the title must include the `[group G]` tag (see "Handling a split") — "Resuming an existing issue" looks it up by this tag later. If any REQ in scope is tagged `[structural]`, add a `## 構造的制約（テストによる担保なし、レビューで確認してください）` section to the PR body listing each such REQ's ID and text — this is the only place their correctness gets checked, since no test exists for them. Omit the section entirely (don't leave an empty header) when scope has no `[structural]` REQ.
-3. Go to "Requesting review".
+- The issue number `N`, so it links the issue (`Closes #N`, or `Part of #N` for a PR-group step that isn't the last — `submit`'s REQ-5 handles this) and pulls in the REQ list and any `[structural]` REQs for the "## 構造的制約" section (`submit`'s REQ-20) automatically.
+- **For a PR-group step after the first**, the previous group's branch as an explicit base-branch override (`submit`'s REQ-19) — this is what makes `submit`'s Draft PR target that branch instead of the repository's default branch (see "Groups are dependent, so branches and PRs stack" above). For the first step (no split, or the first PR-group step), don't pass a base override; `submit` auto-detects the repository's default branch on its own.
+
+For a PR-group step, `submit`'s inferred title won't include the `[group G]` tag "Resuming an existing issue" depends on — after `submit` reports the created PR's URL/number, `gh pr edit <PR-number> --title "[group G] <title>"` to add it.
+
+Then go to "Requesting review" with the PR number `submit` just created.
 
 ## Requesting review
 
-1. Get the SHAs: `BASE_SHA` is where the worktree's branch diverged from its PR's base branch (`git merge-base <branch> origin/<base-branch>` — the same `<base-branch>` used in "Creating the PR", i.e. the default branch, or the previous group's branch for a stacked PR-group step; use the `origin/`-qualified ref so this doesn't rely on a possibly-stale local branch); `HEAD_SHA` is the branch's latest commit.
-2. Invoke `superpowers:requesting-code-review` exactly as documented there — no custom review prompt for `run`. Fill its template with:
-   - `DESCRIPTION`: a brief summary of what was implemented in this scope.
-   - `PLAN_OR_REQUIREMENTS`: the REQ ledger for issue `N` (the full ledger, or just this group's REQ-IDs if scoped).
-   - `BASE_SHA` / `HEAD_SHA`: from step 1.
-3. Read the reviewer's Assessment:
-   - **Any Critical or Important finding:** fix it, commit, then repeat "Requesting review" (re-fetch `HEAD_SHA`). Count this as one round. After 3 rounds still carrying an unresolved Critical/Important, stop and escalate to the human with the outstanding findings — don't attempt a 4th round.
-   - **No Critical/Important (Minor findings or none):** convert the PR to ready for review (`gh pr ready <PR-number>`), then report the PR URL and a short review summary (including any Minor findings, for the human's awareness) to the user. This scope is done — do not merge, ever.
-4. Leave the git worktree in place; `run` never deletes it. Cleanup is the human's call.
+Invoke `sd-tdd:review-pr` with the PR number from "Creating the PR" (or, on a re-review round below, the same PR number again) — don't call `superpowers:requesting-code-review` or compute BASE_SHA/HEAD_SHA directly here; `review-pr` (via `sd-tdd:review`) owns that, and it also owns converting the PR to ready-for-review on a clean result (`review-pr`'s REQ-15) or leaving it Draft with findings reported (REQ-16). `run` only owns the retry/escalation loop around it:
+
+1. Invoke `sd-tdd:review-pr` with the PR number.
+2. Read what it reports back:
+   - **It left the PR Draft with Critical/Important findings:** fix them, commit, then repeat this step (invoke `sd-tdd:review-pr` again with the same PR number). Count this as one round. After 3 rounds still carrying an unresolved Critical/Important, stop and escalate to the human with the outstanding findings — don't attempt a 4th round.
+   - **It converted the PR to ready for review:** report the PR URL and its review summary (including any Minor findings, for the human's awareness) to the user. This scope is done — do not merge, ever.
+3. Leave the git worktree in place; `run` never deletes it. Cleanup is the human's call.
 
 ## Resuming an existing issue
 
@@ -108,7 +109,7 @@ Given issue number `N`:
    - **No `## PRグループ` section:** just run `coverage-check` (see "Running coverage-check" below) for issue `N` with no `--group` flag, and go to step 3.
    - **Has a `## PRグループ` section:** find the group to resume by PR state, not by `coverage-check` alone — `coverage-check` only tells you whether tests exist for a REQ, not whether that group's implementation is finished, so a group with generated-but-still-failing tests would look identical to a genuinely finished one if you went by coverage alone. For each group `G` starting from 1, in listed order: `gh pr list --search "\"[group G]\" in:title" --state all --json state,isDraft,number` (per the `[group G]` title tag required in "Creating the PR"). The first group with **no matching PR**, or whose PR is still a **Draft**, is the group to resume — stop the loop there. (Groups whose PR is ready-for-review or merged are done; skip past them.) Once you have that group `G`, run `coverage-check --group <G>` for issue `N` to find out *how* far it got, and go to step 3.
 3. Interpret the result:
-   - **A Draft PR already exists for this group** (found via the `gh pr list` lookup in step 2 — only relevant for a PR-group task): implementation and PR creation already happened in a prior session; mark TodoWrite items 1–8 `completed` and resume directly at "Requesting review" (re-fetch `HEAD_SHA` first; don't re-run `spec-to-tests`, implementation, or `gh pr create`).
+   - **A Draft PR already exists for this group** (found via the `gh pr list` lookup in step 2 — only relevant for a PR-group task): implementation and PR creation already happened in a prior session; mark TodoWrite items 1–8 `completed` and resume directly at "Requesting review" using that PR's number (from the same `gh pr list` lookup) — don't re-run `spec-to-tests`, implementation, or `sd-tdd:submit`.
    - **No PR yet, and coverage-check reports missing REQs, or the test directory has no `issue-<N>_REQ-` matches at all**: mark TodoWrite items 1–3 `completed`, and resume "Implementing one scope" from its step 1 (worktree creation) — a resumed run still needs its own isolated worktree even if one existed in a prior session, unless that worktree is still present and on the right branch, in which case reuse it.
    - **No PR yet, and coverage-check passes cleanly**: tests exist but implementation isn't done (no PR was ever created for this group — see "Creating the PR," which only runs once tests pass); mark TodoWrite items 1–6 `completed`, and resume "Implementing one scope" from "Implementing against the tests" onward.
 

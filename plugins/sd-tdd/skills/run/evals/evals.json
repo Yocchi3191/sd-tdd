@@ -246,6 +246,50 @@
         {"name": "routes_to_handling_a_split", "description": "runがグループ→REQ-IDの対応表を受け取り、「Handling a split」のグループごとのループに進んでいること"},
         {"name": "no_duplicate_filing_and_no_epic", "description": "task-filingの『File as PR groups』が二重に呼ばれておらず、epic-issueも作成されていないこと"}
       ]
+    },
+    {
+      "id": 22,
+      "name": "issue-32_REQ-17_creating_pr_step_delegates_to_submit_not_gh_pr_create",
+      "prompt": "対象スコープの全REQのテストが通過した直後の状態です（PRグループ分割なし、単一issue）。runは次に何をしますか？",
+      "expected_output": "runは`gh pr create --draft`を自分で直接実行するのではなく、`sd-tdd:submit`スキルを呼び出す。submitが未コミット変更のコミット・push・pr-template.mdを使ったDraft PR作成までを行い、runはissue番号を渡してCloses行が含まれるようにする。",
+      "files": [],
+      "assertions": [
+        {"name": "submit_invoked_not_gh_pr_create_directly", "description": "runが`sd-tdd:submit`を呼び出しており、`gh pr create`を自分で直接実行していないこと"},
+        {"name": "issue_number_passed_to_submit", "description": "submit呼び出し時に対象issue番号が渡され、Closes行が生成される想定になっていること"}
+      ]
+    },
+    {
+      "id": 23,
+      "name": "issue-32_REQ-17_pr_group_step_passes_previous_group_branch_as_base_to_submit",
+      "prompt": "issue #50はPRグループ分割されており、現在グループ2の実装が完了し全テストが通過した直後です。グループ1のブランチは`worktree-issue-50-group1-foo`です。runはDraft PR作成のために`sd-tdd:submit`をどう呼び出しますか？",
+      "expected_output": "runは`sd-tdd:submit`にbaseブランチとして`worktree-issue-50-group1-foo`（グループ1のブランチ）を明示的に渡す。submitはこの明示指定を受け取り、デフォルトブランチの自動検出をスキップしてそれをbaseとして使う（REQ-19）。結果としてグループ2のPRはグループ1のブランチをbaseにしたDraft PRになる。",
+      "files": [],
+      "assertions": [
+        {"name": "previous_group_branch_passed_as_base", "description": "submit呼び出し時に前グループ（グループ1）のブランチ名がbaseとして明示的に渡されていること"},
+        {"name": "not_default_branch", "description": "この場合のPRのbaseがリポジトリのデフォルトブランチになっていないこと"}
+      ]
+    },
+    {
+      "id": 24,
+      "name": "issue-32_REQ-18_requesting_review_step_delegates_to_review_pr_with_pr_number",
+      "prompt": "Draft PR（PR番号#60）の作成が完了した直後の状態です。runはレビューをどう実施しますか？",
+      "expected_output": "runはsuperpowers:requesting-code-reviewを自分で直接呼び出したりready化判定を自分で行ったりせず、`sd-tdd:review-pr`スキルにPR番号#60を渡して呼び出す。review-prが内部でsd-tdd:review（さらにその中でsuperpowers:requesting-code-review）を呼び出し、レビュー結果に応じたready化判定まで行う。",
+      "files": [],
+      "assertions": [
+        {"name": "review_pr_invoked_with_pr_number", "description": "runが`sd-tdd:review-pr`をPR番号#60を渡して呼び出していること"},
+        {"name": "no_direct_requesting_code_review_or_ready_logic_in_run", "description": "runがsuperpowers:requesting-code-reviewの直接呼び出しや`gh pr ready`判定を自分自身では行っていないこと"}
+      ]
+    },
+    {
+      "id": 25,
+      "name": "issue-32_REQ-18_critical_findings_retry_loop_still_owned_by_run",
+      "prompt": "sd-tdd:review-prを呼び出した結果、PRはDraftのままでCriticalな指摘が1件報告されました。runはどう振る舞いますか？",
+      "expected_output": "runは指摘を修正してコミットし、再度`sd-tdd:review-pr`を同じPR番号で呼び出す（再レビュー）。この修正→再レビューのサイクルを、指摘が解消されるまで（上限3回）自律的に繰り返す。3回を超えてもCritical/Importantが残る場合は人間にエスカレーションする。retry/escalationの回数管理はrun自身が行い、review-prはこのループを認識しない。",
+      "files": [],
+      "assertions": [
+        {"name": "run_owns_retry_loop", "description": "修正→sd-tdd:review-pr再呼び出しのサイクルをrunが管理していること"},
+        {"name": "three_round_escalation_still_applies", "description": "3回を超えて指摘が残る場合に人間へのエスカレーションが行われること"}
+      ]
     }
   ]
 }
