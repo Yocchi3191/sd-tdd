@@ -1,6 +1,6 @@
 ---
 name: submit
-description: Use when the user wants to commit the current working-tree changes and open a Draft PR without running the full sd-tdd:run pipeline — e.g. "submitして", "今の変更をPRにして", or when run's own "Creating the PR" step delegates here. Commits any uncommitted changes with an inferred message, auto-detects the head/base branches, pushes, and opens a Draft PR from pr-template.md. Never converts a PR to ready for review — that is review-pr's job.
+description: Use when the user wants to commit the current working-tree changes and open a Draft PR without running the full sd-tdd:run pipeline — e.g. "submitして", "今の変更をPRにして", or when run's own "Creating the PR" step delegates here. Commits any uncommitted changes with an inferred message, auto-detects the head/base branches, pushes, and opens a Draft PR from pr-template.md. When an explicit base branch was supplied (a PR-group step), also links the new PR into a GitHub stacked PR on top of the prior group's PR via the gh-stack extension. Never converts a PR to ready for review — that is review-pr's job.
 ---
 
 # Submit
@@ -97,3 +97,29 @@ EOF
 ```
 
 Report the created PR's URL back to the user. Never run `gh pr ready` here — this skill only ever creates Draft PRs; converting to ready for review is `review-pr`'s responsibility, not this one's.
+
+## Step 6: Link into a stacked PR — only when a base override was given
+
+Skip this step entirely if `<base-branch>` in Step 2 came from the default-branch auto-detection (no explicit base was supplied). It only applies when the caller supplied an explicit base — that's the signal this PR is meant to sit on top of another one.
+
+Look for an existing PR whose head is `<base-branch>` — that's the PR this one should stack on:
+
+```bash
+gh pr list --head <base-branch> --state all --json number -q '.[0].number'
+```
+
+- **No PR found:** nothing to stack on (the prior PR may not exist yet, or may have been closed) — skip stacking and leave the PR as the plain Draft PR created in Step 5. This is not an error.
+- **A PR number is found (`<prior-PR-number>`):** this PR needs to be linked into GitHub's stacked-PR feature with the one just created (`<PR-number>`, from Step 5). That requires the `gh-stack` extension:
+
+```bash
+gh extension list | grep -q gh-stack
+```
+
+  - **Not installed:** don't install it automatically. Tell the user it's needed for stacked PRs and give them the install command: `gh extension install github/gh-stack`. Skip stacking for this run — leave the PR as the plain Draft PR from Step 5; this is not an error.
+  - **Installed:** link the two PRs into a stack, bottom (older, `<prior-PR-number>`) to top (this one, `<PR-number>`):
+
+```bash
+gh stack link <prior-PR-number> <PR-number>
+```
+
+This also correctly extends an existing stack — if `<prior-PR-number>` is already part of a stack from an earlier group, this call adds the new PR to the top of it rather than starting a separate one.

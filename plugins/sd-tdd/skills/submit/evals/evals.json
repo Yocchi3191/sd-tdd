@@ -149,6 +149,69 @@
       "assertions": [
         {"name": "no_structural_section_without_issue_number", "description": "issue番号が渡されていない場合に構造的制約セクションが追加されていないこと"}
       ]
+    },
+    {
+      "id": 14,
+      "name": "issue-38_REQ-1_explicit_base_triggers_prior_pr_lookup",
+      "prompt": "baseブランチとして `worktree-issue-50-group1-foo` を明示的に指定して `sd-tdd:submit` を実行してください（PRグループのgroup2からの呼び出しを想定）。Draft PR作成後、submitは何をしますか？",
+      "expected_output": "submitはDraft PR作成後、`gh pr list --head worktree-issue-50-group1-foo` を実行し、そのbaseブランチに対応する既存PR（グループ1のPR）を検索する。",
+      "files": [],
+      "assertions": [
+        {"name": "prior_pr_lookup_performed", "description": "base明示指定時、Draft PR作成後にbaseブランチをheadとする既存PRの検索が行われていること"}
+      ]
+    },
+    {
+      "id": 15,
+      "name": "issue-38_REQ-1_no_explicit_base_skips_prior_pr_lookup",
+      "prompt": "baseブランチの明示指定なしで `sd-tdd:submit` を実行してください（従来通りの単体呼び出し）。submitは`gh pr list --head`によるPR検索を行いますか？",
+      "expected_output": "base明示指定が無い（デフォルトブランチを自動検出した）場合、submitは前PRの検索やstack化を一切行わない。REQ-1はbase明示指定時のみの動作であり、既存のbase未指定ケース（REQ-1〜REQ-20）の動作に影響しない。",
+      "files": [],
+      "assertions": [
+        {"name": "no_prior_pr_lookup_without_explicit_base", "description": "base明示指定が無い場合、前PR検索やstack化関連の処理が一切行われていないこと"}
+      ]
+    },
+    {
+      "id": 16,
+      "name": "issue-38_REQ-2_prior_pr_found_links_as_stacked_pr",
+      "prompt": "baseブランチとして `worktree-issue-50-group1-foo` を明示指定して `sd-tdd:submit` を実行し、`gh pr list --head worktree-issue-50-group1-foo` の結果、PR #70が見つかりました。今回作成されたPRが#71だとすると、submitは次に何をしますか？",
+      "expected_output": "submitは `gh stack link 70 71` を実行し、PR #70とPR #71をGitHubのstacked PRとしてリンクする。",
+      "files": [],
+      "assertions": [
+        {"name": "gh_stack_link_invoked_with_correct_order", "description": "`gh stack link` が前PR番号→今回のPR番号の順（stack順、下から上）で実行されていること"}
+      ]
+    },
+    {
+      "id": 17,
+      "name": "issue-38_REQ-3_prior_pr_not_found_skips_stacking",
+      "prompt": "baseブランチとして `worktree-issue-50-group1-foo` を明示指定して `sd-tdd:submit` を実行しましたが、`gh pr list --head worktree-issue-50-group1-foo` の結果、該当するPRが見つかりませんでした（例：まだPRが作られていない、または既にクローズ済み）。submitはどう振る舞いますか？",
+      "expected_output": "submitはstack化をスキップし、通常のDraft PR作成のみで処理を終える。前PRが見つからないことをエラーとして扱わない。",
+      "files": [],
+      "assertions": [
+        {"name": "no_gh_stack_link_when_prior_pr_missing", "description": "前PRが見つからない場合に`gh stack link`が実行されていないこと"},
+        {"name": "does_not_error_when_prior_pr_missing", "description": "前PRが見つからないことでsubmitがエラー終了しないこと"}
+      ]
+    },
+    {
+      "id": 18,
+      "name": "issue-38_REQ-4_gh_stack_not_installed_prompts_user",
+      "prompt": "baseブランチを明示指定して `sd-tdd:submit` を実行し、前PRも見つかりstack化しようとしたところ、`gh-stack` 拡張機能がインストールされていないことが分かりました。submitはどう振る舞いますか？",
+      "expected_output": "submitは `gh extension install github/gh-stack` を自動実行せず、このコマンドをユーザーに提示してインストールを促す。stack化はスキップし、通常のDraft PR作成のみで処理を終える（エラーにしない）。",
+      "files": [],
+      "assertions": [
+        {"name": "no_automatic_extension_install", "description": "gh-stack拡張機能の自動インストールが行われていないこと"},
+        {"name": "install_command_presented_to_user", "description": "インストールコマンドがユーザーに提示されていること"},
+        {"name": "falls_back_to_normal_pr_creation", "description": "stack化はスキップされ、通常のDraft PR作成のみで完了し、エラーにならないこと"}
+      ]
+    },
+    {
+      "id": 19,
+      "name": "issue-38_REQ-4_gh_stack_already_installed_no_prompt",
+      "prompt": "baseブランチを明示指定して `sd-tdd:submit` を実行し、前PRも見つかった状態です。`gh-stack` 拡張機能は既にインストール済みです。submitはインストールを促すプロンプトを出しますか？",
+      "expected_output": "gh-stack拡張機能が既にインストール済みのため、インストールを促すメッセージは出さず、通常通り`gh stack link`でstack化を行う。",
+      "files": [],
+      "assertions": [
+        {"name": "no_install_prompt_when_already_installed", "description": "gh-stack拡張機能が既にインストール済みの場合、インストールを促すメッセージが出ていないこと"}
+      ]
     }
   ]
 }
