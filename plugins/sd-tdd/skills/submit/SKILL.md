@@ -18,10 +18,10 @@ git status --porcelain
 
 ```bash
 git add -A
-git diff --cached --stat
+git diff --cached
 ```
 
-Read the staged diff, infer a concise commit message describing what changed (not why — that belongs in the PR body), then commit:
+Read the full staged diff (not just `--stat`) so the inferred message reflects what actually changed, not just which files and how many lines — fall back to `git diff --cached --stat` only as a truncation guard when the diff is too large to read in full. Infer a concise commit message describing what changed (not why — that belongs in the PR body), then commit:
 
 ```bash
 git commit -m "<inferred message>"
@@ -35,26 +35,39 @@ The head branch is whatever is currently checked out:
 git branch --show-current
 ```
 
-The base branch is where that branch diverged from — find it against the repository's default branch:
+If this prints nothing (detached HEAD), stop and tell the user submit needs a named branch to open a PR from — check out or create one first.
+
+The base branch is the repository's default branch:
 
 ```bash
 gh repo view --json defaultBranchRef -q .defaultBranchRef.name
-git merge-base <head-branch> origin/<default-branch>
 ```
+
+Use that name directly as `<base-branch>` in the steps below. (This skill only supports submitting against the default branch — it has no way to target a different base, such as a prior PR-group's branch. If a future caller needs that, it must be passed explicitly; this is out of scope here.)
 
 If the current branch *is* the default branch, stop and tell the user there's nothing to submit against — a PR needs a head branch distinct from its base.
 
 ## Step 3: Push
 
+Check whether there's anything new to send before pushing:
+
+```bash
+git rev-list --count '@{u}' 2>/dev/null && git rev-list --count '@{u}..HEAD'
+```
+
+- **The first command fails** (no upstream configured — branch has never been pushed): push.
+- **The second command prints `0`** (local HEAD has no commits beyond its upstream): skip pushing — nothing new to send.
+- **Otherwise:** push.
+
 ```bash
 git push -u origin <head-branch>
 ```
 
-If the branch is already up to date with its remote (no local commits ahead of `origin/<head-branch>`), skip this — don't push when there's nothing new to send.
-
 ## Step 4: Ensure pr-template.md exists
 
-Check for `pr-template.md` in this skill's own directory (next to this `SKILL.md`). If it is missing, create it before continuing — don't improvise a PR body from scratch. Use this as the template:
+Check for `pr-template.md` in this skill's own directory (next to this `SKILL.md`). If it already exists, reuse it as-is — never overwrite it.
+
+If it is missing, create it before continuing — don't improvise a PR body from scratch. Use this as the template (keep this copy in sync with the committed `pr-template.md` if that file is ever edited):
 
 ```markdown
 <!-- 対象issue番号が無い場合、この行ごと省略する -->
@@ -69,8 +82,6 @@ Closes #<ISSUE_NUMBER>
 <REQ_LIST>
 ```
 
-If it already exists, reuse it as-is — never overwrite it.
-
 ## Step 5: Fill the template and create the Draft PR
 
 Read `pr-template.md` and fill in its placeholders:
@@ -79,10 +90,19 @@ Read `pr-template.md` and fill in its placeholders:
 - `<SUMMARY>`: a concise summary of what the committed changes do, inferred from the diff (and the issue's REQ ledger, if an issue number was given).
 - `<REQ_LIST>`: if an issue number was given, the REQ-IDs in scope for this PR (fetch the ledger via `gh issue view <N> --json body -q .body` and list the active ones relevant to this diff). If no issue number was given, delete this section.
 
-Derive a PR title from the summary (or the issue title, if an issue number was given).
+Derive a PR title from the summary, or, if an issue number was given, from the issue's title:
 
 ```bash
-gh pr create --draft --base <base-branch> --title "<title>" --body "<filled-in template>"
+gh issue view <N> --json title -q .title
+```
+
+Create the PR using a heredoc for the body, since it's multi-line markdown that may itself contain backticks or quotes:
+
+```bash
+gh pr create --draft --base <base-branch> --title "<title>" --body "$(cat <<'EOF'
+<filled-in template>
+EOF
+)"
 ```
 
 Report the created PR's URL back to the user. Never run `gh pr ready` here — this skill only ever creates Draft PRs; converting to ready for review is `review-pr`'s responsibility, not this one's.
