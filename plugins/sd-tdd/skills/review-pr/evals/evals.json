@@ -8,18 +8,18 @@
       "expected_output": "review-prはPR番号が無いと処理を進められないため、対象PR番号の指定を求める（現在の作業ブランチから推測して代わりに処理を進めたりはしない）。",
       "files": [],
       "assertions": [
-        {"name": "issue_number_required", "description": "PR番号未指定の場合、review-prがPR番号の指定を求めており、現在のブランチ等から推測して処理を進めていないこと"}
+        {"name": "pr_number_required", "description": "PR番号未指定の場合、review-prがPR番号の指定を求めており、現在のブランチ等から推測して処理を進めていないこと"}
       ]
     },
     {
       "id": 1,
-      "name": "issue-32_REQ-12_base_head_sha_resolved_from_pr_info",
-      "prompt": "PR番号 `#40` を指定して `sd-tdd:review-pr` を実行してください。BASE_SHA/HEAD_SHAはどう決まりますか？",
-      "expected_output": "review-prはPR #40のbase/headブランチ情報を取得し（`gh pr view 40 --json baseRefName,headRefName` 等）、BASE_SHAをそのPRのbaseブランチからの分岐元コミット、HEAD_SHAをPRブランチの最新コミットとして解決する。ユーザーにSHAの指定を求めない。",
+      "name": "issue-32_REQ-12_stacked_pr_base_resolved_against_non_default_branch",
+      "prompt": "PR番号 `#40` を指定して `sd-tdd:review-pr` を実行してください。このPRは `worktree-issue-32-group2-review` というfeatureブランチをbaseにした、PRグループの積み上げPRです（リポジトリのデフォルトブランチ `main` をbaseにしたPRではありません）。BASE_SHA/HEAD_SHAはどう決まりますか？",
+      "expected_output": "review-prはPR #40のbase/headブランチ情報を取得し（`gh pr view 40 --json baseRefName,headRefName` の `baseRefName` は `main` ではなく `worktree-issue-32-group2-review`）、BASE_SHAをこの非デフォルトbaseブランチ（`worktree-issue-32-group2-review`）からの分岐元コミットとして解決する。リポジトリのデフォルトブランチ（`main`）との分岐点を使ってしまうことはない。HEAD_SHAはPRブランチの最新コミット。ユーザーにSHAの指定を求めない。",
       "files": [],
       "assertions": [
         {"name": "pr_info_fetched", "description": "対象PRのbase/headブランチ情報が取得されていること"},
-        {"name": "base_sha_from_pr_base", "description": "BASE_SHAがPRのbaseブランチからの分岐元コミットとして解決されていること"},
+        {"name": "base_sha_from_actual_pr_base_not_default_branch", "description": "BASE_SHAがPRの実際のbaseブランチ（デフォルトブランチではない `worktree-issue-32-group2-review`）からの分岐元コミットとして解決されていること"},
         {"name": "head_sha_from_pr_head", "description": "HEAD_SHAがPRブランチの最新コミットとして解決されていること"}
       ]
     },
@@ -59,6 +59,16 @@
     },
     {
       "id": 5,
+      "name": "issue-32_REQ-13_both_closes_and_part_of_present_closes_wins",
+      "prompt": "本文に `Closes #40` と `Part of #41` の両方を含むPR番号 `#44` を指定して `sd-tdd:review-pr` を実行してください。PLAN_OR_REQUIREMENTSはどちらのissueのREQ台帳になりますか？",
+      "expected_output": "review-prは `Closes` を優先し、issue #40のREQ台帳をPLAN_OR_REQUIREMENTSとして使う。issue #41は使われない。",
+      "files": [],
+      "assertions": [
+        {"name": "closes_takes_precedence_over_part_of", "description": "Closes参照とPart of参照が両方存在する場合、Closes側のissue番号のREQ台帳が使われていること"}
+      ]
+    },
+    {
+      "id": 6,
       "name": "issue-32_REQ-14_delegates_to_review_skill_with_resolved_values",
       "prompt": "BASE_SHA/HEAD_SHA/PLAN_OR_REQUIREMENTS/DESCRIPTIONの解決が完了した直後の状態です。`sd-tdd:review-pr` は次に何をしますか？",
       "expected_output": "review-prは独自にsuperpowers:requesting-code-reviewを呼び出すのではなく、`sd-tdd:review` を呼び出し、解決済みのBASE_SHA/HEAD_SHA/PLAN_OR_REQUIREMENTS/DESCRIPTIONを渡す（reviewのStep 0の入力として使われる）。",
@@ -69,7 +79,7 @@
       ]
     },
     {
-      "id": 6,
+      "id": 7,
       "name": "issue-32_REQ-15_clean_review_converts_pr_to_ready",
       "prompt": "sd-tdd:reviewの結果、Critical/Importantの指摘が一件もありませんでした。`sd-tdd:review-pr` はこの後どう振る舞いますか？",
       "expected_output": "review-prは対象PRを `gh pr ready` でready for reviewに切り替え、PRのURLとレビューサマリを報告する。",
@@ -80,7 +90,18 @@
       ]
     },
     {
-      "id": 7,
+      "id": 8,
+      "name": "issue-32_REQ-15_minor_findings_only_still_converts_to_ready",
+      "prompt": "sd-tdd:reviewの結果、Critical/Importantの指摘は無く、Minorな指摘が1件だけありました。`sd-tdd:review-pr` はこの後どう振る舞いますか？",
+      "expected_output": "review-prはMinor指摘のみの場合も「Critical/Important指摘が一件もない」に該当するため、対象PRを `gh pr ready` でready for reviewに切り替え、Minor指摘を含むレビューサマリを報告する。Minor指摘の存在を理由にDraftのままにしたりしない。",
+      "files": [],
+      "assertions": [
+        {"name": "pr_ready_invoked_with_minor_only", "description": "Minor指摘のみでCritical/Important指摘が無い場合に `gh pr ready` が実行されていること"},
+        {"name": "minor_findings_included_in_summary", "description": "報告されるサマリにMinor指摘が含まれていること"}
+      ]
+    },
+    {
+      "id": 9,
       "name": "issue-32_REQ-16_unresolved_findings_keep_pr_draft",
       "prompt": "sd-tdd:reviewの結果、Importantな指摘が1件残っていました。`sd-tdd:review-pr` はこの後どう振る舞いますか？",
       "expected_output": "review-prは対象PRをDraftのままにし（`gh pr ready` を実行せず）、残っている指摘内容をそのまま報告する。",

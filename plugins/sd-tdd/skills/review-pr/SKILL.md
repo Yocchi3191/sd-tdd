@@ -17,6 +17,8 @@ This skill always needs a PR number. If none was given, ask for one — never gu
 gh pr view <N> --json baseRefName,headRefName,title,body
 ```
 
+Substitute the actual `baseRefName` and `headRefName` values from that output for `<baseRefName>`/`<headRefName>` in every command below — both of the following blocks depend on them.
+
 Fetch both refs so local git has the commits to diff:
 
 ```bash
@@ -31,6 +33,10 @@ git rev-parse origin/<headRefName>
 - `BASE_SHA` = the `git merge-base` output — where the PR's head branch diverged from its actual base branch (not necessarily the repository's default branch — this is what makes `review-pr` work correctly for a stacked PR-group PR, unlike `review`'s own self-computation, which is limited to the default branch).
 - `HEAD_SHA` = the PR's head branch latest commit (`git rev-parse origin/<headRefName>`).
 
+**Scope note:** this assumes the PR's head branch lives on `origin` (true for this project's worktree-based workflow). A fork-based PR's head branch would not resolve this way — out of scope here, same assumption `submit` makes about pushing to `origin`.
+
+If `gh pr view <N>` fails (no such PR, wrong repo, etc.), stop and report that to the user rather than proceeding with partial data.
+
 ## Step 3: Resolve PLAN_OR_REQUIREMENTS from the PR body
 
 Search the PR body fetched in Step 2 for an issue reference:
@@ -39,11 +45,15 @@ Search the PR body fetched in Step 2 for an issue reference:
 /(?:Closes|Part of) #(\d+)/i
 ```
 
+If both a `Closes #N` and a `Part of #M` reference appear in the same body, `Closes` wins — it names the issue this PR is meant to fully resolve, which is the more specific signal.
+
 - **A match is found:** fetch that issue's REQ ledger and use it as PLAN_OR_REQUIREMENTS:
 
 ```bash
 gh issue view <matched-N> --json body -q .body
 ```
+
+If this command fails (issue deleted, number typo'd, private/inaccessible, etc.), don't stop and don't leave PLAN_OR_REQUIREMENTS empty — fall back to the PR's own title and body instead, same as the no-match case below, and note in your final report that the referenced issue couldn't be fetched.
 
 - **No match:** don't go looking for an issue any other way. Use the PR's own title and body (from Step 2) as PLAN_OR_REQUIREMENTS instead. A PR with no `Closes`/`Part of` reference is normal, not an error.
 
