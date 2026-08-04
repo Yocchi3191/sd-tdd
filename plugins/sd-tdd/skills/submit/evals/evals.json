@@ -1,0 +1,101 @@
+{
+  "skill_name": "submit",
+  "evals": [
+    {
+      "id": 0,
+      "name": "issue-32_REQ-1_uncommitted-changes-are-committed-with-inferred-message",
+      "prompt": "作業ツリーに未コミットの変更（新規ファイルscripts/foo.jsの追加と既存ファイルREADME.mdの編集）がある状態で `sd-tdd:submit` を実行してください。",
+      "expected_output": "submitは変更内容（diff）を確認したうえで、コミットメッセージをユーザーに尋ねることなくClaudeが自ら推定して生成し、`git add` と `git commit` を実行して未コミットの変更をコミットする。",
+      "files": [],
+      "assertions": [
+        {"name": "commit_created_without_asking_message", "description": "コミットメッセージをユーザーに質問せず、変更内容から推定したメッセージでコミットが作成されていること"},
+        {"name": "all_changes_staged", "description": "新規ファイルと編集済みファイルの両方がコミット対象に含まれていること"}
+      ]
+    },
+    {
+      "id": 1,
+      "name": "issue-32_REQ-1_no_uncommitted_changes_skips_commit",
+      "prompt": "作業ツリーに未コミットの変更が一切ない状態で `sd-tdd:submit` を実行してください。",
+      "expected_output": "submitはコミット対象が無いことを検出し、空コミットを作成せずにPR作成のステップへ進む。",
+      "files": [],
+      "assertions": [
+        {"name": "no_empty_commit_created", "description": "変更が無いにもかかわらず空コミットが作成されていないこと"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "issue-32_REQ-2_head_and_base_branch_auto_detected",
+      "prompt": "`feature/search-filter` という作業ブランチ（`main` から分岐）にいる状態で `sd-tdd:submit` を実行してください。base/headブランチをどう決定しますか？",
+      "expected_output": "submitは現在の作業ブランチ（`feature/search-filter`）をhead、そのブランチが分岐した元のブランチ（`main`）をbaseとして自動検出する。ユーザーにbase/headの指定を尋ねない。",
+      "files": [],
+      "assertions": [
+        {"name": "head_is_current_branch", "description": "headとして現在のチェックアウト中ブランチが使われていること"},
+        {"name": "base_is_divergence_point", "description": "baseとして作業ブランチの分岐元ブランチが自動検出されていること（ユーザーへの質問なし）"}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "issue-32_REQ-3_pushes_then_creates_draft_pr_from_template",
+      "prompt": "コミット済みで未pushのコミットがある作業ブランチの状態で `sd-tdd:submit` を実行してください。",
+      "expected_output": "submitはまず現在のブランチを `git push -u origin <branch>` でpushし、その後 `skills/submit/pr-template.md` のプレースホルダを埋めてPRタイトル・本文を生成し、`gh pr create --draft --base <base>` でDraft PRを作成する。",
+      "files": ["plugins/sd-tdd/skills/submit/pr-template.md"],
+      "assertions": [
+        {"name": "branch_pushed_before_pr_create", "description": "PR作成の前にブランチのpushが行われていること"},
+        {"name": "pr_created_as_draft", "description": "作成されるPRがDraft状態であること（readyではない）"},
+        {"name": "pr_body_uses_template", "description": "PRタイトル・本文が pr-template.md のプレースホルダを埋める形で生成されていること"}
+      ]
+    },
+    {
+      "id": 4,
+      "name": "issue-32_REQ-3_already_pushed_branch_skips_redundant_push",
+      "prompt": "作業ブランチが既にリモートと同期済み（未pushのコミットが無い）状態で `sd-tdd:submit` を実行してください。",
+      "expected_output": "submitは不要な再pushを行わず、そのままpr-template.mdを用いたDraft PR作成に進む。",
+      "files": [],
+      "assertions": [
+        {"name": "no_redundant_push", "description": "pushするコミットが無い場合に不要なpush操作が行われていないこと"}
+      ]
+    },
+    {
+      "id": 5,
+      "name": "issue-32_REQ-4_missing_pr_template_is_created_before_use",
+      "prompt": "`plugins/sd-tdd/skills/submit/pr-template.md` がまだ存在しないリポジトリで `sd-tdd:submit` を実行してください。",
+      "expected_output": "submitはPR作成に進む前に `plugins/sd-tdd/skills/submit/pr-template.md` を新規作成し、そのテンプレートを使ってPR本文を生成する。テンプレート無しでPR本文を即興生成することはしない。",
+      "files": [],
+      "assertions": [
+        {"name": "template_file_created", "description": "pr-template.mdが存在しない場合に、PR作成前にそのファイルが新規作成されていること"},
+        {"name": "created_template_then_used", "description": "作成したテンプレートを使ってPR本文が生成されていること"}
+      ]
+    },
+    {
+      "id": 6,
+      "name": "issue-32_REQ-4_existing_pr_template_is_reused",
+      "prompt": "`plugins/sd-tdd/skills/submit/pr-template.md` が既に存在するリポジトリで `sd-tdd:submit` を実行してください。",
+      "expected_output": "submitは既存の pr-template.md を上書き・再作成せず、そのまま読み込んでPR本文を生成する。",
+      "files": ["plugins/sd-tdd/skills/submit/pr-template.md"],
+      "assertions": [
+        {"name": "existing_template_not_overwritten", "description": "既存のpr-template.mdが不要に上書き・再作成されていないこと"}
+      ]
+    },
+    {
+      "id": 7,
+      "name": "issue-32_REQ-5_issue_number_argument_adds_closes_line",
+      "prompt": "issue番号 `#40` を引数として渡して `sd-tdd:submit` を実行してください。",
+      "expected_output": "submitが作成するPR本文に `Closes #40` の行が含まれる。",
+      "files": [],
+      "assertions": [
+        {"name": "closes_line_present", "description": "PR本文に対象issue番号への `Closes #<N>` 行が含まれていること"}
+      ]
+    },
+    {
+      "id": 8,
+      "name": "issue-32_REQ-5_no_issue_number_omits_closes_line",
+      "prompt": "issue番号を渡さずに `sd-tdd:submit` を実行してください。",
+      "expected_output": "submitが作成するPR本文に `Closes #` 行は含まれない。issue番号が無いことを理由にエラーにはならない。",
+      "files": [],
+      "assertions": [
+        {"name": "no_closes_line", "description": "PR本文に `Closes #` 行が含まれていないこと"},
+        {"name": "does_not_error_without_issue_number", "description": "issue番号未指定でもsubmitがエラー終了しないこと"}
+      ]
+    }
+  ]
+}
