@@ -65,22 +65,10 @@ git push -u origin <head-branch>
 
 ## Step 4: Ensure pr-template.md exists
 
-Check for `pr-template.md` in this skill's own directory (next to this `SKILL.md`). If it already exists, reuse it as-is — never overwrite it.
+Check for `pr-template.md` in this skill's own directory (next to this `SKILL.md`). It is the single source of truth for the PR body's structure — nothing here duplicates its content, so there is only one place to edit if it ever changes.
 
-If it is missing, create it before continuing — don't improvise a PR body from scratch. Use this as the template (keep this copy in sync with the committed `pr-template.md` if that file is ever edited):
-
-```markdown
-<!-- 対象issue番号が無い場合、この行ごと省略する -->
-Closes #<ISSUE_NUMBER>
-
-## 概要
-<!-- このPRで何を実装したか、変更内容の要約 -->
-<SUMMARY>
-
-## 変更対象のREQ
-<!-- issueのREQ台帳から、このPRのスコープに含まれるREQ-IDを列挙する -->
-<REQ_LIST>
-```
+- **If it already exists:** reuse it as-is — never overwrite it.
+- **If it is missing:** create it before continuing — don't improvise a PR body from scratch. It needs, in order: an optional `Closes #<ISSUE_NUMBER>` line (with a comment noting it's deleted when no issue number is given); a `## 概要` section holding a `<SUMMARY>` placeholder; and a `## 変更対象のREQ` section holding a `<REQ_LIST>` placeholder. See Step 5 for how each placeholder gets filled.
 
 ## Step 5: Fill the template and create the Draft PR
 
