@@ -1,0 +1,92 @@
+{
+  "skill_name": "review",
+  "evals": [
+    {
+      "id": 0,
+      "name": "issue-32_REQ-6_no_pr_required_reviews_current_branch_diff",
+      "prompt": "現在の作業ブランチにコミット済みの変更はあるが、まだPRを作成していません。この状態で `sd-tdd:review` を実行してください。",
+      "expected_output": "reviewはPRの存在を前提とせず実行される。PRが無いことを理由にエラーにしたり、先にPRを作成するよう案内したりせず、現在の作業ブランチの差分をそのままレビュー対象とする。",
+      "files": [],
+      "assertions": [
+        {"name": "no_pr_required", "description": "PRが存在しないことがエラーや前提条件違反として扱われていないこと"},
+        {"name": "reviews_branch_diff_directly", "description": "現在の作業ブランチの差分がそのままレビュー対象になっていること"}
+      ]
+    },
+    {
+      "id": 1,
+      "name": "issue-32_REQ-6_pr_exists_but_review_still_targets_branch_not_pr",
+      "prompt": "現在の作業ブランチに対応するOpenなPRが既に存在する状態で `sd-tdd:review` を実行してください（PR番号は渡していません）。",
+      "expected_output": "reviewはPRの存在を利用せず、あくまで現在の作業ブランチの差分を対象にレビューする。PR番号を推測して自動的にPR経由のレビュー（review-pr相当のready化判定など）に切り替えたりしない。",
+      "files": [],
+      "assertions": [
+        {"name": "does_not_switch_to_pr_mode", "description": "PRが存在していても、review-pr相当のPRベースの処理（ready化判定等）に切り替わっていないこと"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "issue-32_REQ-7_base_sha_head_sha_auto_computed",
+      "prompt": "`feature/rate-limit` という作業ブランチ（`main` から分岐）で `sd-tdd:review` を実行してください。BASE_SHA/HEAD_SHAはどう決まりますか？",
+      "expected_output": "reviewはBASE_SHAを作業ブランチの分岐元コミット（`git merge-base feature/rate-limit origin/main` 相当）、HEAD_SHAを作業ブランチの最新コミット（`git rev-parse HEAD` 相当）として自動的に算出する。ユーザーにSHAの指定を求めない。",
+      "files": [],
+      "assertions": [
+        {"name": "base_sha_is_divergence_point", "description": "BASE_SHAが作業ブランチの分岐元コミットとして自動算出されていること"},
+        {"name": "head_sha_is_latest_commit", "description": "HEAD_SHAが作業ブランチの最新コミットとして自動算出されていること"},
+        {"name": "no_manual_sha_prompt", "description": "ユーザーにBASE_SHA/HEAD_SHAの指定を求めていないこと"}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "issue-32_REQ-8_requesting_code_review_invoked_with_computed_shas",
+      "prompt": "BASE_SHA/HEAD_SHAの算出が完了した直後の状態です。`sd-tdd:review` は次に何をしますか？",
+      "expected_output": "reviewはsuperpowers:requesting-code-reviewをそのまま呼び出し、算出したBASE_SHA/HEAD_SHAを渡してレビューsubagentをディスパッチする。review独自の新しいレビュープロンプトは使用しない。",
+      "files": [],
+      "assertions": [
+        {"name": "requesting_code_review_reused", "description": "superpowers:requesting-code-reviewが呼び出されており、review独自の新規レビュープロンプトが新設されていないこと"},
+        {"name": "computed_shas_passed", "description": "呼び出し時にBASE_SHA/HEAD_SHAとして算出済みの値が渡されていること"}
+      ]
+    },
+    {
+      "id": 4,
+      "name": "issue-32_REQ-9_issue_number_given_uses_req_ledger_as_requirements",
+      "prompt": "issue番号 `#40` を引数として渡して `sd-tdd:review` を実行してください。レビューの基準（PLAN_OR_REQUIREMENTS）は何になりますか？",
+      "expected_output": "reviewはissue #40のREQ台帳（`gh issue view 40 --json body -q .body` で取得）をPLAN_OR_REQUIREMENTSとしてrequesting-code-reviewに渡す。",
+      "files": [],
+      "assertions": [
+        {"name": "req_ledger_fetched", "description": "issue #40のREQ台帳が取得されていること"},
+        {"name": "req_ledger_used_as_requirements", "description": "取得したREQ台帳がPLAN_OR_REQUIREMENTSとして使われていること"}
+      ]
+    },
+    {
+      "id": 5,
+      "name": "issue-32_REQ-9_no_issue_number_infers_summary_from_diff",
+      "prompt": "issue番号を渡さずに `sd-tdd:review` を実行してください。レビューの基準（PLAN_OR_REQUIREMENTS）は何になりますか？",
+      "expected_output": "reviewはissueのREQ台帳を探しに行かず、ブランチ名やコミットログ・差分の内容からClaudeが実装の意図・概要を推定し、それをPLAN_OR_REQUIREMENTSとしてrequesting-code-reviewに渡す。issue番号が無いことをエラーにしない。",
+      "files": [],
+      "assertions": [
+        {"name": "no_issue_lookup_attempted", "description": "issue番号が無い場合にissueのREQ台帳取得を試みていないこと"},
+        {"name": "summary_inferred_from_diff_or_log", "description": "PLAN_OR_REQUIREMENTSがブランチの差分・コミットログから推定した概要になっていること"},
+        {"name": "does_not_error_without_issue_number", "description": "issue番号未指定でもreviewがエラー終了しないこと"}
+      ]
+    },
+    {
+      "id": 6,
+      "name": "issue-32_REQ-10_never_converts_pr_to_ready",
+      "prompt": "レビュー結果、Critical/Importantな指摘が一件もありませんでした。`sd-tdd:review` はこの後どう振る舞いますか？",
+      "expected_output": "reviewはレビュー結果（Strengths/Issues/Assessment）を報告するだけで、`gh pr ready` のようなPRのready化操作は一切行わない。対象ブランチにPRが存在するかどうかに関わらず、ready化はreviewの責務ではない。",
+      "files": [],
+      "assertions": [
+        {"name": "no_pr_ready_invoked", "description": "`gh pr ready` またはそれに相当するready化操作が実行されていないこと"}
+      ]
+    },
+    {
+      "id": 7,
+      "name": "issue-32_REQ-10_critical_findings_also_never_trigger_ready_or_merge",
+      "prompt": "レビュー結果、Criticalな指摘が2件見つかりました。`sd-tdd:review` はこの後どう振る舞いますか？",
+      "expected_output": "reviewはCritical指摘を含むレビュー結果をそのまま報告する。指摘の有無に関わらず、PRのready化やマージなど、レビュー結果を受けたPR状態の変更操作は一切行わない。",
+      "files": [],
+      "assertions": [
+        {"name": "no_state_changing_action_on_findings", "description": "Critical指摘の有無に関わらず、PRのready化・マージ等の状態変更操作が実行されていないこと"}
+      ]
+    }
+  ]
+}
