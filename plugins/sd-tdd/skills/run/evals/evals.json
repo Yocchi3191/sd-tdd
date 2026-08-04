@@ -290,6 +290,37 @@
         {"name": "run_owns_retry_loop", "description": "修正→sd-tdd:review-pr再呼び出しのサイクルをrunが管理していること"},
         {"name": "three_round_escalation_still_applies", "description": "3回を超えて指摘が残る場合に人間へのエスカレーションが行われること"}
       ]
+    },
+    {
+      "id": 26,
+      "name": "issue-32_REQ-21_non_final_group_pr_body_rewritten_to_part_of",
+      "prompt": "issue #50はPRグループ分割されており（グループ1・2・3の3グループ）、現在グループ2の実装が完了し、`sd-tdd:submit`でDraft PR（#61）が作成された直後です。PR本文には`Closes #50`が含まれています。runは次に何をしますか？",
+      "expected_output": "runはグループ2が最終グループ（グループ3）ではないため、`gh pr view 61`でPR本文を取得し、`Closes #50`行を`Part of #50`に書き換えて`gh pr edit 61 --body ...`で反映する。あわせて`[group 2]`タイトルタグの付与とスタッキング注記の追加も行う。",
+      "files": [],
+      "assertions": [
+        {"name": "closes_rewritten_to_part_of_for_non_final_group", "description": "最終グループでないPRグループステップで、PR本文の`Closes #N`が`Part of #N`に書き換えられていること"},
+        {"name": "gh_pr_edit_used_for_body_rewrite", "description": "`gh pr edit`でPR本文の書き換えが反映されていること"}
+      ]
+    },
+    {
+      "id": 27,
+      "name": "issue-32_REQ-21_final_group_pr_body_keeps_closes",
+      "prompt": "issue #50は上記と同じ3グループ構成で、現在グループ3（最終グループ）の実装が完了し、`sd-tdd:submit`でDraft PR（#62）が作成された直後です。PR本文には`Closes #50`が含まれています。runはPR本文の`Closes #50`をどう扱いますか？",
+      "expected_output": "runは最終グループのため`Closes #50`をそのままにし、`Part of #50`への書き換えは行わない。最終グループのPRがマージされて初めてissue #50がcloseされる想定通りの状態になる。",
+      "files": [],
+      "assertions": [
+        {"name": "closes_kept_for_final_group", "description": "最終グループのPRでは`Closes #N`が書き換えられずそのまま残っていること"}
+      ]
+    },
+    {
+      "id": 28,
+      "name": "issue-32_REQ-21_no_split_keeps_closes",
+      "prompt": "issue #55はPRグループ分割されていない単一issueです。全REQのテストが通過し、`sd-tdd:submit`でDraft PR（#63）が作成された直後です。runはPR本文の`Closes #55`をどう扱いますか？",
+      "expected_output": "PRグループ分割が無いため、この`gh pr edit`によるCloses/Part of書き換えやタイトルタグ付けの処理自体が行われない。`Closes #55`はsubmitが書いたまま残る。",
+      "files": [],
+      "assertions": [
+        {"name": "no_pr_group_fixup_when_no_split", "description": "PRグループ分割が無い場合、Closes/Part of書き換えや[group G]タイトルタグ付けの後処理が行われていないこと"}
+      ]
     }
   ]
 }

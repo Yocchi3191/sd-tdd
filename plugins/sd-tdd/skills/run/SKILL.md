@@ -54,7 +54,7 @@ For a PR-group split, repeat items 4–10 once per group. Mark each `in_progress
 
 ## Handling a split
 
-- **PR group split:** invoke `task-filing`'s "File as PR groups" operation to record the single issue with its `## PRグループ` section — unless `epic-filing` already filed it that way inside the single-work-task path (see "Starting new work"), in which case that filing is done and you start at the per-group loop below with the `N` and mapping it reported. Then, for each group in the order listed (do not reorder), run "Implementing one scope" narrowed to that group's REQ-IDs — `spec-to-tests` targets that group (its Step 2), `coverage-check` is run with `--group <G>`, and a separate Draft PR is created and reviewed per group. Move to the next group automatically once a group's PR reaches ready-for-review; do not escalate to a human just because a group finished. **Groups are dependent, so branches and PRs stack:** group 1's worktree branches off the repository's default branch as usual. Group 2's (and every later group's) worktree branches off **group (G−1)'s branch tip**, not the default branch — otherwise it would be missing the prior group's prerequisite code (see "Implementing one scope" step 1, which applies this rule). Correspondingly, group G's Draft PR (G ≥ 2) targets group (G−1)'s branch as its `--base`, not the default branch, so its diff shows only that group's own changes. **Tag every PR-group PR's title with `[group G]`** (e.g. `[group 2] <title>`) — this is not cosmetic, "Resuming an existing issue" step 2 depends on it to find each group's PR. Note the stacking in the PR body too (e.g. "Stacked on #<group G−1's PR number>; targets that branch, not `<default-branch>`, until it merges"). Do not wait for an earlier group's PR to merge before starting the next group — `run` keeps moving automatically per REQ-4, and rebasing/retargeting a later group's PR onto the default branch after an earlier one merges is left to the human, same as the merge itself.
+- **PR group split:** invoke `task-filing`'s "File as PR groups" operation to record the single issue with its `## PRグループ` section — unless `epic-filing` already filed it that way inside the single-work-task path (see "Starting new work"), in which case that filing is done and you start at the per-group loop below with the `N` and mapping it reported. Then, for each group in the order listed (do not reorder), run "Implementing one scope" narrowed to that group's REQ-IDs — `spec-to-tests` targets that group (its Step 2), `coverage-check` is run with `--group <G>`, and a separate Draft PR is created and reviewed per group. Move to the next group automatically once a group's PR reaches ready-for-review; do not escalate to a human just because a group finished. **Groups are dependent, so branches and PRs stack:** group 1's worktree branches off the repository's default branch as usual. Group 2's (and every later group's) worktree branches off **group (G−1)'s branch tip**, not the default branch — otherwise it would be missing the prior group's prerequisite code (see "Implementing one scope" step 1, which applies this rule). Correspondingly, group G's Draft PR (G ≥ 2) targets group (G−1)'s branch as its `--base`, not the default branch, so its diff shows only that group's own changes. **Tag every PR-group PR's title with `[group G]`** (e.g. `[group 2] <title>`) — this is not cosmetic, "Resuming an existing issue" step 2 depends on it to find each group's PR; see "Creating the PR" for how this tag actually gets applied via a `gh pr edit` fixup after `submit` creates the PR (which also handles noting the stacking relationship in the PR body for group ≥2). Do not wait for an earlier group's PR to merge before starting the next group — `run` keeps moving automatically per REQ-4, and rebasing/retargeting a later group's PR onto the default branch after an earlier one merges is left to the human, same as the merge itself.
 
 ## Implementing one scope
 
@@ -81,10 +81,27 @@ If implementation surfaces a design decision that no REQ in the ledger resolves 
 
 Once every test in scope passes, invoke `sd-tdd:submit` to turn the worktree's committed work into a pushed branch and a Draft PR — don't run `git push`/`gh pr create` here directly; that logic lives in `submit` now, not in `run`. Pass it:
 
-- The issue number `N`, so it links the issue (`Closes #N`, or `Part of #N` for a PR-group step that isn't the last — `submit`'s REQ-5 handles this) and pulls in the REQ list and any `[structural]` REQs for the "## 構造的制約" section (`submit`'s REQ-20) automatically.
+- The issue number `N`, so it links the issue (`submit` always writes `Closes #N` when given an issue number — see the `gh pr edit` fixup below for turning this into `Part of #N` on a non-final PR-group step) and pulls in the REQ list and any `[structural]` REQs for the "## 構造的制約" section (`submit`'s REQ-20) automatically.
 - **For a PR-group step after the first**, the previous group's branch as an explicit base-branch override (`submit`'s REQ-19) — this is what makes `submit`'s Draft PR target that branch instead of the repository's default branch (see "Groups are dependent, so branches and PRs stack" above). For the first step (no split, or the first PR-group step), don't pass a base override; `submit` auto-detects the repository's default branch on its own.
 
-For a PR-group step, `submit`'s inferred title won't include the `[group G]` tag "Resuming an existing issue" depends on — after `submit` reports the created PR's URL/number, `gh pr edit <PR-number> --title "[group G] <title>"` to add it.
+`submit` has no awareness of PR groups (by design — it's a plain single-PR tool), so `run` fixes up the following itself after `submit` reports the created PR's number, **for every PR-group step (any group, including the last)** — skip this whole fixup when there's no PR-group split at all:
+
+```bash
+gh pr view <PR-number> --json title,body -q '.title, .body'
+```
+
+- **Title:** `submit`'s inferred title won't include the `[group G]` tag "Resuming an existing issue" depends on — using the title just fetched above, `gh pr edit <PR-number> --title "[group G] <fetched-title>"`.
+- **Stacking note (group ≥ 2 only):** append a note to the body identifying what this PR is stacked on, e.g. "Stacked on #<group (G−1)'s PR number>; targets that branch, not `<default-branch>`, until it merges". Group 1 has nothing to stack on — skip this for group 1.
+- **Closing keyword (REQ-21, non-last group only):** for a PR-group step that is **not** the last group, `submit` will have written `Closes #N` (that's the only form it can produce), which is wrong here — merging this PR would prematurely close issue `N` while later groups are still pending. Replace the `Closes #N` line with `Part of #N`. For the *last* PR-group step, leave `Closes #N` as `submit` wrote it — don't replace it.
+
+Apply the body changes (stacking note, and the closing-keyword replacement when applicable) together in one `gh pr edit`:
+
+```bash
+gh pr edit <PR-number> --body "$(cat <<'EOF'
+<body from gh pr view above, with Closes #N replaced by Part of #N (non-last group only) and the stacking note appended (group >= 2 only)>
+EOF
+)"
+```
 
 Then go to "Requesting review" with the PR number `submit` just created.
 
