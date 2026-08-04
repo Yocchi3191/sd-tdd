@@ -96,20 +96,33 @@ EOF
 )"
 ```
 
-Report the created PR's URL back to the user. Never run `gh pr ready` here — this skill only ever creates Draft PRs; converting to ready for review is `review-pr`'s responsibility, not this one's.
+Report the created PR's URL back to the user, and note its PR number (`<PR-number>`) — either from the trailing path segment of that URL (e.g. `.../pull/71` → `71`), or by fetching it explicitly:
+
+```bash
+gh pr view <head-branch> --json number -q .number
+```
+
+`<PR-number>` is needed in Step 6 below. Never run `gh pr ready` here — this skill only ever creates Draft PRs; converting to ready for review is `review-pr`'s responsibility, not this one's.
 
 ## Step 6: Link into a stacked PR — only when a base override was given
 
 Skip this step entirely if `<base-branch>` in Step 2 came from the default-branch auto-detection (no explicit base was supplied). It only applies when the caller supplied an explicit base — that's the signal this PR is meant to sit on top of another one.
 
-Look for an existing PR whose head is `<base-branch>` — that's the PR this one should stack on:
+Look for an existing, still-open PR whose head is `<base-branch>` — that's the PR this one should stack on. Prefer an open PR; only fall back to any state if none is open, since stacking onto an already-merged or already-closed PR isn't meaningful:
+
+```bash
+gh pr list --head <base-branch> --state open --json number -q '.[0].number'
+```
+
+- **A number is printed:** that's `<prior-PR-number>` — use it below.
+- **No output:** no open PR for that head branch. Fall back to checking any state, in case the prior PR is still relevant despite not being open:
 
 ```bash
 gh pr list --head <base-branch> --state all --json number -q '.[0].number'
 ```
 
-- **No PR found:** nothing to stack on (the prior PR may not exist yet, or may have been closed) — skip stacking and leave the PR as the plain Draft PR created in Step 5. This is not an error.
-- **A PR number is found (`<prior-PR-number>`):** this PR needs to be linked into GitHub's stacked-PR feature with the one just created (`<PR-number>`, from Step 5). That requires the `gh-stack` extension:
+- **No PR found (empty output) either way:** nothing to stack on (the prior PR may not exist yet, or may have been closed) — skip stacking and leave the PR as the plain Draft PR created in Step 5. This is not an error.
+- **A PR number is found (`<prior-PR-number>`), from either lookup above:** this PR needs to be linked into GitHub's stacked-PR feature with the one just created (`<PR-number>`, from Step 5). That requires the `gh-stack` extension:
 
 ```bash
 gh extension list | grep -q gh-stack
