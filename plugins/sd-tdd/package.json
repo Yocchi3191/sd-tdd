@@ -3,7 +3,7 @@
   "version": "0.1.10",
   "private": true,
   "scripts": {
-    "test:coverage-check": "node --test scripts/coverage-check/**/*.test.js",
+    "test:coverage-check": "node --test",
     "test:mutation": "stryker run"
   },
   "devDependencies": {
