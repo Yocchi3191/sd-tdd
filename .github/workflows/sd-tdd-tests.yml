@@ -1,0 +1,29 @@
+name: sd-tdd tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'plugins/sd-tdd/**'
+  pull_request:
+    paths:
+      - 'plugins/sd-tdd/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: plugins/sd-tdd
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm run test:coverage-check

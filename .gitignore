@@ -1,3 +1,5 @@
 .worktrees/
 node_modules/
 .claude/settings.local.json
+.stryker-tmp/
+reports/
