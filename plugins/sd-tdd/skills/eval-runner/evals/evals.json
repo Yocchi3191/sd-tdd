@@ -28,12 +28,13 @@
     {
       "id": 2,
       "name": "issue-47_REQ-3_全eval実行後にpass_fail件数と根拠を含むサマリを出力する",
-      "prompt": "評価対象skillのevals.json内の全evalの実行・判定が完了しました。結果をまとめて報告してください。",
-      "expected_output": "eval-runnerはpass件数・fail件数を含み、各evalごとの判定根拠を含むサマリを、テキストまたはJSON形式で出力する。HTMLビューア(eval-viewer)は使用しない。",
+      "prompt": "評価対象skill(仮に example-skill とします)のevals.jsonには3件のevalがありました。各evalの実行・判定結果は以下の通りです:\n- eval id=0 (name: issue-9_REQ-1_...): expectations 2件のうち2件pass。根拠: 出力に対象の振る舞いが明確に含まれていた。\n- eval id=1 (name: issue-9_REQ-2_...): expectations 3件のうち2件pass、1件fail。fail理由: 出力にエラーハンドリングの記述が見当たらなかった。\n- eval id=2 (name: issue-9_REQ-3_...): expectations 1件のうち1件fail。fail理由: 出力が期待される形式(JSON)ではなく自由文だった。\nこれら3件の結果をまとめて報告してください。",
+      "expected_output": "eval-runnerは3件のevalの結果を集計し、pass件数・fail件数の合計(eval単位、またはexpectations単位のいずれかを明示した上で)を含み、各evalごとに何がpass/failしその根拠は何だったかを含むサマリを、テキストまたはJSON形式で出力する。HTMLビューア(eval-viewer)は使用しない。",
       "files": [],
       "expectations": [
-        "出力にpass件数とfail件数が含まれている",
-        "出力に各evalごとの判定根拠が含まれている",
+        "出力に3件のevalそれぞれの結果が個別に含まれている",
+        "出力にpass件数とfail件数の合計(または集計)が含まれている",
+        "出力に各evalごとの判定根拠(fail理由を含む)が含まれている",
         "出力形式がテキストまたはJSONであり、HTMLファイルの生成やeval-viewerの起動が行われていない"
       ]
     },
