@@ -32,20 +32,25 @@ function parseArgs(argv) {
   throw new Error('Usage: review-guard <snapshot|compare> ...');
 }
 
-function main(argv) {
+function main(argv, deps = {}) {
+  const capture = deps.captureSnapshot || captureSnapshot;
+  const compare = deps.compareSnapshots || compareSnapshots;
+  const readFile = deps.readFile || ((path) => fs.readFileSync(path, 'utf8'));
+  const log = deps.log || console.log;
+
   const args = parseArgs(argv);
 
   if (args.command === 'snapshot') {
-    const snapshot = captureSnapshot(args.branch);
-    console.log(JSON.stringify(snapshot, null, 2));
+    const snapshot = capture(args.branch);
+    log(JSON.stringify(snapshot, null, 2));
     process.exitCode = 0;
     return;
   }
 
-  const before = JSON.parse(fs.readFileSync(args.before, 'utf8'));
-  const after = JSON.parse(fs.readFileSync(args.after, 'utf8'));
-  const result = compareSnapshots(before, after);
-  console.log(JSON.stringify(result, null, 2));
+  const before = JSON.parse(readFile(args.before));
+  const after = JSON.parse(readFile(args.after));
+  const result = compare(before, after);
+  log(JSON.stringify(result, null, 2));
   process.exitCode = result.violated ? 1 : 0;
 }
 

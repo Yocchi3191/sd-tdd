@@ -19,12 +19,16 @@ test('issue-50_REQ-1_captureSnapshot returns HEAD SHA, status porcelain output, 
   });
 });
 
-test('issue-50_REQ-1_captureSnapshot marks remote ref as not existing when git rev-parse fails', () => {
+test('issue-50_REQ-1_captureSnapshot marks remote ref as not existing when the ref genuinely does not exist', () => {
   const fakeGit = (args) => {
     if (args[0] === 'rev-parse' && args[1] === 'HEAD') return 'abc123\n';
     if (args[0] === 'status') return '';
     if (args[0] === 'rev-parse' && args[1] === 'origin/no-upstream') {
-      throw new Error('fatal: ambiguous argument');
+      const error = new Error(
+        "fatal: ambiguous argument 'origin/no-upstream': unknown revision or path not in the working tree.",
+      );
+      error.stderr = error.message;
+      throw error;
     }
     throw new Error(`unexpected git args: ${args.join(' ')}`);
   };
@@ -34,6 +38,20 @@ test('issue-50_REQ-1_captureSnapshot marks remote ref as not existing when git r
     statusPorcelain: '',
     remoteRef: { exists: false, sha: null },
   });
+});
+
+test('issue-50_REQ-1_captureSnapshot rethrows an unexpected error from the remote ref lookup instead of masking it as absent', () => {
+  const fakeGit = (args) => {
+    if (args[0] === 'rev-parse' && args[1] === 'HEAD') return 'abc123\n';
+    if (args[0] === 'status') return '';
+    if (args[0] === 'rev-parse' && args[1] === 'origin/feature-x') {
+      const error = new Error('fatal: unable to access repository: permission denied');
+      error.stderr = error.message;
+      throw error;
+    }
+    throw new Error(`unexpected git args: ${args.join(' ')}`);
+  };
+  assert.throws(() => captureSnapshot('feature-x', { git: fakeGit }), /permission denied/);
 });
 
 test('issue-50_REQ-2_capturing the same repository state twice yields snapshots that compare as no violation', () => {

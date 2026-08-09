@@ -1,7 +1,7 @@
 // plugins/sd-tdd/scripts/review-guard/cli.test.js
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { parseArgs } = require('./cli');
+const { parseArgs, main } = require('./cli');
 
 test('parses the snapshot subcommand with a --branch flag', () => {
   assert.deepEqual(parseArgs(['snapshot', '--branch', 'feature-x']), {
@@ -32,4 +32,60 @@ test('throws when no subcommand is given', () => {
 
 test('throws when an unknown subcommand is given', () => {
   assert.throws(() => parseArgs(['bogus']), /Usage: review-guard <snapshot\|compare>/);
+});
+
+test('main snapshot subcommand captures via the injected branch and logs the JSON snapshot', () => {
+  const logged = [];
+  const fakeSnapshot = { headSha: 'abc', statusPorcelain: '', remoteRef: { exists: true, sha: 'def' } };
+  let capturedBranch = null;
+  main(['snapshot', '--branch', 'feature-x'], {
+    captureSnapshot: (branch) => {
+      capturedBranch = branch;
+      return fakeSnapshot;
+    },
+    log: (line) => logged.push(line),
+  });
+  assert.equal(capturedBranch, 'feature-x');
+  assert.deepEqual(JSON.parse(logged[0]), fakeSnapshot);
+});
+
+test('main compare subcommand reads both files, compares them, and logs the JSON result', () => {
+  const originalExitCode = process.exitCode;
+  const logged = [];
+  const files = {
+    'before.json': JSON.stringify({ headSha: 'a', statusPorcelain: '', remoteRef: { exists: false, sha: null } }),
+    'after.json': JSON.stringify({ headSha: 'b', statusPorcelain: '', remoteRef: { exists: false, sha: null } }),
+  };
+  main(['compare', '--before', 'before.json', '--after', 'after.json'], {
+    readFile: (path) => files[path],
+    compareSnapshots: (before, after) => ({ violated: true, reasons: [`head changed ${before.headSha}->${after.headSha}`] }),
+    log: (line) => logged.push(line),
+  });
+  assert.deepEqual(JSON.parse(logged[0]), {
+    violated: true,
+    reasons: ['head changed a->b'],
+  });
+  process.exitCode = originalExitCode;
+});
+
+test('main compare subcommand sets exitCode 0 when compareSnapshots reports no violation', () => {
+  const originalExitCode = process.exitCode;
+  main(['compare', '--before', 'before.json', '--after', 'after.json'], {
+    readFile: () => '{}',
+    compareSnapshots: () => ({ violated: false, reasons: [] }),
+    log: () => {},
+  });
+  assert.equal(process.exitCode, 0);
+  process.exitCode = originalExitCode;
+});
+
+test('main compare subcommand sets exitCode 1 when compareSnapshots reports a violation', () => {
+  const originalExitCode = process.exitCode;
+  main(['compare', '--before', 'before.json', '--after', 'after.json'], {
+    readFile: () => '{}',
+    compareSnapshots: () => ({ violated: true, reasons: ['HEAD SHA changed'] }),
+    log: () => {},
+  });
+  assert.equal(process.exitCode, 1);
+  process.exitCode = originalExitCode;
 });

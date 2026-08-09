@@ -23,6 +23,7 @@ test('issue-50_REQ-3_compareSnapshots detects violation when HEAD SHA changed', 
   const result = compareSnapshots(before, after);
   assert.equal(result.violated, true);
   assert.equal(result.reasons.length, 1);
+  assert.match(result.reasons[0], /HEAD SHA changed: abc123 -> zzz999/);
 });
 
 test('issue-50_REQ-3_compareSnapshots detects violation when working tree status changed', () => {
@@ -31,6 +32,7 @@ test('issue-50_REQ-3_compareSnapshots detects violation when working tree status
   const result = compareSnapshots(before, after);
   assert.equal(result.violated, true);
   assert.equal(result.reasons.length, 1);
+  assert.match(result.reasons[0], /working tree\/index state changed/);
 });
 
 test('issue-50_REQ-3_compareSnapshots detects violation when remote tracking branch SHA changed', () => {
@@ -39,6 +41,7 @@ test('issue-50_REQ-3_compareSnapshots detects violation when remote tracking bra
   const result = compareSnapshots(before, after);
   assert.equal(result.violated, true);
   assert.equal(result.reasons.length, 1);
+  assert.match(result.reasons[0], /remote tracking branch SHA changed: def456 -> newsha000/);
 });
 
 test('issue-50_REQ-3_compareSnapshots detects violation when remote tracking branch newly appeared', () => {
@@ -47,6 +50,7 @@ test('issue-50_REQ-3_compareSnapshots detects violation when remote tracking bra
   const result = compareSnapshots(before, after);
   assert.equal(result.violated, true);
   assert.equal(result.reasons.length, 1);
+  assert.match(result.reasons[0], /remote tracking branch existence changed: false -> true/);
 });
 
 test('issue-50_REQ-3_compareSnapshots detects violation when remote tracking branch disappeared', () => {
