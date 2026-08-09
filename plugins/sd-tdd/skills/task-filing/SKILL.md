@@ -1,6 +1,6 @@
 ---
 name: task-filing
-description: Use after spec-interview has confirmed a REQ ledger (new or appended) — records it into the project's tracker (GitHub issue by default) using this skill's task-template.md. Also use to fetch a task's current ledger when spec-interview is continuing work on an existing task. Never rewords or summarizes REQ lines; they are transcribed verbatim.
+description: Use after spec-interview has confirmed a REQ ledger (new or appended), or when filing a rough task with no REQ ledger yet pending investigation/design — records it into the project's tracker (GitHub issue by default) using this skill's task-template.md. Also use to fetch a task's current ledger when spec-interview is continuing work on an existing task. Never rewords or summarizes REQ lines; they are transcribed verbatim.
 ---
 
 # Task Filing
@@ -22,8 +22,9 @@ Return the raw body text to the caller. `spec-interview` parses the `REQ-<id>:` 
 ## Operation: File a new task
 
 1. Read `task-template.md` (this skill's directory) and fill it in:
-   - **背景・課題**, **やること・要件**, **完了条件** are required — always fill them.
+   - **背景・課題**, **やること・要件**, **完了条件** are required — always include these section headings.
    - Copy the confirmed REQ-N lines into **やること・要件** verbatim — do not reword, summarize, or renumber them. Replace the template's placeholder `REQ-1: ...` / `REQ-2: ...` lines entirely; never leave them in alongside the real REQ lines.
+   - **REQが0件の場合**（まだ実装可能な粒度に分解されていない粗い起票 — 調査・設計フェーズを経てから`spec-interview`のappend sessionで後から追記する想定）: **やること・要件** はプレースホルダも実REQ行も置かず、空欄のまま起票してよい。この場合でも**背景・課題**と**完了条件**は必須のまま埋める — **完了条件**はREQ単位ではなく、その時点での完了基準（例:「調査・設計方針が固まり、REQ台帳が確定していること」）を書けばよい。
    - **決定事項**, **設計・実装方針**, **注意点・既知のトレードオフ** are optional — include a section only when it's actually relevant to this task; don't leave empty headers.
 2. Create the task:
 
