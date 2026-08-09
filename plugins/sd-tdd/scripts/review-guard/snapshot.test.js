@@ -8,7 +8,7 @@ test('issue-50_REQ-1_captureSnapshot returns HEAD SHA, status porcelain output, 
   const fakeGit = (args) => {
     if (args[0] === 'rev-parse' && args[1] === 'HEAD') return 'abc123\n';
     if (args[0] === 'status') return ' M SKILL.md\n';
-    if (args[0] === 'rev-parse' && args[1] === 'origin/feature-x') return 'def456\n';
+    if (args[0] === 'rev-parse' && args[3] === 'origin/feature-x') return 'def456\n';
     throw new Error(`unexpected git args: ${args.join(' ')}`);
   };
   const snapshot = captureSnapshot('feature-x', { git: fakeGit });
@@ -19,15 +19,14 @@ test('issue-50_REQ-1_captureSnapshot returns HEAD SHA, status porcelain output, 
   });
 });
 
-test('issue-50_REQ-1_captureSnapshot marks remote ref as not existing when the ref genuinely does not exist', () => {
+test('issue-50_REQ-1_captureSnapshot marks remote ref as not existing when git rev-parse --verify -q exits 1 with no stderr', () => {
   const fakeGit = (args) => {
     if (args[0] === 'rev-parse' && args[1] === 'HEAD') return 'abc123\n';
     if (args[0] === 'status') return '';
-    if (args[0] === 'rev-parse' && args[1] === 'origin/no-upstream') {
-      const error = new Error(
-        "fatal: ambiguous argument 'origin/no-upstream': unknown revision or path not in the working tree.",
-      );
-      error.stderr = error.message;
+    if (args[0] === 'rev-parse' && args[3] === 'origin/no-upstream') {
+      const error = new Error('Command failed');
+      error.status = 1;
+      error.stderr = '';
       throw error;
     }
     throw new Error(`unexpected git args: ${args.join(' ')}`);
@@ -44,8 +43,9 @@ test('issue-50_REQ-1_captureSnapshot rethrows an unexpected error from the remot
   const fakeGit = (args) => {
     if (args[0] === 'rev-parse' && args[1] === 'HEAD') return 'abc123\n';
     if (args[0] === 'status') return '';
-    if (args[0] === 'rev-parse' && args[1] === 'origin/feature-x') {
+    if (args[0] === 'rev-parse' && args[3] === 'origin/feature-x') {
       const error = new Error('fatal: unable to access repository: permission denied');
+      error.status = 128;
       error.stderr = error.message;
       throw error;
     }
@@ -54,11 +54,26 @@ test('issue-50_REQ-1_captureSnapshot rethrows an unexpected error from the remot
   assert.throws(() => captureSnapshot('feature-x', { git: fakeGit }), /permission denied/);
 });
 
+test('issue-50_REQ-1_captureSnapshot rethrows even a status-1 failure if stderr is non-empty (not the "ref absent" signature)', () => {
+  const fakeGit = (args) => {
+    if (args[0] === 'rev-parse' && args[1] === 'HEAD') return 'abc123\n';
+    if (args[0] === 'status') return '';
+    if (args[0] === 'rev-parse' && args[3] === 'origin/feature-x') {
+      const error = new Error('fatal: something unexpected happened');
+      error.status = 1;
+      error.stderr = error.message;
+      throw error;
+    }
+    throw new Error(`unexpected git args: ${args.join(' ')}`);
+  };
+  assert.throws(() => captureSnapshot('feature-x', { git: fakeGit }), /something unexpected happened/);
+});
+
 test('issue-50_REQ-2_capturing the same repository state twice yields snapshots that compare as no violation', () => {
   const fakeGit = (args) => {
     if (args[0] === 'rev-parse' && args[1] === 'HEAD') return 'abc123\n';
     if (args[0] === 'status') return '';
-    if (args[0] === 'rev-parse' && args[1] === 'origin/feature-x') return 'def456\n';
+    if (args[0] === 'rev-parse' && args[3] === 'origin/feature-x') return 'def456\n';
     throw new Error(`unexpected git args: ${args.join(' ')}`);
   };
   const before = captureSnapshot('feature-x', { git: fakeGit });

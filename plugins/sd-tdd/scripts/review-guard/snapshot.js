@@ -16,11 +16,14 @@ function captureSnapshot(branch, { git = defaultGit } = {}) {
 
   let remoteRef;
   try {
-    const sha = git(['rev-parse', `origin/${branch}`]).trim();
+    // --verify -q: exit 1 with empty stderr when the ref doesn't exist,
+    // vs. a nonzero exit with a `fatal:` message for a genuine error
+    // (not a repo, permission denied, etc.) — this distinction is exit
+    // code/stderr-based, not tied to git's (locale-dependent) message text.
+    const sha = git(['rev-parse', '--verify', '-q', `origin/${branch}`]).trim();
     remoteRef = { exists: true, sha };
   } catch (error) {
-    const message = String(error.stderr || error.message || '');
-    if (/unknown revision or path not in the working tree/i.test(message)) {
+    if (error.status === 1 && !error.stderr) {
       remoteRef = { exists: false, sha: null };
     } else {
       throw error;
