@@ -87,6 +87,18 @@
       "expectations": [
         "Critical指摘の有無に関わらず、PRのready化・マージ等の状態変更操作が実行されていないこと"
       ]
+    },
+    {
+      "id": 8,
+      "name": "issue-50_REQ-4_read_only_violation_returns_violation_report_not_normal_review",
+      "prompt": "`sd-tdd:review` がレビューsubagent（superpowers:requesting-code-review経由）を起動する前に `scripts/review-guard` でgit状態のスナップショットを記録しました。subagentの応答を受け取った後、同じ手順で再度スナップショットを取得して比較したところ、HEAD SHAが起動前と異なっており、subagentがread-only指示に反してcommitを作成していたことが分かりました。`sd-tdd:review` はこの状態でユーザーに何を返しますか？",
+      "expected_output": "reviewは通常のStrengths/Issues/Recommendations/Assessment形式のレビュー結果を返すのではなく、read-only違反が検出された旨と、変化したHEAD SHA（起動前後の値）を含む違反専用のレポートを返す。あたかも通常のレビューが完了したかのように振る舞ったり、違反の事実を伏せて通常のレビュー結果だけを報告したりしない。",
+      "files": [],
+      "expectations": [
+        "通常のStrengths/Issues/Recommendations/Assessment形式ではなく、read-only違反を明示するレポートが返されていること",
+        "検出された違反の具体的内容（起動前後のHEAD SHAなど、何が変化したか）がレポートに含まれていること",
+        "違反が検出されたにもかかわらず通常のレビュー結果であるかのように報告されていないこと"
+      ]
     }
   ]
 }
