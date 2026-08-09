@@ -22,11 +22,13 @@ If any of these is missing or ambiguous, ask before proceeding rather than guess
 For each eval object being run, read its `prompt` field and execute it as a fresh, non-interactive `claude -p` subprocess scoped to the target plugin. `prompt` text can be multi-line and can itself contain backticks, quotes, or `$(...)` — never interpolate it directly into a double-quoted shell argument, since that lets its content run as shell command substitution instead of being passed through as literal text (the same class of problem `submit`'s SKILL.md solves for PR bodies via a heredoc). Write the prompt to a temp file first, then feed it in via stdin:
 
 ```bash
-cat <<'EOF' > /tmp/eval-runner-prompt.txt
+cat <<'EVAL_RUNNER_PROMPT_EOF' > /tmp/eval-runner-prompt.txt
 <eval.prompt, verbatim>
-EOF
+EVAL_RUNNER_PROMPT_EOF
 claude -p --plugin-dir <target-plugin-worktree-path> < /tmp/eval-runner-prompt.txt
 ```
+
+Use a delimiter this distinctive (not a bare `EOF`) so a prompt that happens to contain a standalone `EOF` line doesn't truncate the heredoc early and silently feed a partial prompt to the executor.
 
 Use the default (plain text) output mode — not `--output-format stream-json` or `--verbose` — so what you capture is the executor's final answer text, not its intermediate tool-call transcript or internal reasoning. Capture that stdout text as this eval's **executor output**. If the subprocess exits non-zero or produces no output, record that as the executor output too (an empty/errored run is still a real result to grade, not a reason to skip the eval).
 

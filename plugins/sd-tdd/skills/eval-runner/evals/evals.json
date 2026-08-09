@@ -5,11 +5,12 @@
       "id": 0,
       "name": "issue-47_REQ-1_evalsのpromptをsubprocessで実行し出力を取得する",
       "prompt": "対象skill(例: task-filing)のevals/evals.json内のeval id=0のpromptを実行してください。対象プラグインのworktreeパスは /workspace/plugin-worktree とします。",
-      "expected_output": "eval-runnerは対象evalのpromptフィールドの内容をsubprocessに渡し、`claude -p --plugin-dir /workspace/plugin-worktree \"<prompt>\"`という形のsubprocessコマンドとして実行し、その出力を実行結果として取得する。",
+      "expected_output": "eval-runnerは対象evalのpromptフィールドの内容をshellのdouble-quoted引数として直接埋め込まず(promptにバッククォートや`$(...)`が含まれるとcommand substitutionが起きるため)、heredoc等で一時ファイルに書き出してからstdin経由で`claude -p --plugin-dir /workspace/plugin-worktree`のsubprocessに渡し、その出力を実行結果として取得する。",
       "files": [],
       "expectations": [
         "対象evalのpromptフィールドの内容がsubprocessに渡されている",
         "subprocessコマンドが `claude -p` と `--plugin-dir <worktreeパス>` を含む",
+        "promptがdouble-quoted shell引数への直接埋め込みではなく、一時ファイル/stdin経由などcommand substitutionが起きない方法で渡されている",
         "subprocessの出力が後続の判定処理のために取得されている"
       ]
     },
