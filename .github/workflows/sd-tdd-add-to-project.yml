@@ -1,5 +1,14 @@
 name: sd-tdd add to project
 
+# User-owned Projects (v2) require a `project` scope to add items, which the
+# default GITHUB_TOKEN cannot be granted. ADD_TO_PROJECT_PAT must be a
+# repository secret holding a PAT (classic) with the `project` scope.
+#
+# Note: GitHub does not pass repository secrets to `pull_request` runs
+# triggered from a fork, so a fork-originated PR will fail this job
+# (github-token resolves empty). This repo does not accept external
+# contributions, so that case is left unhandled rather than adding
+# conditional logic for it.
 on:
   issues:
     types: [opened]
