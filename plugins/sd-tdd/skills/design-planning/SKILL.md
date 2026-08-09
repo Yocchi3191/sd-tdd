@@ -29,10 +29,10 @@ description: Use when a human brings a concrete design proposal (interface desig
 
 このスキル自身は `gh issue edit` などでissueを直接更新しない。確定した設計判断は `task-filing` に渡す:
 
-- 対象のissueがまだ無い場合: `task-filing` の「File a new task」operationに渡し、`## 決定事項` セクションを埋めてもらう。
 - 対象のissueが既にある場合: `task-filing` の「Append to an existing task」operationに渡し、`## 決定事項` セクションを更新してもらう。
+- 対象のissueがまだ無い場合: このスキル自身は新規issueを起票しない。`task-filing` の「File a new task」operationは `## やること・要件` へのREQ台帳の転記を必須とするが、design-planningが扱うのは設計判断であってREQ台帳ではないため、このスキル単独でその必須項目を満たせない。まず `spec-interview` → `task-filing` でREQ台帳付きのissueを起票してもらい、issueが成立してから上記の「Append to an existing task」操作で決定事項を渡す。
 
-対話が長くなり、`task-filing` に渡すまでの間に内容が失われる懸念がある場合は、確定した決定を都度、一時ファイルに書き出しておく。`task-filing` への引き渡しが完了すれば、一時ファイルはその後不要になる。
+対話が長くなり、`task-filing` に渡すまでの間に内容が失われる懸念がある場合（対象issueがまだ無く、成立を待つ間も含む）は、確定した決定を都度、一時ファイルに書き出しておく。`task-filing` への引き渡しが完了すれば、一時ファイルはその後不要になる。
 
 ## スコープ
 
