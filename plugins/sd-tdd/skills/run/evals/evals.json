@@ -7,10 +7,10 @@
       "prompt": "「ユーザー認証にレート制限を追加して」というタスクをやってください。issueはまだありません。",
       "expected_output": "runが起動し、epic-filing→spec-interview→task-filing→（必要なら）test-infra-setup→spec-to-tests→coverage-check→superpowers:test-driven-development→PR作成→superpowers:requesting-code-reviewまでを、REQ承認と企画（multi-task initiative）分割エスカレーション以外は人間に逐一確認せず自動的に進める。マージは実行しない。",
       "files": [],
-      "assertions": [
-        {"name": "full_pipeline_invoked", "description": "epic-filing/spec-interviewからレビューまでの各skill/ステップが呼び出し順に実行されていること"},
-        {"name": "no_unnecessary_pauses", "description": "REQ承認ゲートと企画（multi-task initiative）分割エスカレーション以外で、フェーズの節目ごとに人間へ確認を求めていないこと"},
-        {"name": "no_merge_performed", "description": "PRのマージ操作（gh pr merge等）が一切実行されていないこと"}
+      "expectations": [
+        "epic-filing/spec-interviewからレビューまでの各skill/ステップが呼び出し順に実行されていること",
+        "REQ承認ゲートと企画（multi-task initiative）分割エスカレーション以外で、フェーズの節目ごとに人間へ確認を求めていないこと",
+        "PRのマージ操作（gh pr merge等）が一切実行されていないこと"
       ]
     },
     {
@@ -19,9 +19,9 @@
       "prompt": "「CSVエクスポート機能を追加して」というタスクをやってください。既存issueへの言及はありません。",
       "expected_output": "既存issue番号の参照がないため、runは新規作業としてまずepic-filingを呼び出す。epic-filingはこれを単一taskと判定し、自らspec-interviewを呼んで新規REQ台帳（REQ-1から開始）を作成させ、承認後にtask-filingの『File a new task』operationで新しいGitHub issueとして記録して、そのissue番号をrunに返す。runがspec-interviewやtask-filingを直接呼ぶのではなく、epic-filing経由である点が正しい。",
       "files": [],
-      "assertions": [
-        {"name": "spec_interview_fresh_ledger", "description": "spec-interviewがREQ-1から始まる新規台帳としてヒアリングを行っていること（既存台帳の取得を試みていないこと）"},
-        {"name": "task_filing_new_issue", "description": "task-filingの『新規issue起票』操作が呼ばれ、新しいissue番号が発行されていること"}
+      "expectations": [
+        "spec-interviewがREQ-1から始まる新規台帳としてヒアリングを行っていること（既存台帳の取得を試みていないこと）",
+        "task-filingの『新規issue起票』操作が呼ばれ、新しいissue番号が発行されていること"
       ]
     },
     {
@@ -30,9 +30,9 @@
       "prompt": "issue #12の続きをやってください。",
       "expected_output": "既存issue番号（#12）への参照があるため、runはtask-filingの『fetch current ledger』操作でREQ台帳を取得し、spec-interviewでの新規台帳作成はスキップして、test-infra-setup/spec-to-tests以降から再開する。",
       "files": [],
-      "assertions": [
-        {"name": "fetch_ledger_called", "description": "task-filingのfetch current ledger操作でissue #12の本文が取得されていること"},
-        {"name": "no_fresh_spec_interview", "description": "REQ-1から始まる新規ヒアリング（新規台帳作成）が行われていないこと。既存REQ台帳がある前提でspec-to-tests以降に進んでいること"}
+      "expectations": [
+        "task-filingのfetch current ledger操作でissue #12の本文が取得されていること",
+        "REQ-1から始まる新規ヒアリング（新規台帳作成）が行われていないこと。既存REQ台帳がある前提でspec-to-tests以降に進んでいること"
       ]
     },
     {
@@ -41,9 +41,9 @@
       "prompt": "「決済機能を追加して」というタスクをやってください。spec-interviewのStep4でPRグループ分割（グループ1: 基本決済 (REQ-1,2), グループ2: 返金処理 (REQ-3,4)）が提案され、ユーザーが承認したとします。",
       "expected_output": "PRグループ分割が承認された場合、runはグループ1、グループ2の順に、各グループについてspec-to-tests→coverage-check→実装→PR作成→レビューを1セッション内で自動的に最後まで進行し、グループの切り替わりごとに人間へのエスカレーションは発生しない。",
       "files": [],
-      "assertions": [
-        {"name": "all_groups_processed_in_order", "description": "提示された順序（グループ1→グループ2）で全グループが処理されていること"},
-        {"name": "no_escalation_between_groups", "description": "PRグループの切り替わり自体を理由にした人間へのエスカレーションが発生していないこと"}
+      "expectations": [
+        "提示された順序（グループ1→グループ2）で全グループが処理されていること",
+        "PRグループの切り替わり自体を理由にした人間へのエスカレーションが発生していないこと"
       ]
     },
     {
@@ -52,9 +52,9 @@
       "prompt": "「通知基盤を刷新して」というタスクをやってください。epic-filingが企画と判定し、epic-issue #30とtask-issue #31（メール通知）, #32（プッシュ通知）を起票したとします。",
       "expected_output": "企画としてepic-issue+複数task-issueが起票された場合、runはどのtask-issueから着手するかを人間にエスカレーションして停止する。spec-to-tests以降には自動で進まない。",
       "files": [],
-      "assertions": [
-        {"name": "epic_filing_invoked_for_initiative", "description": "企画判定された依頼についてepic-filingが呼ばれ、epic-issueと複数task-issueが起票されていること"},
-        {"name": "escalates_before_spec_to_tests", "description": "起票の直後に、どのtask-issueから着手するかを問う形で人間にエスカレーションしており、spec-to-testsが自動的に呼ばれていないこと"}
+      "expectations": [
+        "企画判定された依頼についてepic-filingが呼ばれ、epic-issueと複数task-issueが起票されていること",
+        "起票の直後に、どのtask-issueから着手するかを問う形で人間にエスカレーションしており、spec-to-testsが自動的に呼ばれていないこと"
       ]
     },
     {
@@ -63,9 +63,9 @@
       "prompt": "「検索フィルタを追加して」というタスクをやってください。REQ台帳の承認とissue起票までは完了しているとします。",
       "expected_output": "runはspec-to-testsを呼び出す前にsuperpowers:using-git-worktreesで専用のgit worktreeを作成し、以降のテスト作成・実装・コミットは全てそのworktree内で行う。",
       "files": [],
-      "assertions": [
-        {"name": "worktree_created_before_tests", "description": "using-git-worktrees（またはgit worktree add相当）の呼び出しが、spec-to-testsの呼び出しより前に発生していること"},
-        {"name": "subsequent_work_in_worktree", "description": "spec-to-tests・実装・コミットが、作成されたworktreeのパス内で行われていること（現在のブランチを直接汚していないこと）"}
+      "expectations": [
+        "using-git-worktrees（またはgit worktree add相当）の呼び出しが、spec-to-testsの呼び出しより前に発生していること",
+        "spec-to-tests・実装・コミットが、作成されたworktreeのパス内で行われていること（現在のブランチを直接汚していないこと）"
       ]
     },
     {
@@ -74,9 +74,9 @@
       "prompt": "テストフレームワークが既に導入済みのプロジェクトで「バリデーション処理を追加して」というタスクをやってください。",
       "expected_output": "test-infra-setupのStep 0相当の判定でテストフレームワークが既に検出されるため、runはtest-infra-setupを実行してもそのスキル自身が『何もしない（idempotent）』と報告するだけで、spec-to-tests実行を妨げない。テストフレームワーク未検出の別ケースでは、spec-to-testsを呼ぶ前にtest-infra-setupが実行される。",
       "files": [],
-      "assertions": [
-        {"name": "test_infra_setup_invoked_idempotently", "description": "テストフレームワークが既にあるケースでtest-infra-setupが呼ばれても、新規インストール等の変更が発生していないこと"},
-        {"name": "missing_case_installs_before_spec_to_tests", "description": "テストフレームワーク未検出のケースを想定した記述で、spec-to-testsより前にtest-infra-setupの導入が行われる順序になっていること"}
+      "expectations": [
+        "テストフレームワークが既にあるケースでtest-infra-setupが呼ばれても、新規インストール等の変更が発生していないこと",
+        "テストフレームワーク未検出のケースを想定した記述で、spec-to-testsより前にtest-infra-setupの導入が行われる順序になっていること"
       ]
     },
     {
@@ -85,9 +85,9 @@
       "prompt": "spec-to-testsとcoverage-checkが完了し、対象issueの全REQに対応するテストが揃って coverage-check が green（missing/orphansなし）になった直後の状態です。runは次に何をしますか？",
       "expected_output": "runはsuperpowers:test-driven-developmentにハンドオフし、生成された失敗テストが通るまで実装させる。対象issue番号・REQ-IDの範囲を明示して引き継ぐ。",
       "files": [],
-      "assertions": [
-        {"name": "tdd_handoff_after_green_coverage", "description": "coverage-checkがgreenになった後に、superpowers:test-driven-developmentへのハンドオフが行われていること"},
-        {"name": "scope_passed_explicitly", "description": "ハンドオフ時に対象issue番号またはREQ-IDの範囲が明示されていること"}
+      "expectations": [
+        "coverage-checkがgreenになった後に、superpowers:test-driven-developmentへのハンドオフが行われていること",
+        "ハンドオフ時に対象issue番号またはREQ-IDの範囲が明示されていること"
       ]
     },
     {
@@ -96,9 +96,9 @@
       "prompt": "同一REQ（REQ-5）に対する実装が、superpowers:test-driven-developmentによる修正を経ても3回連続でテストが通らなかったとします。runはどう振る舞いますか？",
       "expected_output": "runは実装ループを打ち切り、REQ-5について3回失敗した旨と失敗内容（テスト名・エラー概要）を添えて人間にエスカレーションする。4回目の自動リトライは行わない。",
       "files": [],
-      "assertions": [
-        {"name": "stops_after_third_failure", "description": "同一REQに対する4回目の自動実装リトライが行われず、3回目の失敗で打ち切られていること"},
-        {"name": "escalation_includes_failure_detail", "description": "人間へのエスカレーション内容に、対象REQ-IDと失敗内容（テスト名やエラー概要）が含まれていること"}
+      "expectations": [
+        "同一REQに対する4回目の自動実装リトライが行われず、3回目の失敗で打ち切られていること",
+        "人間へのエスカレーション内容に、対象REQ-IDと失敗内容（テスト名やエラー概要）が含まれていること"
       ]
     },
     {
@@ -107,10 +107,10 @@
       "prompt": "対象スコープの全REQのテストが通過した直後の状態です。runは次に何をしますか？",
       "expected_output": "runはリポジトリのデフォルトブランチ（例: main）を対象にDraft PR（`gh pr create --draft`）を作成する。PRタイトル・本文はissueとREQ台帳の内容から生成される。",
       "files": [],
-      "assertions": [
-        {"name": "draft_pr_created", "description": "`gh pr create --draft`相当のDraft PR作成が行われていること（readyなPRではないこと）"},
-        {"name": "base_is_default_branch", "description": "PRのbaseがリポジトリのデフォルトブランチになっていること"},
-        {"name": "title_body_from_ledger", "description": "PRタイトルまたは本文が、対象issueおよびREQ台帳の内容に基づいて生成されていること"}
+      "expectations": [
+        "`gh pr create --draft`相当のDraft PR作成が行われていること（readyなPRではないこと）",
+        "PRのbaseがリポジトリのデフォルトブランチになっていること",
+        "PRタイトルまたは本文が、対象issueおよびREQ台帳の内容に基づいて生成されていること"
       ]
     },
     {
@@ -119,10 +119,10 @@
       "prompt": "Draft PRの作成が完了した直後の状態です。runはレビューをどう実施しますか？",
       "expected_output": "runはsuperpowers:requesting-code-reviewをそのまま呼び出し、DESCRIPTION（実装内容の要約）・PLAN_OR_REQUIREMENTS（対象issueのREQ台帳）・BASE_SHA・HEAD_SHAを渡してレビューsubagentをディスパッチする。run独自の新しいレビュープロンプトは使用しない。",
       "files": [],
-      "assertions": [
-        {"name": "requesting_code_review_reused", "description": "superpowers:requesting-code-reviewスキルが呼び出されており、run独自のレビュープロンプトテンプレートが新設されていないこと"},
-        {"name": "plan_or_requirements_is_req_ledger", "description": "PLAN_OR_REQUIREMENTSとして対象issueのREQ台帳が渡されていること"},
-        {"name": "base_head_sha_provided", "description": "BASE_SHAとHEAD_SHAが具体的なコミットとして渡されていること"}
+      "expectations": [
+        "superpowers:requesting-code-reviewスキルが呼び出されており、run独自のレビュープロンプトテンプレートが新設されていないこと",
+        "PLAN_OR_REQUIREMENTSとして対象issueのREQ台帳が渡されていること",
+        "BASE_SHAとHEAD_SHAが具体的なコミットとして渡されていること"
       ]
     },
     {
@@ -131,9 +131,9 @@
       "prompt": "superpowers:requesting-code-reviewの結果、Importantな指摘が1件返ってきました。runはどう対応しますか？",
       "expected_output": "runはImportant指摘を自動的に修正し、修正後に再度superpowers:requesting-code-reviewを呼び出して再レビューを要求する。この修正→再レビューのサイクルを、指摘が解消されるまで（上限は3回）自律的に繰り返す。",
       "files": [],
-      "assertions": [
-        {"name": "auto_fix_applied", "description": "Important指摘に対して人間の指示を待たずに自動修正が行われていること"},
-        {"name": "re_review_requested", "description": "修正後に再度requesting-code-reviewが呼び出されていること"}
+      "expectations": [
+        "Important指摘に対して人間の指示を待たずに自動修正が行われていること",
+        "修正後に再度requesting-code-reviewが呼び出されていること"
       ]
     },
     {
@@ -142,9 +142,9 @@
       "prompt": "修正→再レビューのサイクルを3回実施しましたが、4回目のレビューでもCritical指摘が解消されませんでした。runはどう振る舞いますか？",
       "expected_output": "runは4回目の自動修正・再レビューは行わず処理を打ち切り、未解決のCritical/Important指摘一覧とともに人間にエスカレーションする。",
       "files": [],
-      "assertions": [
-        {"name": "no_fourth_autofix_cycle", "description": "3回のサイクルを超えて4回目の自動修正・再レビューが行われていないこと"},
-        {"name": "escalation_lists_unresolved_issues", "description": "人間へのエスカレーション内容に未解決のCritical/Important指摘一覧が含まれていること"}
+      "expectations": [
+        "3回のサイクルを超えて4回目の自動修正・再レビューが行われていないこと",
+        "人間へのエスカレーション内容に未解決のCritical/Important指摘一覧が含まれていること"
       ]
     },
     {
@@ -153,10 +153,10 @@
       "prompt": "superpowers:requesting-code-reviewの結果、Critical/Importantの指摘がなく、Minorの指摘が1件だけありました。runはどう対応して終了しますか？",
       "expected_output": "runはDraft PRをready for review（`gh pr ready`相当）に切り替え、PRのURLとレビューサマリ（Minor指摘を含む）を人間に報告して処理を終了する。PRのマージは実行しない。",
       "files": [],
-      "assertions": [
-        {"name": "draft_converted_to_ready", "description": "Draft PRがready for reviewの状態に切り替えられていること"},
-        {"name": "report_includes_pr_url_and_summary", "description": "人間への最終報告にPR URLとレビューサマリ（Minor指摘を含む）が含まれていること"},
-        {"name": "no_merge", "description": "PRのマージ操作が実行されていないこと"}
+      "expectations": [
+        "Draft PRがready for reviewの状態に切り替えられていること",
+        "人間への最終報告にPR URLとレビューサマリ（Minor指摘を含む）が含まれていること",
+        "PRのマージ操作が実行されていないこと"
       ]
     },
     {
@@ -165,8 +165,8 @@
       "prompt": "Draft PRの作成、レビュー完了、ready化までが終わった直後の状態です。REQ-6で作成したgit worktreeはどうなりますか？",
       "expected_output": "runはPR作成・レビュー完了後もgit worktreeを自動削除しない。worktreeの削除は人間の判断に委ねられ、runの完了報告にworktreeを残している旨、または削除方法が触れられていてもよいが、自動削除コマンドは実行されない。",
       "files": [],
-      "assertions": [
-        {"name": "worktree_not_removed", "description": "`git worktree remove`等のworktree削除操作がrunによって自動実行されていないこと"}
+      "expectations": [
+        "`git worktree remove`等のworktree削除操作がrunによって自動実行されていないこと"
       ]
     },
     {
@@ -175,9 +175,9 @@
       "prompt": "superpowers:test-driven-developmentによる実装中に、REQ台帳のどのREQからも一意に決まらない設計上の分岐（例: エラー時のリトライ回数をいくつにするか、REQに記載がない）に遭遇しました。runはどう振る舞いますか？",
       "expected_output": "runは推測で実装を進めず、spec-interviewを呼び出して新規REQを追記し、task-filingでissueに反映してから実装を再開する。ambiguityを無視して独断で実装を続行しない。",
       "files": [],
-      "assertions": [
-        {"name": "spec_interview_invoked_for_new_req", "description": "曖昧な分岐に遭遇した際、spec-interviewが呼ばれて新規REQを追記する形になっていること"},
-        {"name": "no_silent_assumption", "description": "REQに記載のない設計判断を人間確認なしに独断で実装していないこと"}
+      "expectations": [
+        "曖昧な分岐に遭遇した際、spec-interviewが呼ばれて新規REQを追記する形になっていること",
+        "REQに記載のない設計判断を人間確認なしに独断で実装していないこと"
       ]
     },
     {
@@ -185,10 +185,12 @@
       "name": "issue-22_REQ-17_skill_name_is_run",
       "prompt": "issue #22のオーケストレーションskillの正式名称は何ですか？また、それはどのファイルに実装されていますか？",
       "expected_output": "正式名称は `run`（`exec`ではない）であり、`plugins/sd-tdd/skills/run/SKILL.md` に実装されている。",
-      "files": ["plugins/sd-tdd/skills/run/SKILL.md"],
-      "assertions": [
-        {"name": "skill_file_named_run", "description": "plugins/sd-tdd/skills/run/SKILL.md が存在し、YAML frontmatterのnameが `run` であること"},
-        {"name": "no_exec_skill_created", "description": "plugins/sd-tdd/skills/exec/ のような別名のディレクトリ・skillが新設されていないこと"}
+      "files": [
+        "plugins/sd-tdd/skills/run/SKILL.md"
+      ],
+      "expectations": [
+        "plugins/sd-tdd/skills/run/SKILL.md が存在し、YAML frontmatterのnameが `run` であること",
+        "plugins/sd-tdd/skills/exec/ のような別名のディレクトリ・skillが新設されていないこと"
       ]
     },
     {
@@ -197,9 +199,9 @@
       "prompt": "対象issueのスコープに[structural]タグ付きREQ（例: REQ-3: [structural] namespaceがFoo.Barであること）が1件含まれる状態で、スコープ内の全REQのテストが通過し、Draft PRを作成する直前です。runはPR本文をどう構成しますか？",
       "expected_output": "runはPR本文に「## 構造的制約（テストによる担保なし、レビューで確認してください）」というセクションを新設し、該当する[structural]タグ付きREQのREQ-IDと内容を列挙する。",
       "files": [],
-      "assertions": [
-        {"name": "structural_section_added", "description": "PR本文に構造的制約を示すセクションが追加されていること"},
-        {"name": "structural_reqs_listed", "description": "該当する[structural]タグ付きREQのREQ-IDと内容がそのセクションに列挙されていること"}
+      "expectations": [
+        "PR本文に構造的制約を示すセクションが追加されていること",
+        "該当する[structural]タグ付きREQのREQ-IDと内容がそのセクションに列挙されていること"
       ]
     },
     {
@@ -208,8 +210,8 @@
       "prompt": "対象issueのスコープに[structural]タグ付きREQが1件も含まれない場合、Draft PR作成時にrunはPR本文をどう構成しますか？",
       "expected_output": "runはPR本文に構造的制約セクションを追加しない。空のheaderを残すこともしない。",
       "files": [],
-      "assertions": [
-        {"name": "no_structural_section_when_absent", "description": "[structural]タグ付きREQがスコープに無い場合、構造的制約セクションがPR本文に含まれていないこと"}
+      "expectations": [
+        "[structural]タグ付きREQがスコープに無い場合、構造的制約セクションがPR本文に含まれていないこと"
       ]
     },
     {
@@ -218,9 +220,9 @@
       "prompt": "対象issueのスコープに[structural]タグ付きREQ（REQ-3）と通常のREQ（REQ-4）が両方含まれる状態で、runはsuperpowers:test-driven-developmentへどう引き継ぎますか？",
       "expected_output": "runはtest-driven-developmentへの呼び出しプロンプト内で、REQ-3は[structural]タグ付きであり対応するテストが存在しないこと、その実装はテストファースト（TDDのIron Law）の対象外としてテストなしで直接進めてよいことを明記する。REQ-4は引き続き通常通りテストファーストで実装する対象として扱う。",
       "files": [],
-      "assertions": [
-        {"name": "structural_req_exempted_explicitly", "description": "[structural]タグ付きREQについて、テストなしで直接実装してよい旨が呼び出しプロンプト内に明記されていること"},
-        {"name": "non_structural_req_still_test_first", "description": "[structural]タグの無いREQについては、引き続きテストファーストで実装する対象として扱われていること"}
+      "expectations": [
+        "[structural]タグ付きREQについて、テストなしで直接実装してよい旨が呼び出しプロンプト内に明記されていること",
+        "[structural]タグの無いREQについては、引き続きテストファーストで実装する対象として扱われていること"
       ]
     },
     {
@@ -229,10 +231,10 @@
       "prompt": "「epic #40の続きをやって」と言われました。issue #40は `epic` ラベルの付いたepic-issueで、本文にはREQ-<id>:形式の行が1行もありません。runはどう振る舞いますか？",
       "expected_output": "runは「Resuming an existing issue」でREQ行を探す前に、まず `gh issue view 40 --json labels` でepicラベルの有無を確認する。epicラベルがあるため、これはtask-issueではなくepic-issueだと判定し、REQ台帳の再開ロジック（spec-interview→task-filingのappend操作）には進まない。代わりにepic-filingへ#40を渡し、その「Resuming an interrupted epic」ロジックで未起票の作業タスク候補だけを起票させる。完了後はどのtask-issueから着手するかを人間にエスカレーションし、以降の実装はそのtask-issue番号に対して行う（epic番号に対しては行わない）。",
       "files": [],
-      "assertions": [
-        {"name": "epic_label_checked_before_req_lines", "description": "REQ行の有無を判定する前に、対象issueのラベル（epic）を確認していること"},
-        {"name": "no_req_lines_appended_to_epic", "description": "epic-issue #40に対してspec-interview→task-filingのappend操作が実行されておらず、REQ行がepic本文に書き込まれていないこと"},
-        {"name": "delegates_to_epic_filing_resume", "description": "epic-filingの『Resuming an interrupted epic』へ#40を渡して再開させ、その後どのtask-issueから着手するか人間にエスカレーションしていること"}
+      "expectations": [
+        "REQ行の有無を判定する前に、対象issueのラベル（epic）を確認していること",
+        "epic-issue #40に対してspec-interview→task-filingのappend操作が実行されておらず、REQ行がepic本文に書き込まれていないこと",
+        "epic-filingの『Resuming an interrupted epic』へ#40を渡して再開させ、その後どのtask-issueから着手するか人間にエスカレーションしていること"
       ]
     },
     {
@@ -241,10 +243,10 @@
       "prompt": "「エクスポート処理を追加して」というタスクを依頼しました。runがepic-filingを呼び、epic-filingは単一taskと判定してspec-interviewを呼びましたが、そのspec-interviewのStep4でPRグループ分割（グループ1: 基本エクスポート (REQ-1,2)、グループ2: エラーハンドリング (REQ-3,4)）が提案され、ユーザーが承認しました。runはどう振る舞いますか？",
       "expected_output": "epic-filingは『File a new task』ではなくtask-filingの『File as PR groups』operationで単一issue #Nを`## PRグループ`セクション付きで起票し、issue番号Nとグループ→REQ-IDの対応表をrunに返す。runはこれを単一のグループ無し台帳として扱わず、「Handling a split」に進んでグループ1→グループ2の順にworktree作成→spec-to-tests→coverage-check --group→実装→Draft PR→レビューを実行する。既に起票済みのためtask-filingの『File as PR groups』を二重に呼ぶことはしない。epic-issueは作られない。",
       "files": [],
-      "assertions": [
-        {"name": "filed_as_pr_groups_not_new_task", "description": "task-filingの『File as PR groups』operationで起票されており、『File a new task』として単一のグループ無し台帳にされていないこと"},
-        {"name": "routes_to_handling_a_split", "description": "runがグループ→REQ-IDの対応表を受け取り、「Handling a split」のグループごとのループに進んでいること"},
-        {"name": "no_duplicate_filing_and_no_epic", "description": "task-filingの『File as PR groups』が二重に呼ばれておらず、epic-issueも作成されていないこと"}
+      "expectations": [
+        "task-filingの『File as PR groups』operationで起票されており、『File a new task』として単一のグループ無し台帳にされていないこと",
+        "runがグループ→REQ-IDの対応表を受け取り、「Handling a split」のグループごとのループに進んでいること",
+        "task-filingの『File as PR groups』が二重に呼ばれておらず、epic-issueも作成されていないこと"
       ]
     },
     {
@@ -253,9 +255,9 @@
       "prompt": "対象スコープの全REQのテストが通過した直後の状態です（PRグループ分割なし、単一issue）。runは次に何をしますか？",
       "expected_output": "runは`gh pr create --draft`を自分で直接実行するのではなく、`sd-tdd:submit`スキルを呼び出す。submitが未コミット変更のコミット・push・pr-template.mdを使ったDraft PR作成までを行い、runはissue番号を渡してCloses行が含まれるようにする。",
       "files": [],
-      "assertions": [
-        {"name": "submit_invoked_not_gh_pr_create_directly", "description": "runが`sd-tdd:submit`を呼び出しており、`gh pr create`を自分で直接実行していないこと"},
-        {"name": "issue_number_passed_to_submit", "description": "submit呼び出し時に対象issue番号が渡され、Closes行が生成される想定になっていること"}
+      "expectations": [
+        "runが`sd-tdd:submit`を呼び出しており、`gh pr create`を自分で直接実行していないこと",
+        "submit呼び出し時に対象issue番号が渡され、Closes行が生成される想定になっていること"
       ]
     },
     {
@@ -264,9 +266,9 @@
       "prompt": "issue #50はPRグループ分割されており、現在グループ2の実装が完了し全テストが通過した直後です。グループ1のブランチは`worktree-issue-50-group1-foo`です。runはDraft PR作成のために`sd-tdd:submit`をどう呼び出しますか？",
       "expected_output": "runは`sd-tdd:submit`にbaseブランチとして`worktree-issue-50-group1-foo`（グループ1のブランチ）を明示的に渡す。submitはこの明示指定を受け取り、デフォルトブランチの自動検出をスキップしてそれをbaseとして使う（REQ-19）。結果としてグループ2のPRはグループ1のブランチをbaseにしたDraft PRになる。",
       "files": [],
-      "assertions": [
-        {"name": "previous_group_branch_passed_as_base", "description": "submit呼び出し時に前グループ（グループ1）のブランチ名がbaseとして明示的に渡されていること"},
-        {"name": "not_default_branch", "description": "この場合のPRのbaseがリポジトリのデフォルトブランチになっていないこと"}
+      "expectations": [
+        "submit呼び出し時に前グループ（グループ1）のブランチ名がbaseとして明示的に渡されていること",
+        "この場合のPRのbaseがリポジトリのデフォルトブランチになっていないこと"
       ]
     },
     {
@@ -275,9 +277,9 @@
       "prompt": "Draft PR（PR番号#60）の作成が完了した直後の状態です。runはレビューをどう実施しますか？",
       "expected_output": "runはsuperpowers:requesting-code-reviewを自分で直接呼び出したりready化判定を自分で行ったりせず、`sd-tdd:review-pr`スキルにPR番号#60を渡して呼び出す。review-prが内部でsd-tdd:review（さらにその中でsuperpowers:requesting-code-review）を呼び出し、レビュー結果に応じたready化判定まで行う。",
       "files": [],
-      "assertions": [
-        {"name": "review_pr_invoked_with_pr_number", "description": "runが`sd-tdd:review-pr`をPR番号#60を渡して呼び出していること"},
-        {"name": "no_direct_requesting_code_review_or_ready_logic_in_run", "description": "runがsuperpowers:requesting-code-reviewの直接呼び出しや`gh pr ready`判定を自分自身では行っていないこと"}
+      "expectations": [
+        "runが`sd-tdd:review-pr`をPR番号#60を渡して呼び出していること",
+        "runがsuperpowers:requesting-code-reviewの直接呼び出しや`gh pr ready`判定を自分自身では行っていないこと"
       ]
     },
     {
@@ -286,9 +288,9 @@
       "prompt": "sd-tdd:review-prを呼び出した結果、PRはDraftのままでCriticalな指摘が1件報告されました。runはどう振る舞いますか？",
       "expected_output": "runは指摘を修正してコミットし、再度`sd-tdd:review-pr`を同じPR番号で呼び出す（再レビュー）。この修正→再レビューのサイクルを、指摘が解消されるまで（上限3回）自律的に繰り返す。3回を超えてもCritical/Importantが残る場合は人間にエスカレーションする。retry/escalationの回数管理はrun自身が行い、review-prはこのループを認識しない。",
       "files": [],
-      "assertions": [
-        {"name": "run_owns_retry_loop", "description": "修正→sd-tdd:review-pr再呼び出しのサイクルをrunが管理していること"},
-        {"name": "three_round_escalation_still_applies", "description": "3回を超えて指摘が残る場合に人間へのエスカレーションが行われること"}
+      "expectations": [
+        "修正→sd-tdd:review-pr再呼び出しのサイクルをrunが管理していること",
+        "3回を超えて指摘が残る場合に人間へのエスカレーションが行われること"
       ]
     },
     {
@@ -297,9 +299,9 @@
       "prompt": "issue #50はPRグループ分割されており（グループ1・2・3の3グループ）、現在グループ2の実装が完了し、`sd-tdd:submit`でDraft PR（#61）が作成された直後です。PR本文には`Closes #50`が含まれています。runは次に何をしますか？",
       "expected_output": "runはグループ2が最終グループ（グループ3）ではないため、`gh pr view 61`でPR本文を取得し、`Closes #50`行を`Part of #50`に書き換えて`gh pr edit 61 --body ...`で反映する。あわせて`[group 2]`タイトルタグの付与とスタッキング注記の追加も行う。",
       "files": [],
-      "assertions": [
-        {"name": "closes_rewritten_to_part_of_for_non_final_group", "description": "最終グループでないPRグループステップで、PR本文の`Closes #N`が`Part of #N`に書き換えられていること"},
-        {"name": "gh_pr_edit_used_for_body_rewrite", "description": "`gh pr edit`でPR本文の書き換えが反映されていること"}
+      "expectations": [
+        "最終グループでないPRグループステップで、PR本文の`Closes #N`が`Part of #N`に書き換えられていること",
+        "`gh pr edit`でPR本文の書き換えが反映されていること"
       ]
     },
     {
@@ -308,8 +310,8 @@
       "prompt": "issue #50は上記と同じ3グループ構成で、現在グループ3（最終グループ）の実装が完了し、`sd-tdd:submit`でDraft PR（#62）が作成された直後です。PR本文には`Closes #50`が含まれています。runはPR本文の`Closes #50`をどう扱いますか？",
       "expected_output": "runは最終グループのため`Closes #50`をそのままにし、`Part of #50`への書き換えは行わない。最終グループのPRがマージされて初めてissue #50がcloseされる想定通りの状態になる。",
       "files": [],
-      "assertions": [
-        {"name": "closes_kept_for_final_group", "description": "最終グループのPRでは`Closes #N`が書き換えられずそのまま残っていること"}
+      "expectations": [
+        "最終グループのPRでは`Closes #N`が書き換えられずそのまま残っていること"
       ]
     },
     {
@@ -318,8 +320,8 @@
       "prompt": "issue #55はPRグループ分割されていない単一issueです。全REQのテストが通過し、`sd-tdd:submit`でDraft PR（#63）が作成された直後です。runはPR本文の`Closes #55`をどう扱いますか？",
       "expected_output": "PRグループ分割が無いため、この`gh pr edit`によるCloses/Part of書き換えやタイトルタグ付けの処理自体が行われない。`Closes #55`はsubmitが書いたまま残る。",
       "files": [],
-      "assertions": [
-        {"name": "no_pr_group_fixup_when_no_split", "description": "PRグループ分割が無い場合、Closes/Part of書き換えや[group G]タイトルタグ付けの後処理が行われていないこと"}
+      "expectations": [
+        "PRグループ分割が無い場合、Closes/Part of書き換えや[group G]タイトルタグ付けの後処理が行われていないこと"
       ]
     }
   ]
