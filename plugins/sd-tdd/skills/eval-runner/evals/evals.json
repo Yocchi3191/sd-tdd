@@ -1,0 +1,63 @@
+{
+  "skill_name": "eval-runner",
+  "evals": [
+    {
+      "id": 0,
+      "name": "issue-47_REQ-1_evalsのpromptをsubprocessで実行し出力を取得する",
+      "prompt": "対象skill(例: task-filing)のevals/evals.json内のeval id=0のpromptを実行してください。対象プラグインのworktreeパスは /workspace/plugin-worktree とします。",
+      "expected_output": "eval-runnerは対象evalのpromptフィールドの内容をsubprocessに渡し、`claude -p --plugin-dir /workspace/plugin-worktree \"<prompt>\"`という形のsubprocessコマンドとして実行し、その出力を実行結果として取得する。",
+      "files": [],
+      "expectations": [
+        "対象evalのpromptフィールドの内容がsubprocessに渡されている",
+        "subprocessコマンドが `claude -p` と `--plugin-dir <worktreeパス>` を含む",
+        "subprocessの出力が後続の判定処理のために取得されている"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "issue-47_REQ-2_executorの出力テキストのみを根拠に判定する",
+      "prompt": "REQ-1で得たexecutorの出力には、ツール呼び出しの試行錯誤や中間的な会話ログと、最終的な回答テキストの両方が含まれています。この出力と対象evalのexpected_output/expectationsを使って、各expectations項目のpass/fail判定を行ってください。",
+      "expected_output": "eval-runnerはexecutorの出力テキストのみを根拠として各expectations項目をpass/fail判定し、判定の根拠(evidence)を付与する。判定にexecutorの試行錯誤や内部の会話過程は利用しない。",
+      "files": [],
+      "expectations": [
+        "各expectations項目についてpass/fail判定が出力される",
+        "各判定にはexecutorの出力テキストに基づく根拠(evidence)が付与されている",
+        "判定の根拠としてexecutorの中間的な試行錯誤や内部会話過程が使用されていない"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "issue-47_REQ-3_全eval実行後にpass_fail件数と根拠を含むサマリを出力する",
+      "prompt": "評価対象skillのevals.json内の全evalの実行・判定が完了しました。結果をまとめて報告してください。",
+      "expected_output": "eval-runnerはpass件数・fail件数を含み、各evalごとの判定根拠を含むサマリを、テキストまたはJSON形式で出力する。HTMLビューア(eval-viewer)は使用しない。",
+      "files": [],
+      "expectations": [
+        "出力にpass件数とfail件数が含まれている",
+        "出力に各evalごとの判定根拠が含まれている",
+        "出力形式がテキストまたはJSONであり、HTMLファイルの生成やeval-viewerの起動が行われていない"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "issue-47_REQ-4_evals.jsonはexpectations形式を使用する",
+      "prompt": "eval-runner skill自身のevals/evals.jsonのスキーマを確認してください。",
+      "expected_output": "eval-runnerのevals/evals.jsonは、各eval要素にassertions(オブジェクト配列)ではなくexpectations(文字列配列)フィールドを使用しており、skill-creator公式スキーマ(references/schemas.md)のevals.json形式に一致する。",
+      "files": [],
+      "expectations": [
+        "eval-runnerのevals.jsonの各eval要素にexpectationsフィールド(文字列配列)が存在する",
+        "eval-runnerのevals.jsonの各eval要素にassertionsフィールドが存在しない"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "issue-47_REQ-5_トリガー精度検証はrun_eval.pyをそのまま呼び出す",
+      "prompt": "あるskillのdescriptionのトリガー精度(該当するクエリで正しく呼び出されるか)を検証したいです。eval-runnerはどうやって検証しますか？",
+      "expected_output": "eval-runnerはskill-creatorプラグインのscripts/run_eval.pyをsubprocessとしてそのまま呼び出し、トリガー精度の検証を行う。sd-tdd独自にトリガー精度検証ロジックを再実装しない。",
+      "files": [],
+      "expectations": [
+        "トリガー精度検証にskill-creatorのrun_eval.pyが呼び出されている",
+        "sd-tdd独自の新規トリガー精度検証ロジックが実装・提案されていない"
+      ]
+    }
+  ]
+}
