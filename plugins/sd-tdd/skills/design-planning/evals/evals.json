@@ -1,0 +1,67 @@
+{
+  "skill_name": "design-planning",
+  "evals": [
+    {
+      "id": 0,
+      "name": "issue-41_REQ-1_finalized_decision_has_three_parts",
+      "prompt": "design-planningで人間と設計案を検討していたところ、「キャッシュ層はRedisではなくインメモリLRUにする」という設計判断が固まりました。design-planningはこの決定をどうまとめますか？",
+      "expected_output": "決定内容（インメモリLRUを採用）・検討した代替案（Redis等）・却下理由（採用しなかった理由）の3点を含む形でまとめる。",
+      "files": [],
+      "assertions": [
+        {"name": "three_part_summary", "description": "決定内容・検討した代替案・却下理由の3点が揃った形で決定がまとめられていること"}
+      ]
+    },
+    {
+      "id": 1,
+      "name": "issue-41_REQ-2_never_writes_issue_directly",
+      "prompt": "design-planningでの対話中、対象issueが既に存在する状態で設計判断が確定しました。design-planningはこの確定した内容をどこにどうやって記録しますか？issueを直接編集してよいですか？",
+      "expected_output": "design-planning自身はgh issue editなどでissueを直接更新しない。確定した設計判断の内容はtask-filingに渡し、task-filingの「Append to an existing task」operationが決定事項セクションへの記録を行う。",
+      "files": [],
+      "assertions": [
+        {"name": "no_direct_issue_write", "description": "design-planningがissueへの直接書き込みを行っていないこと"},
+        {"name": "handoff_to_task_filing", "description": "確定内容がtask-filingのAppend operationに渡されていること"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "issue-41_REQ-2_no_issue_yet_defers_to_spec_interview",
+      "prompt": "design-planningでの対話中、まだissueが存在しない状態で設計判断が確定しました。design-planningはtask-filingの「File a new task」operationを直接呼んでよいですか？",
+      "expected_output": "呼ばない。「File a new task」operationはREQ台帳の転記を必須とするが、design-planningが扱うのは設計判断でありREQ台帳ではないため、この必須項目を単独では満たせない。まずspec-interview→task-filingでREQ台帳付きのissueを起票してもらい、issueが成立してから「Append to an existing task」operationで決定事項を渡す。issueの成立を待つ間に内容が失われる懸念がある場合は一時ファイルに書き出しておく。",
+      "files": [],
+      "assertions": [
+        {"name": "no_direct_file_new_task_call", "description": "design-planningがtask-filingの「File a new task」operationを直接呼んでいないこと"},
+        {"name": "defers_to_spec_interview_first", "description": "issue未成立の場合はspec-interview経由でのissue起票を先に待つ設計になっていること"}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "issue-41_REQ-2_long_dialogue_uses_scratch_file",
+      "prompt": "design-planningでの設計検討が長時間続き、複数の設計判断が確定しましたが、まだtask-filingには何も渡していません。この間に内容が失われる懸念がある場合、design-planningはどうすべきですか？",
+      "expected_output": "対話が長くなりtask-filingに渡すまでの間に内容が失われる懸念がある場合は、確定した決定を一時ファイルに書き出しておく。issueへの直接書き込みで代替してはならない。",
+      "files": [],
+      "assertions": [
+        {"name": "scratch_file_used", "description": "issueへの直接書き込みではなく一時ファイルへの書き出しが選ばれていること"}
+      ]
+    },
+    {
+      "id": 4,
+      "name": "issue-41_dialogue_direction_differs_from_brainstorming",
+      "prompt": "design-planningとsuperpowers:brainstormingの対話の向きの違いを説明してください。design-planningはbrainstormingのフローをそのまま流用しますか？",
+      "expected_output": "brainstormingは「AIが提案 → 人間が承認」の向き。design-planningは「人間が設計案を持ち込む → AIが一緒にブラッシュアップする」向きであり、brainstormingのフローをそのまま流用しない。",
+      "files": [],
+      "assertions": [
+        {"name": "direction_not_reused_from_brainstorming", "description": "design-planningがbrainstormingの提案主導フローをそのまま流用していないことが説明されていること"}
+      ]
+    },
+    {
+      "id": 5,
+      "name": "issue-41_no_forced_question_format",
+      "prompt": "design-planningでの対話中、AIが気づいた点を人間に伝える場面です。必ず疑問文の形で聞かなければいけませんか？",
+      "expected_output": "疑問文の形を強制しない。気づいたことは疑問文でも平叙文でも、その場に自然な言い方で伝えればよい。",
+      "files": [],
+      "assertions": [
+        {"name": "question_form_not_mandatory", "description": "疑問文形式が強制されていないこと"}
+      ]
+    }
+  ]
+}
