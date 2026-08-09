@@ -36,4 +36,4 @@ description: Use when a human brings a concrete design proposal (interface desig
 
 ## スコープ
 
-このスキル単体では `sd-tdd:run` パイプラインへの組み込みは行わない（別issueで対応）。現時点では単体で呼び出して使う。
+`sd-tdd:run` パイプラインへの組み込みは `run` の「Starting new work」フロー（コードベース調査の直後）で行われる（issue #42）。単体でも呼び出して使える。
