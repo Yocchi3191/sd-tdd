@@ -73,18 +73,18 @@ A JSON report, if that's the chosen format, should look like:
 
 Trigger accuracy — whether a skill's `description` makes Claude invoke it on the right queries — is a different question from whether a skill *behaves* correctly once invoked (Steps 1–3 above), and uses a different eval-set shape (`{query, should_trigger}`, not `{prompt, expected_output, expectations}`). Don't reimplement this: call `skill-creator`'s own script directly.
 
-First locate the installed `skill-creator` plugin's directory — it is not at a fixed path, since it depends on the local Claude Code plugin cache layout. Search for it, e.g.:
+First locate `run_eval.py` inside the installed `skill-creator` plugin — don't assume a fixed depth under the plugin cache (marketplace/version segments vary), search for the file itself:
 
 ```bash
-find ~/.claude/plugins/cache -maxdepth 2 -iname "skill-creator" -type d
+find ~/.claude/plugins/cache -iname run_eval.py -path "*/skill-creator/*"
 ```
 
-That directory contains `skills/skill-creator/scripts/run_eval.py`. If nothing is found, tell the user `skill-creator` isn't installed rather than guessing a path — it's a prerequisite for this step, not something this skill can substitute for.
+If nothing is found, tell the user `skill-creator` isn't installed rather than guessing a path — it's a prerequisite for this step, not something this skill can substitute for.
 
-`run_eval.py` imports its sibling `scripts.utils` module by package path, so it must be run as a module with its working directory set to the `skill-creator` skill directory (`skills/skill-creator`), not invoked as a bare script path from elsewhere — running it directly (`python .../scripts/run_eval.py ...`) fails with `ModuleNotFoundError: No module named 'scripts'`:
+`run_eval.py` imports its sibling `scripts.utils` module by package path, so it must be run as a module with its working directory set to its own parent's parent directory (the `skill-creator` skill directory, i.e. two levels up from `run_eval.py` itself — `scripts/run_eval.py` → `scripts/` → `skills/skill-creator/`), not invoked as a bare script path from elsewhere — running it directly (`python .../scripts/run_eval.py ...`) fails with `ModuleNotFoundError: No module named 'scripts'`:
 
 ```bash
-cd <skill-creator-plugin-path>/skills/skill-creator
+cd "$(dirname "$(dirname "<path-to-run_eval.py-from-the-find-above>")")"
 python -m scripts.run_eval --eval-set <trigger-eval-set.json> --skill-path <target-skill-path>
 ```
 
