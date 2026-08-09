@@ -57,9 +57,7 @@ A brief summary of what was implemented, inferred from the same commit log/diff 
 
 The reviewer subagent dispatched in Step 5 is instructed to be strictly read-only, but a prompt-level instruction is not an enforced guarantee — record a snapshot now so Step 6 can mechanically check whether that instruction was actually honored.
 
-```bash
-git branch --show-current
-```
+Reuse the branch name Step 1 already computed via `git branch --show-current`; if you arrived here via Step 0's shortcut (so Step 1 didn't run), compute it now the same way. Use this same `<current-branch>` value again in Step 6 — don't re-query it, since the reviewer subagent isn't expected to switch branches and re-querying could mask the very change being checked for.
 
 Run the `review-guard` commands below from the sd-tdd plugin root (same convention as `coverage-check`):
 
@@ -88,6 +86,7 @@ node scripts/review-guard/cli.js compare --before /tmp/review-guard-before.json 
 
 - **`violated: false`:** no read-only violation — continue to Step 7 and report normally.
 - **`violated: true`:** the reviewer subagent mutated the working tree, git history, or the remote-tracking branch despite Step 5's read-only instructions. Skip Step 7's normal report entirely and go to Step 7a instead.
+- **Either `snapshot` or `compare` itself fails to run cleanly** (non-JSON output, a `git`/`node` error, one of the snapshot files missing) rather than exiting with a clean `violated: true`/`false` result: treat this as inconclusive, not as "no violation." Don't report a normal review in this case — stop and tell the user the read-only check itself could not be completed, so they can investigate before trusting the review result either way.
 
 ## Step 7: Report the result — never change PR state
 
@@ -102,4 +101,4 @@ Only reached when Step 6 found `violated: true`. Return a violation report in pl
 - An explicit statement that the reviewer subagent violated its read-only instructions.
 - The specific `reasons` from Step 6's `compare` output (e.g. which of HEAD SHA / working tree state / remote-tracking branch changed, and the before/after values).
 
-This report is not a Critical/Important finding to be fixed and re-reviewed — it is a report about the review process itself, not about the code under review. `review-pr` (when this skill was invoked through it) treats a violation report differently from an ordinary finding-bearing result; see its own SKILL.md.
+This report is not a Critical/Important finding to be fixed and re-reviewed — it is a report about the review process itself, not about the code under review. `review-pr` is expected to treat a violation report differently from an ordinary finding-bearing result (see issue #50 REQ-5/REQ-6, landing in a separate PR group stacked immediately after this one) — until that lands, a caller invoking this skill through `review-pr` should not assume `review-pr`'s existing Draft/ready branching already accounts for this case.
