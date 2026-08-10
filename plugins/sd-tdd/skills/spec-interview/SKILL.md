@@ -5,45 +5,45 @@ description: Use when a feature or bug request has no structured, testable requi
 
 # Spec Interview
 
-Converts a vague request into a REQ ledger — the only record of "what we believed, when." No separate spec document is ever created; this ledger plus the tests it produces (via `spec-to-tests`) are the whole spec.
+曖昧な依頼をREQ台帳 — 「いつ・何を信じていたか」の唯一の記録 — に変換する。個別の仕様書は一切作成しない。この台帳と、そこから生成されるテスト（`spec-to-tests`経由）が、仕様のすべてである。
 
-This skill never talks to a tracker directly. Reading and writing the ledger's home (a GitHub issue, or whatever the project uses) is `task-filing`'s job.
+このスキルはトラッカーと直接やり取りしない。台帳の置き場所（GitHub issue、あるいはプロジェクトが使う何か）の読み書きは`task-filing`の仕事である。
 
-## Step 1: Check for an existing ledger
+## Step 1: 既存の台帳を確認する
 
-If this is a continuation of an existing task, invoke `task-filing`'s "fetch ledger" operation for that task and read the `REQ-` lines it returns. This is an **append session**: new items become `REQ-<max+1>`, `REQ-<max+2>`, ... Existing lines are never rewritten. If you're correcting or replacing an old REQ, append a new one and add `[superseded by REQ-<new id>]` to the old line — don't edit its original text otherwise.
+既存タスクの続きである場合、そのタスクに対して`task-filing`の「fetch ledger」operationを呼び出し、返ってきた`REQ-`行を読む。これは**追記セッション**である: 新しい項目は`REQ-<max+1>`、`REQ-<max+2>`、…となる。既存の行は決して書き換えない。古いREQを訂正・置き換えする場合は、新しい行を追記し、古い行に`[superseded by REQ-<new id>]`を追加する — それ以外の形で元の文言を編集してはならない。
 
-If there's no existing task, this is a fresh interview; the ledger starts at `REQ-1`.
+既存タスクがない場合は新規インタビューであり、台帳は`REQ-1`から始まる。
 
-## Step 2: Interview one question at a time
+## Step 2: 一度に1つずつ質問する
 
-- Ask one question per message. Prefer multiple choice.
-- Each REQ must be a single falsifiable fact — one behavior, one expected outcome. Split anything joined by "and"/"or" into separate REQs.
-- Push back on vagueness. "Handle errors gracefully" is not a REQ. "If the input is empty, return a 400 with message X" is.
-- Keep asking until you can write the whole feature as a list of REQ lines with no ambiguity left.
-- If a REQ describes a structural property of the code (e.g. a namespace, a file layout, a naming rule) rather than an input→output behavior, tag it `[structural]` immediately after the `REQ-<id>:` prefix (e.g. `REQ-3: [structural] namespaceはFoo.Barであること`). `spec-to-tests` generates no test for a `[structural]` REQ and `coverage-check` doesn't require one — its correctness is left to code review instead. Reach for this tag when a behavioral test for the property would end up coupled to the same constraint it's supposed to verify (e.g. a namespace-reflection test whose own `using`/`import` must match the constraint to even compile), making it unable to fail once it compiles. Don't tag a REQ `[structural]` just because it's hard to test — only when it's describing shape, not behavior.
+- 1メッセージにつき1つの質問をする。可能なら選択式にする。
+- 各REQは反証可能な単一の事実でなければならない — 1つの振る舞い、1つの期待される結果。「〜と〜」「〜または〜」で結ばれるものは別々のREQに分割する。
+- 曖昧さには押し返す。「エラーを適切に処理する」はREQではない。「入力が空なら、メッセージXとともに400を返す」はREQである。
+- 機能全体を、曖昧さの残らないREQ行のリストとして書き切れるまで質問を続ける。
+- REQが入力→出力の振る舞いではなく、コードの構造的性質（namespace、ファイル配置、命名規則など）を記述している場合、`REQ-<id>:`プレフィックス直後に`[structural]`タグを付ける（例: `REQ-3: [structural] namespaceがFoo.Barであること`）。`spec-to-tests`は`[structural]`なREQに対してテストを生成せず、`coverage-check`もそれを要求しない — その正しさはコードレビューに委ねられる。この性質を検証する振る舞いテストが、検証すべき制約自体と結合してしまい（例: namespaceをreflectionで検証するテストは、自身の`using`/`import`がその制約に一致していないとそもそもコンパイルできない）、コンパイルが通った時点で失敗し得なくなってしまう場合に、このタグを使う。単に「テストが書きにくい」という理由だけでREQに`[structural]`タグを付けてはならない — それが振る舞いではなく形状を記述している場合にのみ使う。
 
-## Step 3: Decide where the "why" goes
+## Step 3: 「なぜ」をどこに書くかを決める
 
-Default: leave rationale for the test code (`spec-to-tests` will embed it as a comment or in the test name). Only write the rationale directly into a REQ line when at least one of these holds:
+デフォルト: 根拠はテストコード側に残す（`spec-to-tests`がコメントまたはテスト名に埋め込む）。以下のいずれかに当てはまる場合にのみ、根拠をREQ行に直接書く:
 
-1. It requires explaining an alternative that was considered and rejected.
-2. It depends on context the code can't reveal (a stakeholder ask, a compliance rule, a specific past incident).
-3. It can't be stated in one sentence.
+1. 検討した上で却下した代替案の説明が必要な場合。
+2. コードだけでは読み取れない文脈に依存する場合（ステークホルダーからの依頼、コンプライアンス規則、過去の特定のインシデントなど）。
+3. 一文で言い切れない場合。
 
-## Step 4: Consider whether to split
+## Step 4: 分割すべきか検討する
 
-Before asking for final approval, weigh whether this ledger is large or varied enough that a single issue/PR would be painful to review. There is no fixed REQ-count threshold — judge it the same way you'd judge any scope call: how many REQs, how unrelated they are, whether they touch disjoint parts of the codebase.
+最終承認を求める前に、この台帳が大きすぎる・多岐にわたりすぎていて、単一のissue/PRではレビューがつらくなるかどうかを見極める。REQ数による固定の閾値はない — 通常のスコープ判断と同じ観点で判断する: REQの数、それらがどれだけ無関係か、コードベースの重なり合わない部分に触れているかどうか。
 
-- **Judge it not worth splitting:** say nothing about splitting — go straight to Step 5 with the full ledger.
-- **Judge it worth splitting because the groups are independent concerns** (different components, unrelated features — each reviewable/mergeable on its own): propose the grouping (which REQ-IDs belong together), state that recommendation and why, and let the user approve or override it. If approved, this becomes an **independent-concerns split** — see Step 5 for the hand-off.
-- **Judge it worth splitting because the groups are the same feature staged as dependent steps** (e.g. base case → edge cases → error handling, where separate issues would be artificial): propose a **PR-group rollout** instead — state the recommendation and why, then let the user approve or override it. If approved, this becomes a **PR-group split** — see Step 5 for the hand-off.
-- Never ask "sub issue or PR group?" with no guidance; state one recommendation based on independence vs. dependency, as above. That just pushes the same ad-hoc judgment call the user is trying to get away from.
-- If the user declines a split (or you judged none needed), proceed as a single ledger.
+- **分割不要と判断した場合:** 分割については何も言わず、そのままStep 5へ進み台帳全体を扱う。
+- **グループが独立した関心事であるために分割すべきと判断した場合**（異なるコンポーネント、無関係な機能 — それぞれ単独でレビュー・マージ可能）: グルーピング案（どのREQ-IDがどちらのグループに属するか）を提示し、その推奨内容と理由を述べ、ユーザーに承認または上書きしてもらう。承認された場合、これは**独立関心事の分割**になる — 引き継ぎ方法はStep 5参照。
+- **グループが同じ機能を依存関係のある段階に分けたものであるために分割すべきと判断した場合**（例: 基本ケース→エッジケース→エラーハンドリングのように、別issueにすると不自然になる場合）: 代わりに**PRグループでの段階的ロールアウト**を提案する — 推奨内容と理由を述べ、ユーザーに承認または上書きしてもらう。承認された場合、これは**PRグループ分割**になる — 引き継ぎ方法はStep 5参照。
+- 「sub issueにするかPRグループにするか」を指針なしに問うてはならない。上記のとおり、独立性か依存性かに基づいて1つの推奨案を提示すること。指針なしに問うのは、ユーザーが避けたがっている場当たり的な判断をそのまま押し付けているに過ぎない。
+- ユーザーが分割を辞退した場合（または分割不要と判断した場合）、単一の台帳としてそのまま進める。
 
-## Step 5: Get explicit approval, then hand off
+## Step 5: 明示的な承認を得てから引き継ぐ
 
-Show the user the final REQ list before handing off — do not write it anywhere yourself, and do not run any tracker command. Once approved:
+引き継ぐ前に、最終的なREQリストをユーザーに提示する — 自分でどこかに書き込んだり、トラッカーのコマンドを実行したりしてはならない。承認されたら:
 
-- **No split, or a PR-group split**: tell the user "REQ ledger confirmed. Next: invoke `task-filing` to record it (new task, or append if this was a continuation of an existing one)." If a PR-group split was agreed in Step 4, also pass `task-filing` the group→REQ-ID mapping for its "File as PR groups" operation.
-- **An independent-concerns split**: tell the user "REQ ledger confirmed. Next: hand off to `epic-filing` to file the epic-issue and each group as its own task-issue." Pass `epic-filing` the confirmed REQ ledger and the group→REQ-ID mapping — this is `epic-filing`'s Entry B.
+- **分割なし、またはPRグループ分割の場合**: ユーザーに「REQ台帳を確定しました。次は`task-filing`を呼び出して記録します（新規タスク、または既存タスクの続きなら追記）」と伝える。Step 4でPRグループ分割が合意された場合は、`task-filing`の「File as PR groups」operation向けに、グループ→REQ-IDのマッピングも併せて渡す。
+- **独立関心事の分割の場合**: ユーザーに「REQ台帳を確定しました。次は`epic-filing`に引き継いでepic-issueと各グループのtask-issueを起票します」と伝える。確定したREQ台帳とグループ→REQ-IDのマッピングを`epic-filing`に渡す — これが`epic-filing`のEntry Bである。

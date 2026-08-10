@@ -5,44 +5,44 @@ description: Use before spec-to-tests, or whenever a target project might be mis
 
 # Test Infrastructure Setup
 
-`spec-to-tests` only produces something meaningful if the project can run tests, and "tests pass" only proves something if a weak test (e.g. `expect(result).toBeDefined()`) would actually fail under mutation. This skill makes sure both exist before any REQ-to-test generation happens.
+`spec-to-tests`は、プロジェクトがテストを実行できて初めて意味のあるものを生み出せる。また「テストがパスする」ことも、`expect(result).toBeDefined()`のような弱いテストがミューテーションの下で実際に失敗するのでなければ、何も証明したことにならない。このスキルは、REQからテストへの生成が始まる前に、その両方が揃っていることを確認する。
 
-## Step 1: Detect or install a test framework
+## Step 1: テストフレームワークの検出またはインストール
 
-Check for an existing test framework using whatever signal matches the project's ecosystem (not exhaustive — use judgment for ecosystems not listed):
+プロジェクトのエコシステムに合った手がかりを使って、既存のテストフレームワークの有無を確認する（網羅的ではない — 記載のないエコシステムでは判断で補う）:
 
-- Node/TS: `devDependencies` in `package.json` for `vitest`, `jest`, `mocha`, `node:test` usage.
-- Python: `pytest`/`unittest` in `pyproject.toml`, `requirements*.txt`, or existing `test_*.py` files.
-- Go: built-in `testing` package — Go projects almost always already have this; just confirm `*_test.go` files exist or can.
-- Rust: built-in `cargo test` — confirm a `tests/` dir or `#[test]` usage is possible.
-- Java/Kotlin: JUnit in `pom.xml`/`build.gradle`.
+- Node/TS: `package.json`の`devDependencies`に`vitest`、`jest`、`mocha`、`node:test`の利用があるか。
+- Python: `pyproject.toml`、`requirements*.txt`に`pytest`/`unittest`があるか、既存の`test_*.py`ファイルがあるか。
+- Go: 標準の`testing`パッケージ — Goプロジェクトはほぼ常にこれを持っている。`*_test.go`ファイルが存在するか、作成可能かを確認すればよい。
+- Rust: 標準の`cargo test` — `tests/`ディレクトリまたは`#[test]`の利用が可能であることを確認する。
+- Java/Kotlin: `pom.xml`/`build.gradle`のJUnit。
 
-If found: skip to Step 2.
+見つかった場合: Step 2へ進む。
 
-If missing: install the ecosystem-idiomatic minimal default (e.g. `vitest` for a bare JS/TS project, `pytest` for a bare Python project) and write one trivial smoke test to confirm the runner actually executes (e.g. `assert 1 + 1 == 2`). Run it and confirm it passes before moving on.
+見つからなかった場合: そのエコシステムで慣用的な最小構成をインストールし（例: 素のJS/TSプロジェクトには`vitest`、素のPythonプロジェクトには`pytest`）、ランナーが実際に動作することを確認するための自明なスモークテストを1つ書く（例: `assert 1 + 1 == 2`）。次に進む前に、それを実行してパスすることを確認する。
 
-## Step 2: Detect or install a mutation-testing tool
+## Step 2: ミューテーションテストツールの検出またはインストール
 
-Mutation testing deliberately introduces small bugs ("mutants") into the code and checks whether the test suite catches them. This is the only reliable signal that tests are actually asserting something, as opposed to merely existing.
+ミューテーションテストは、コードに意図的に小さなバグ（「ミュータント」）を注入し、テストスイートがそれを検知できるかを確認する。これは、テストが単に存在しているだけでなく実際に何かをアサートしていることを示す唯一の信頼できるシグナルである。
 
-- Node/TS: Stryker (`@stryker-mutator/core`).
-- Python: `mutmut` or `cosmic-ray`.
-- Rust: `cargo-mutants`.
-- Go: `go-mutesting`.
-- Java: PIT (`pitest`).
+- Node/TS: Stryker（`@stryker-mutator/core`）。
+- Python: `mutmut`または`cosmic-ray`。
+- Rust: `cargo-mutants`。
+- Go: `go-mutesting`。
+- Java: PIT（`pitest`）。
 
-If found (config file or dependency already present): skip to Step 3.
+見つかった場合（設定ファイルまたは依存関係が既に存在する）: Step 3へ進む。
 
-If missing: install it with a minimal config targeting the project's source directory, and confirm it runs at least once locally (`--dry-run` or equivalent if available, to avoid a slow full run during setup).
+見つからなかった場合: プロジェクトのソースディレクトリを対象とする最小構成でインストールし、少なくとも1回はローカルで実行できることを確認する（セットアップ中に遅い全実行を避けるため、可能であれば`--dry-run`相当のオプションを使う）。
 
-## Step 3: Wire mutation testing into a scheduled CI job — never per-commit
+## Step 3: ミューテーションテストをスケジュール実行のCIジョブに組み込む — コミットごとには実行しない
 
-Mutation testing is expensive (it reruns the suite once per mutant). It must never run synchronously on every push or PR.
+ミューテーションテストはコストが高い（ミュータントごとにスイートを再実行する）。プッシュやPRのたびに同期的に実行してはならない。
 
-- If CI config already exists (e.g. `.github/workflows/*.yml`) and already has a scheduled (`schedule:` / `cron`) job running mutation testing: skip.
-- If CI config exists but has no scheduled mutation job: add a new workflow file with a `schedule: cron` trigger (weekly is a reasonable default absent other signal) that runs only the mutation-testing command. Leave existing per-push/per-PR jobs untouched — they should keep running the regular (fast) test suite only.
-- If no CI config exists at all: create a minimal one with two jobs — a per-push job running the test suite, and a scheduled job running mutation testing.
+- CI設定が既に存在し（例: `.github/workflows/*.yml`）、ミューテーションテストを実行するスケジュール（`schedule:`/cron）ジョブが既にある場合: スキップ。
+- CI設定は存在するがスケジュール実行のミューテーションジョブがない場合: `schedule: cron`トリガー（他に手がかりがなければ週次を妥当なデフォルトとする）を持つ新しいワークフローファイルを追加し、ミューテーションテストのコマンドのみを実行させる。既存のpush/PRごとのジョブには手を加えない — それらは通常の（高速な）テストスイートのみを実行し続ける。
+- CI設定が全く存在しない場合: 2つのジョブを持つ最小構成を作成する — pushごとにテストスイートを実行するジョブと、スケジュール実行でミューテーションテストを実行するジョブ。
 
-## Step 4: Report
+## Step 4: 報告
 
-Summarize what was detected vs. installed (test framework, mutation tool, CI scheduling) so the user can review the diff before it's committed alongside actual feature work.
+検出したものとインストールしたもの（テストフレームワーク、ミューテーションツール、CIスケジューリング）をまとめ、実際の機能実装と一緒にコミットされる前にユーザーが差分をレビューできるようにする。
