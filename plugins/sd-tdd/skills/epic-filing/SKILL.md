@@ -1,9 +1,9 @@
 ---
 name: epic-filing
-description: Use before spec-interview starts on a fresh, unfiled request — judges whether it describes a single concrete work item or a goal/idea spanning multiple independent work items. For a multi-item initiative, interviews the user on background/goal/success criteria, breaks it into task candidates, files an epic-issue, then runs spec-interview → task-filing per candidate as a sub-issue of the epic. Also triggers directly on phrases like "タスクを切って" / "issueにして" to file work without going through the full run pipeline — filing-only, no implementation follows. Also invoked by spec-interview's own Step 4 when REQ-gathering reveals the ledger actually covers independent concerns, instead of spec-interview filing a sub issue split itself. Resumable by passing an existing epic issue number.
+description: 未起票の新規依頼に対して`spec-interview`を始める前に使う — その依頼が単一の具体的な作業項目を表しているか、複数の独立した作業項目にまたがるゴール・アイデアかを判定する。複数項目の企画の場合は、背景・ゴール・成功指標についてユーザーにヒアリングし、タスク候補に分解した上でepic-issueを起票し、各候補についてspec-interview → task-filingをepicのsub-issueとして実行する。「タスクを切って」「issueにして」のような発話に対しても直接トリガーし、runパイプライン全体を通さずに起票だけを行う——実装は続けて行わない。また、REQヒアリング中に台帳が実は独立した関心事にまたがっていると判明した場合、spec-interview自身が単独でsub issue分割を起票する代わりに、spec-interviewのStep 4から呼び出されることもある。既存のepic issue番号を渡すことで再開可能。
 ---
 
-# Epic Filing
+# Epic Filing: 企画・作業タスクの起票
 
 企画・アイデアレベルの依頼を、目的・ゴール・成功指標を記述する epic-issue として起票し、それを実現する作業タスクは `spec-interview` → `task-filing` で通常どおり task-issue として起票したうえで、その epic-issue の sub-issue にする。単一の作業タスクだと判定した場合はepic化せず、そのまま `spec-interview` → `task-filing` に委譲して終わる。
 
@@ -30,7 +30,7 @@ description: Use before spec-interview starts on a fresh, unfiled request — ju
 
 ### Step A2: 既存epicの再開かどうかを確認する
 
-呼び出し元（`run`、またはユーザー）から既存のepic issue番号が示されている場合は、以降のStep A3〜A6は実行せず、「Resuming an interrupted epic」（後述）に進む。示されていなければ新規のepicとしてStep A3へ進む。
+呼び出し元（`run`、またはユーザー）から既存のepic issue番号が示されている場合は、以降のStep A3〜A6は実行せず、「Resuming an interrupted epic: 中断したepicの再開」（後述）に進む。示されていなければ新規のepicとしてStep A3へ進む。
 
 ### Step A3: 背景・ゴール・成功指標をヒアリングする
 
@@ -108,7 +108,7 @@ Step A5と同じ手順。ただし「関連task-issue」欄は空のまま起票
 
 全グループの処理が終わったら、呼び出し元（`spec-interview` を呼んだ元の文脈、通常は `run`）に「epic-issue #<epic-N> と task-issue #<...>, ... を起票した」と報告する。
 
-## Resuming an interrupted epic
+## Resuming an interrupted epic: 中断したepicの再開
 
 既存のepic issue番号 `<epic-N>` を指定して呼ばれた場合:
 
