@@ -3,14 +3,14 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { parseArgs, main } = require('./cli');
 
-test('parses the snapshot subcommand with a --branch flag', () => {
+test('--branchフラグ付きのsnapshotサブコマンドをパースする', () => {
   assert.deepEqual(parseArgs(['snapshot', '--branch', 'feature-x']), {
     command: 'snapshot',
     branch: 'feature-x',
   });
 });
 
-test('parses the compare subcommand with --before and --after flags', () => {
+test('--beforeと--afterフラグ付きのcompareサブコマンドをパースする', () => {
   assert.deepEqual(parseArgs(['compare', '--before', 'a.json', '--after', 'b.json']), {
     command: 'compare',
     before: 'a.json',
@@ -18,23 +18,23 @@ test('parses the compare subcommand with --before and --after flags', () => {
   });
 });
 
-test('throws when the snapshot subcommand is missing --branch', () => {
+test('snapshotサブコマンドに--branchが無い場合は例外を投げる', () => {
   assert.throws(() => parseArgs(['snapshot']), /Usage: review-guard snapshot/);
 });
 
-test('throws when the compare subcommand is missing --before or --after', () => {
+test('compareサブコマンドに--beforeまたは--afterが無い場合は例外を投げる', () => {
   assert.throws(() => parseArgs(['compare', '--before', 'a.json']), /Usage: review-guard compare/);
 });
 
-test('throws when no subcommand is given', () => {
+test('サブコマンドが指定されない場合は例外を投げる', () => {
   assert.throws(() => parseArgs([]), /Usage: review-guard <snapshot\|compare>/);
 });
 
-test('throws when an unknown subcommand is given', () => {
+test('未知のサブコマンドが指定された場合は例外を投げる', () => {
   assert.throws(() => parseArgs(['bogus']), /Usage: review-guard <snapshot\|compare>/);
 });
 
-test('main snapshot subcommand captures via the injected branch and logs the JSON snapshot', () => {
+test('mainのsnapshotサブコマンドは注入されたbranchでキャプチャし、JSONスナップショットをログ出力する', () => {
   const logged = [];
   const fakeSnapshot = { headSha: 'abc', statusPorcelain: '', remoteRef: { exists: true, sha: 'def' } };
   let capturedBranch = null;
@@ -49,7 +49,7 @@ test('main snapshot subcommand captures via the injected branch and logs the JSO
   assert.deepEqual(JSON.parse(logged[0]), fakeSnapshot);
 });
 
-test('main compare subcommand reads both files, compares them, and logs the JSON result', () => {
+test('mainのcompareサブコマンドは両ファイルを読み込み、比較し、JSON結果をログ出力する', () => {
   const originalExitCode = process.exitCode;
   try {
     const logged = [];
@@ -74,7 +74,7 @@ test('main compare subcommand reads both files, compares them, and logs the JSON
   }
 });
 
-test('main compare subcommand sets exitCode 0 when compareSnapshots reports no violation', () => {
+test('compareSnapshotsが違反なしと報告した場合、mainのcompareサブコマンドはexitCodeを0にする', () => {
   const originalExitCode = process.exitCode;
   try {
     main(['compare', '--before', 'before.json', '--after', 'after.json'], {
@@ -88,7 +88,7 @@ test('main compare subcommand sets exitCode 0 when compareSnapshots reports no v
   }
 });
 
-test('main compare subcommand sets exitCode 1 when compareSnapshots reports a violation', () => {
+test('compareSnapshotsが違反ありと報告した場合、mainのcompareサブコマンドはexitCodeを1にする', () => {
   const originalExitCode = process.exitCode;
   try {
     main(['compare', '--before', 'before.json', '--after', 'after.json'], {

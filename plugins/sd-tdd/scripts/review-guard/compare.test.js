@@ -11,13 +11,13 @@ function baseSnapshot() {
   };
 }
 
-test('issue-50_REQ-3_compareSnapshots reports no violation when all three fields are unchanged', () => {
+test('issue-50_REQ-3_3項目すべてが変化していない場合、compareSnapshotsは違反なしと報告する', () => {
   const before = baseSnapshot();
   const after = baseSnapshot();
   assert.deepEqual(compareSnapshots(before, after), { violated: false, reasons: [] });
 });
 
-test('issue-50_REQ-3_compareSnapshots detects violation when HEAD SHA changed', () => {
+test('issue-50_REQ-3_HEAD SHAが変化した場合、compareSnapshotsは違反を検出する', () => {
   const before = baseSnapshot();
   const after = { ...baseSnapshot(), headSha: 'zzz999' };
   const result = compareSnapshots(before, after);
@@ -26,7 +26,7 @@ test('issue-50_REQ-3_compareSnapshots detects violation when HEAD SHA changed', 
   assert.match(result.reasons[0], /HEAD SHA changed: abc123 -> zzz999/);
 });
 
-test('issue-50_REQ-3_compareSnapshots detects violation when working tree status changed', () => {
+test('issue-50_REQ-3_作業ツリーの状態が変化した場合、compareSnapshotsは違反を検出する', () => {
   const before = baseSnapshot();
   const after = { ...baseSnapshot(), statusPorcelain: ' M SKILL.md' };
   const result = compareSnapshots(before, after);
@@ -35,7 +35,7 @@ test('issue-50_REQ-3_compareSnapshots detects violation when working tree status
   assert.match(result.reasons[0], /working tree\/index state changed/);
 });
 
-test('issue-50_REQ-3_compareSnapshots detects violation when remote tracking branch SHA changed', () => {
+test('issue-50_REQ-3_リモート追跡ブランチのSHAが変化した場合、compareSnapshotsは違反を検出する', () => {
   const before = baseSnapshot();
   const after = { ...baseSnapshot(), remoteRef: { exists: true, sha: 'newsha000' } };
   const result = compareSnapshots(before, after);
@@ -44,7 +44,7 @@ test('issue-50_REQ-3_compareSnapshots detects violation when remote tracking bra
   assert.match(result.reasons[0], /remote tracking branch SHA changed: def456 -> newsha000/);
 });
 
-test('issue-50_REQ-3_compareSnapshots detects violation when remote tracking branch newly appeared', () => {
+test('issue-50_REQ-3_リモート追跡ブランチが新たに出現した場合、compareSnapshotsは違反を検出する', () => {
   const before = { ...baseSnapshot(), remoteRef: { exists: false, sha: null } };
   const after = baseSnapshot();
   const result = compareSnapshots(before, after);
@@ -53,7 +53,7 @@ test('issue-50_REQ-3_compareSnapshots detects violation when remote tracking bra
   assert.match(result.reasons[0], /remote tracking branch existence changed: false -> true/);
 });
 
-test('issue-50_REQ-3_compareSnapshots detects violation when remote tracking branch disappeared', () => {
+test('issue-50_REQ-3_リモート追跡ブランチが消失した場合、compareSnapshotsは違反を検出する', () => {
   const before = baseSnapshot();
   const after = { ...baseSnapshot(), remoteRef: { exists: false, sha: null } };
   const result = compareSnapshots(before, after);
@@ -61,7 +61,7 @@ test('issue-50_REQ-3_compareSnapshots detects violation when remote tracking bra
   assert.equal(result.reasons.length, 1);
 });
 
-test('issue-50_REQ-3_compareSnapshots reports one reason per changed dimension when multiple fields change', () => {
+test('issue-50_REQ-3_複数フィールドが変化した場合、compareSnapshotsは変化した項目ごとに理由を1つ報告する', () => {
   const before = baseSnapshot();
   const after = {
     headSha: 'zzz999',
@@ -73,7 +73,7 @@ test('issue-50_REQ-3_compareSnapshots reports one reason per changed dimension w
   assert.equal(result.reasons.length, 3);
 });
 
-test('issue-50_REQ-3_compareSnapshots reports no violation when remote ref absent both before and after', () => {
+test('issue-50_REQ-3_リモート参照が前後とも不在の場合、compareSnapshotsは違反なしと報告する', () => {
   const before = { ...baseSnapshot(), remoteRef: { exists: false, sha: null } };
   const after = { ...baseSnapshot(), remoteRef: { exists: false, sha: null } };
   assert.deepEqual(compareSnapshots(before, after), { violated: false, reasons: [] });

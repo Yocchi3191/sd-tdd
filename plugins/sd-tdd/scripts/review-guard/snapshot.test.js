@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const { captureSnapshot } = require('./snapshot');
 const { compareSnapshots } = require('./compare');
 
-test('issue-50_REQ-1_captureSnapshot returns HEAD SHA, status porcelain output, and existing remote ref SHA', () => {
+test('issue-50_REQ-1_captureSnapshotはHEAD SHA・status porcelainの出力・存在するリモート参照のSHAを返す', () => {
   const fakeGit = (args) => {
     if (args[0] === 'rev-parse' && args[1] === 'HEAD') return 'abc123\n';
     if (args[0] === 'status') return ' M SKILL.md\n';
@@ -19,7 +19,7 @@ test('issue-50_REQ-1_captureSnapshot returns HEAD SHA, status porcelain output, 
   });
 });
 
-test('issue-50_REQ-1_captureSnapshot marks remote ref as not existing when git rev-parse --verify -q exits 1 with no stderr', () => {
+test('issue-50_REQ-1_git rev-parse --verify -qがstderr無しでexit 1した場合、captureSnapshotはリモート参照を存在しないとマークする', () => {
   const fakeGit = (args) => {
     if (args[0] === 'rev-parse' && args[1] === 'HEAD') return 'abc123\n';
     if (args[0] === 'status') return '';
@@ -39,7 +39,7 @@ test('issue-50_REQ-1_captureSnapshot marks remote ref as not existing when git r
   });
 });
 
-test('issue-50_REQ-1_captureSnapshot rethrows an unexpected error from the remote ref lookup instead of masking it as absent', () => {
+test('issue-50_REQ-1_captureSnapshotはリモート参照検索での予期しないエラーを、不在として隠蔽せず再送出する', () => {
   const fakeGit = (args) => {
     if (args[0] === 'rev-parse' && args[1] === 'HEAD') return 'abc123\n';
     if (args[0] === 'status') return '';
@@ -54,7 +54,7 @@ test('issue-50_REQ-1_captureSnapshot rethrows an unexpected error from the remot
   assert.throws(() => captureSnapshot('feature-x', { git: fakeGit }), /permission denied/);
 });
 
-test('issue-50_REQ-1_captureSnapshot rethrows even a status-1 failure if stderr is non-empty (not the "ref absent" signature)', () => {
+test('issue-50_REQ-1_stderrが空でないstatus-1の失敗（「参照不在」のシグネチャではない）の場合も、captureSnapshotは再送出する', () => {
   const fakeGit = (args) => {
     if (args[0] === 'rev-parse' && args[1] === 'HEAD') return 'abc123\n';
     if (args[0] === 'status') return '';
@@ -69,7 +69,7 @@ test('issue-50_REQ-1_captureSnapshot rethrows even a status-1 failure if stderr 
   assert.throws(() => captureSnapshot('feature-x', { git: fakeGit }), /something unexpected happened/);
 });
 
-test('issue-50_REQ-2_capturing the same repository state twice yields snapshots that compare as no violation', () => {
+test('issue-50_REQ-2_同じリポジトリ状態を2回キャプチャすると、比較結果は違反なしになる', () => {
   const fakeGit = (args) => {
     if (args[0] === 'rev-parse' && args[1] === 'HEAD') return 'abc123\n';
     if (args[0] === 'status') return '';
