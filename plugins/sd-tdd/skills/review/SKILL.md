@@ -53,7 +53,19 @@ gh issue view <N> --json body -q .body
 
 A brief summary of what was implemented, inferred from the same commit log/diff used in Step 2 — one or two sentences.
 
-## Step 4: Dispatch the reviewer via superpowers:requesting-code-review
+## Step 4: Record a pre-dispatch git-state snapshot
+
+The reviewer subagent dispatched in Step 5 is instructed to be strictly read-only, but a prompt-level instruction is not an enforced guarantee — record a snapshot now so Step 6 can mechanically check whether that instruction was actually honored.
+
+Reuse the branch name Step 1 already computed via `git branch --show-current`; if you arrived here via Step 0's shortcut (so Step 1 didn't run), compute it now the same way. Use this same `<current-branch>` value again in Step 6 — don't re-query it, since the reviewer subagent isn't expected to switch branches and re-querying could mask the very change being checked for.
+
+Run the `review-guard` commands below from the sd-tdd plugin root (same convention as `coverage-check`):
+
+```bash
+node scripts/review-guard/cli.js snapshot --branch <current-branch> > /tmp/review-guard-before.json
+```
+
+## Step 5: Dispatch the reviewer via superpowers:requesting-code-review
 
 Invoke `superpowers:requesting-code-review` exactly as documented there — this skill introduces no new review prompt or template. Fill its template with:
 
@@ -61,8 +73,32 @@ Invoke `superpowers:requesting-code-review` exactly as documented there — this
 - `PLAN_OR_REQUIREMENTS`: from Step 2.
 - `BASE_SHA` / `HEAD_SHA`: from Step 1.
 
-## Step 5: Report the result — never change PR state
+## Step 6: Record a post-dispatch snapshot and compare
+
+Once the subagent returns, capture a second snapshot the same way and compare it against the one from Step 4:
+
+```bash
+node scripts/review-guard/cli.js snapshot --branch <current-branch> > /tmp/review-guard-after.json
+node scripts/review-guard/cli.js compare --before /tmp/review-guard-before.json --after /tmp/review-guard-after.json
+```
+
+`compare` exits 1 (and prints `"violated": true` with a `reasons` array) when the two snapshots differ; it exits 0 (`"violated": false`) when they match.
+
+- **`violated: false`:** no read-only violation — continue to Step 7 and report normally.
+- **`violated: true`:** the reviewer subagent mutated the working tree, git history, or the remote-tracking branch despite Step 5's read-only instructions. Skip Step 7's normal report entirely and go to Step 7a instead.
+- **Either `snapshot` or `compare` itself fails to run cleanly** (non-JSON output, a `git`/`node` error, one of the snapshot files missing) rather than exiting with a clean `violated: true`/`false` result: treat this as inconclusive, not as "no violation." Don't report a normal review in this case — stop and tell the user the read-only check itself could not be completed, so they can investigate before trusting the review result either way.
+
+## Step 7: Report the result — never change PR state
 
 Report the reviewer's Strengths / Issues / Recommendations / Assessment back to the user as-is.
 
 Regardless of the review's outcome — including a clean pass with no Critical/Important findings — this skill never runs `gh pr ready`, `gh pr merge`, or any other PR-state-changing command. Converting a Draft PR to ready for review is `review-pr`'s responsibility, not this one's; `review` has no opinion on PR state because it doesn't assume a PR exists at all.
+
+## Step 7a: Report a read-only violation instead
+
+Only reached when Step 6 found `violated: true`. Return a violation report in place of the normal Strengths/Issues/Recommendations/Assessment format — do not present this as if it were an ordinary review result. Include:
+
+- An explicit statement that the reviewer subagent violated its read-only instructions.
+- The specific `reasons` from Step 6's `compare` output (e.g. which of HEAD SHA / working tree state / remote-tracking branch changed, and the before/after values).
+
+This report is not a Critical/Important finding to be fixed and re-reviewed — it is a report about the review process itself, not about the code under review. `review-pr` is expected to treat a violation report differently from an ordinary finding-bearing result (see issue #50 REQ-5/REQ-6, landing in a separate PR group stacked immediately after this one) — until that lands, a caller invoking this skill through `review-pr` should not assume `review-pr`'s existing Draft/ready branching already accounts for this case.
