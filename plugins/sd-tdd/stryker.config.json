@@ -8,7 +8,9 @@
   "coverageAnalysis": "off",
   "mutate": [
     "scripts/coverage-check/**/*.js",
-    "!scripts/coverage-check/**/*.test.js"
+    "!scripts/coverage-check/**/*.test.js",
+    "scripts/review-guard/**/*.js",
+    "!scripts/review-guard/**/*.test.js"
   ],
   "reporters": ["clear-text", "progress"]
 }
