@@ -1,37 +1,37 @@
 ---
 name: spec-to-tests
-description: Use after spec-interview has confirmed a REQ ledger and task-filing has recorded it on the tracker — generates one or more failing tests per active REQ-ID, named with an issue-N_REQ-XX compound key for traceability. Requires a test framework to already exist (see test-infra-setup).
+description: spec-interviewがREQ台帳を確定し、task-filingがそれをトラッカーに記録した後に使用する。アクティブなREQ-IDごとに1つ以上の失敗するテストを生成し、トレーサビリティのためissue-N_REQ-XX形式の複合キーで命名する。テストフレームワークが既に存在している必要がある（test-infra-setup参照）。
 ---
 
-# Spec to Tests
+# 仕様からテストを生成する
 
-Turns each REQ-ID in an issue's ledger into a failing test. The test name *is* the traceability link back to the ledger — there is no separate mapping file to maintain.
+issueのREQ台帳にある各REQ-IDを、失敗するテストへと変換する。テスト名そのものが台帳へのトレーサビリティのリンクとなり、別途メンテナンスすべきマッピングファイルは存在しない。
 
-## Step 0: Confirm test infrastructure exists
+## ステップ0: テスト基盤の存在を確認する
 
-If the project has no detectable test framework, stop and say so — invoke `test-infra-setup` first. Don't generate tests into a project that can't run them.
+プロジェクトにテストフレームワークが検出できない場合は、そこで作業を止めてその旨を伝える — 先に`test-infra-setup`を呼び出すこと。テストを実行できないプロジェクトにテストを生成してはならない。
 
-## Step 1: Read the ledger
+## ステップ1: 台帳を読む
 
 ```bash
 gh issue view <N> --json body -q .body
 ```
 
-Parse the `REQ-<id>: ...` lines. Skip any line annotated `[superseded by REQ-<m>]` — only active (non-superseded) REQs need a test. Also note which active REQs are tagged `[structural]` (e.g. `REQ-3: [structural] namespaceはFoo.Barであること`) — see Step 4 for how those are handled differently.
+`REQ-<id>: ...`形式の行をパースする。`[superseded by REQ-<m>]`と注記された行はスキップする — アクティブな（supersedeされていない）REQのみテストが必要。また、`[structural]`タグが付いたアクティブなREQ（例: `REQ-3: [structural] namespaceはFoo.Barであること`）がどれかも記録しておく — これらがどのように異なる扱いを受けるかはステップ4を参照。
 
-## Step 2: If the ledger has a PR group breakdown, pick one group to target
+## ステップ2: 台帳にPRグループの分割がある場合、対象とするグループを1つ選ぶ
 
-Check the body for a `## PRグループ` section (see `task-filing`'s `task-template.md`). If it's absent, skip this step — target every active REQ from Step 1, same as always.
+本文に`## PRグループ`セクションがあるか確認する（`task-filing`の`task-template.md`を参照）。無ければこのステップはスキップし、常通りステップ1の全アクティブREQを対象とする。
 
-If it's present, ask the user which group to process this round (default to the first not-yet-implemented group in listed order, since groups are meant to be staged). Narrow the REQ set from Step 1 down to just that group's REQ-IDs — everything downstream (test generation, the red-check, `coverage-check`) operates on this narrowed set only, not the full ledger.
+ある場合は、今回どのグループを処理するかユーザーに確認する（グループは段階的に進める想定のため、デフォルトは記載順で最初の未実装グループ）。ステップ1のREQ集合を、そのグループのREQ-IDのみに絞り込む — 以降の工程（テスト生成、red確認、`coverage-check`）はすべて、台帳全体ではなくこの絞り込んだ集合に対して行う。
 
-## Step 3: Detect the project's test conventions
+## ステップ3: プロジェクトのテスト規約を検出する
 
-Look at existing test files (naming, assertion style, `describe`/`it` vs. bare `test`, fixture setup patterns) and match them. Don't introduce a second test style into a project that already has one.
+既存のテストファイル（命名規則、アサーションのスタイル、`describe`/`it`か素の`test`か、フィクスチャのセットアップパターン）を確認し、それに合わせる。既にスタイルが存在するプロジェクトに、2つ目のテストスタイルを持ち込まないこと。
 
-## Step 4: Generate one test per REQ-ID, named with the compound key
+## ステップ4: REQ-IDごとに1つテストを生成し、複合キーで命名する
 
-**Except for `[structural]` REQs — generate no test for those.** A `[structural]` REQ describes a property of the code's shape (e.g. a namespace, a file layout, a naming rule) rather than an input→output behavior. This pipeline's tests exist to verify behavior; a structural property is typically only checkable by a test that is itself coupled to the same constraint it's supposed to verify (e.g. a namespace-reflection test whose own `using`/`import` must match the constraint to even compile) — once such a test compiles, it can no longer fail, defeating the point of having it. Leave a `[structural]` REQ's verification to code review instead: don't write a test or eval case for it, and don't count it against yourself in Step 7's red-check. (`run`'s "Creating the PR" step is what actually surfaces `[structural]` REQs to the reviewer, in the PR body — this skill's only job here is to not generate a test that can't fail.) This changes nothing for REQs without the tag — generate one test per REQ-ID for all of them, as below:
+**ただし`[structural]`なREQは例外 — これらに対してはテストを生成しない。** `[structural]`なREQは、入力→出力の振る舞いではなく、コードの形状に関する性質（namespace、ファイル配置、命名規則など）を記述している。このパイプラインのテストは振る舞いを検証するために存在するが、構造的な性質は多くの場合、検証対象の制約そのものに結合したテストでしか確認できない（例: namespaceをreflectionで確認するテストは、コンパイルさせるためにそのテスト自身の`using`/`import`が制約と一致していなければならない）— そのようなテストは、コンパイルが通った時点で既に失敗し得ない状態になっており、テストとして存在する意味がない。`[structural]`なREQの検証はコードレビューに委ね、テストやevalケースを書かず、ステップ7のred確認でも自分に不利益として数えないこと。（`[structural]`なREQを実際にレビュアーへ提示するのはPR本文への記載を行う`run`の「PRを作成する」ステップの役割であり、このskillの責務はあくまで失敗し得ないテストを生成しないことだけである。）タグの無いREQについてはこれまでと変わらず、以下のようにREQ-IDごとに1つずつテストを生成する:
 
 ```ts
 it("issue-12_REQ-3_空文字を送信したら400を返す", () => {
@@ -39,24 +39,24 @@ it("issue-12_REQ-3_空文字を送信したら400を返す", () => {
 });
 ```
 
-A REQ may need more than one test (happy path, edge cases) — give each the same `issue-N_REQ-XX` prefix; `coverage-check` only requires at least one match per REQ-ID, not exactly one.
+1つのREQに複数のテストが必要になる場合もある（正常系、エッジケースなど）— それぞれに同じ`issue-N_REQ-XX`プレフィックスを付ける。`coverage-check`はREQ-IDごとに最低1件のマッチを要求するだけで、ちょうど1件であることは要求しない。
 
 `issue-N_REQ-XX` プレフィックス自体（トレーサビリティ用のキー）は上記の英数字表記のまま変更しないこと。一方、それに続く説明文——`test()`/`it()`/`describe()` などに渡す文字列——は日本語で書く。日本語しか読めないレビュアーがテストの説明文を読めない、という指摘が過去にあった(issue #50 / PR #55)。
 
-## Step 5: Decide where the "why" goes, per test
+## ステップ5: テストごとに「理由」をどこに書くか決める
 
-If the reason a REQ holds is a single sentence derivable from the code/domain itself, put it in the test name or a one-line comment. If it needs the longer treatment (alternatives considered, external context, multi-sentence) it belongs on the ledger, not here — if it isn't already on the ledger, invoke `spec-interview` to draft the new REQ and `task-filing` to append it to the ledger, then add a short pointer comment in the test (e.g. `// see issue #12`).
+そのREQが成り立つ理由が、コード/ドメインから導ける一文で説明できる場合は、テスト名か1行コメントに書く。より長い説明が必要な場合（検討した代替案、外部コンテキスト、複数文にわたる説明）は、ここではなく台帳に書くべきものである — まだ台帳に無ければ、`spec-interview`を呼び出して新しいREQを起草し、`task-filing`で台帳に追記した上で、テストには短い参照コメントを添える（例: `// see issue #12`）。
 
-## Step 6: Discovered a case the ledger doesn't mention?
+## ステップ6: 台帳に記載の無いケースを発見したら？
 
-Don't silently add a test for it. Invoke `spec-interview` to draft a new REQ, then `task-filing` to append it to the ledger (this is what keeps the ledger honest), then write the test against the new REQ-ID. If a PR group is targeted, add the new REQ to that group.
+黙ってそのままテストを追加してはいけない。`spec-interview`を呼び出して新しいREQを起草し、`task-filing`で台帳に追記する（これが台帳の正しさを保つ手段である）。その上で、新しいREQ-IDに対してテストを書く。PRグループを対象にしている場合は、その新しいREQを該当グループに追加する。
 
-## Step 7: Confirm red for the right reason
+## ステップ7: 正しい理由でred（失敗）になっていることを確認する
 
-Run the new tests once before handing off:
+引き渡す前に、一度新しいテストを実行する:
 
 ```bash
 <project's test command> <new test files>
 ```
 
-Expected: every new test FAILS with an assertion/not-implemented error — not a syntax error, import error, or setup crash. If it's failing for the wrong reason, fix the test itself before moving on.
+期待される結果: 新しいテストはすべて、アサーションエラーまたは未実装エラーでFAILすること — 構文エラー、importエラー、セットアップのクラッシュではないこと。誤った理由で失敗している場合は、先に進む前にテスト自体を修正すること。
