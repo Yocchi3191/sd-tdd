@@ -7,8 +7,8 @@
       "prompt": "PR番号を指定せずに `sd-tdd:review-pr` を実行してください。",
       "expected_output": "review-prはPR番号が無いと処理を進められないため、対象PR番号の指定を求める（現在の作業ブランチから推測して代わりに処理を進めたりはしない）。",
       "files": [],
-      "assertions": [
-        {"name": "pr_number_required", "description": "PR番号未指定の場合、review-prがPR番号の指定を求めており、現在のブランチ等から推測して処理を進めていないこと"}
+      "expectations": [
+        "PR番号未指定の場合、review-prがPR番号の指定を求めており、現在のブランチ等から推測して処理を進めていないこと"
       ]
     },
     {
@@ -17,10 +17,10 @@
       "prompt": "PR番号 `#40` を指定して `sd-tdd:review-pr` を実行してください。このPRは `worktree-issue-32-group2-review` というfeatureブランチをbaseにした、PRグループの積み上げPRです（リポジトリのデフォルトブランチ `main` をbaseにしたPRではありません）。BASE_SHA/HEAD_SHAはどう決まりますか？",
       "expected_output": "review-prはPR #40のbase/headブランチ情報を取得し（`gh pr view 40 --json baseRefName,headRefName` の `baseRefName` は `main` ではなく `worktree-issue-32-group2-review`）、BASE_SHAをこの非デフォルトbaseブランチ（`worktree-issue-32-group2-review`）からの分岐元コミットとして解決する。リポジトリのデフォルトブランチ（`main`）との分岐点を使ってしまうことはない。HEAD_SHAはPRブランチの最新コミット。ユーザーにSHAの指定を求めない。",
       "files": [],
-      "assertions": [
-        {"name": "pr_info_fetched", "description": "対象PRのbase/headブランチ情報が取得されていること"},
-        {"name": "base_sha_from_actual_pr_base_not_default_branch", "description": "BASE_SHAがPRの実際のbaseブランチ（デフォルトブランチではない `worktree-issue-32-group2-review`）からの分岐元コミットとして解決されていること"},
-        {"name": "head_sha_from_pr_head", "description": "HEAD_SHAがPRブランチの最新コミットとして解決されていること"}
+      "expectations": [
+        "対象PRのbase/headブランチ情報が取得されていること",
+        "BASE_SHAがPRの実際のbaseブランチ（デフォルトブランチではない `worktree-issue-32-group2-review`）からの分岐元コミットとして解決されていること",
+        "HEAD_SHAがPRブランチの最新コミットとして解決されていること"
       ]
     },
     {
@@ -29,9 +29,9 @@
       "prompt": "本文に `Closes #40` を含むPR番号 `#41` を指定して `sd-tdd:review-pr` を実行してください。PLAN_OR_REQUIREMENTSは何になりますか？",
       "expected_output": "review-prはPR本文から `Closes #40` を正規表現で抽出し、issue #40のREQ台帳（`gh issue view 40 --json body -q .body`）を取得してPLAN_OR_REQUIREMENTSとして使う。",
       "files": [],
-      "assertions": [
-        {"name": "closes_reference_extracted", "description": "PR本文の `Closes #40` からissue番号40が抽出されていること"},
-        {"name": "req_ledger_used", "description": "抽出したissue番号のREQ台帳がPLAN_OR_REQUIREMENTSとして使われていること"}
+      "expectations": [
+        "PR本文の `Closes #40` からissue番号40が抽出されていること",
+        "抽出したissue番号のREQ台帳がPLAN_OR_REQUIREMENTSとして使われていること"
       ]
     },
     {
@@ -40,9 +40,9 @@
       "prompt": "本文に `Part of #40` を含むPR番号 `#42` を指定して `sd-tdd:review-pr` を実行してください。PLAN_OR_REQUIREMENTSは何になりますか？",
       "expected_output": "review-prは `Closes #N` だけでなく `Part of #N` も同様にissue番号として抽出し、issue #40のREQ台帳をPLAN_OR_REQUIREMENTSとして使う。PRグループ分割時の中間PRで使われる `Part of #N` 表記でも同じ挙動になる。",
       "files": [],
-      "assertions": [
-        {"name": "part_of_reference_extracted", "description": "PR本文の `Part of #40` からissue番号40が抽出されていること"},
-        {"name": "req_ledger_used_for_part_of", "description": "抽出したissue番号のREQ台帳がPLAN_OR_REQUIREMENTSとして使われていること"}
+      "expectations": [
+        "PR本文の `Part of #40` からissue番号40が抽出されていること",
+        "抽出したissue番号のREQ台帳がPLAN_OR_REQUIREMENTSとして使われていること"
       ]
     },
     {
@@ -51,10 +51,10 @@
       "prompt": "本文に `Closes #N` や `Part of #N` の記載が無いPR番号 `#43` を指定して `sd-tdd:review-pr` を実行してください。PLAN_OR_REQUIREMENTSは何になりますか？",
       "expected_output": "review-prはissue番号を抽出できないため、issueのREQ台帳を探しに行かず、PR自体のタイトルと本文をそのままPLAN_OR_REQUIREMENTSとして使う。issue番号が見つからないことをエラーにしない。",
       "files": [],
-      "assertions": [
-        {"name": "no_issue_lookup_when_no_reference", "description": "Closes/Part of参照が無い場合にissueのREQ台帳取得を試みていないこと"},
-        {"name": "pr_title_body_used_as_fallback", "description": "PRのタイトル・本文がPLAN_OR_REQUIREMENTSとして使われていること"},
-        {"name": "does_not_error_without_issue_reference", "description": "issue参照が見つからなくてもreview-prがエラー終了しないこと"}
+      "expectations": [
+        "Closes/Part of参照が無い場合にissueのREQ台帳取得を試みていないこと",
+        "PRのタイトル・本文がPLAN_OR_REQUIREMENTSとして使われていること",
+        "issue参照が見つからなくてもreview-prがエラー終了しないこと"
       ]
     },
     {
@@ -63,8 +63,8 @@
       "prompt": "本文に `Closes #40` と `Part of #41` の両方を含むPR番号 `#44` を指定して `sd-tdd:review-pr` を実行してください。PLAN_OR_REQUIREMENTSはどちらのissueのREQ台帳になりますか？",
       "expected_output": "review-prは `Closes` を優先し、issue #40のREQ台帳をPLAN_OR_REQUIREMENTSとして使う。issue #41は使われない。",
       "files": [],
-      "assertions": [
-        {"name": "closes_takes_precedence_over_part_of", "description": "Closes参照とPart of参照が両方存在する場合、Closes側のissue番号のREQ台帳が使われていること"}
+      "expectations": [
+        "Closes参照とPart of参照が両方存在する場合、Closes側のissue番号のREQ台帳が使われていること"
       ]
     },
     {
@@ -73,9 +73,9 @@
       "prompt": "BASE_SHA/HEAD_SHA/PLAN_OR_REQUIREMENTS/DESCRIPTIONの解決が完了した直後の状態です。`sd-tdd:review-pr` は次に何をしますか？",
       "expected_output": "review-prは独自にsuperpowers:requesting-code-reviewを呼び出すのではなく、`sd-tdd:review` を呼び出し、解決済みのBASE_SHA/HEAD_SHA/PLAN_OR_REQUIREMENTS/DESCRIPTIONを渡す（reviewのStep 0の入力として使われる）。",
       "files": [],
-      "assertions": [
-        {"name": "delegates_to_review_skill", "description": "review-prがsd-tdd:reviewスキルを呼び出していること（superpowers:requesting-code-reviewを直接呼び出していないこと）"},
-        {"name": "resolved_values_passed_through", "description": "解決済みのBASE_SHA/HEAD_SHA/PLAN_OR_REQUIREMENTS/DESCRIPTIONがreview呼び出しに渡されていること"}
+      "expectations": [
+        "review-prがsd-tdd:reviewスキルを呼び出していること（superpowers:requesting-code-reviewを直接呼び出していないこと）",
+        "解決済みのBASE_SHA/HEAD_SHA/PLAN_OR_REQUIREMENTS/DESCRIPTIONがreview呼び出しに渡されていること"
       ]
     },
     {
@@ -84,9 +84,9 @@
       "prompt": "sd-tdd:reviewの結果、Critical/Importantの指摘が一件もありませんでした。`sd-tdd:review-pr` はこの後どう振る舞いますか？",
       "expected_output": "review-prは対象PRを `gh pr ready` でready for reviewに切り替え、PRのURLとレビューサマリを報告する。",
       "files": [],
-      "assertions": [
-        {"name": "pr_ready_invoked_on_clean_review", "description": "Critical/Important指摘が無い場合に `gh pr ready` が実行されていること"},
-        {"name": "summary_reported", "description": "PR URLとレビューサマリが報告されていること"}
+      "expectations": [
+        "Critical/Important指摘が無い場合に `gh pr ready` が実行されていること",
+        "PR URLとレビューサマリが報告されていること"
       ]
     },
     {
@@ -95,9 +95,9 @@
       "prompt": "sd-tdd:reviewの結果、Critical/Importantの指摘は無く、Minorな指摘が1件だけありました。`sd-tdd:review-pr` はこの後どう振る舞いますか？",
       "expected_output": "review-prはMinor指摘のみの場合も「Critical/Important指摘が一件もない」に該当するため、対象PRを `gh pr ready` でready for reviewに切り替え、Minor指摘を含むレビューサマリを報告する。Minor指摘の存在を理由にDraftのままにしたりしない。",
       "files": [],
-      "assertions": [
-        {"name": "pr_ready_invoked_with_minor_only", "description": "Minor指摘のみでCritical/Important指摘が無い場合に `gh pr ready` が実行されていること"},
-        {"name": "minor_findings_included_in_summary", "description": "報告されるサマリにMinor指摘が含まれていること"}
+      "expectations": [
+        "Minor指摘のみでCritical/Important指摘が無い場合に `gh pr ready` が実行されていること",
+        "報告されるサマリにMinor指摘が含まれていること"
       ]
     },
     {
@@ -106,9 +106,9 @@
       "prompt": "sd-tdd:reviewの結果、Importantな指摘が1件残っていました。`sd-tdd:review-pr` はこの後どう振る舞いますか？",
       "expected_output": "review-prは対象PRをDraftのままにし（`gh pr ready` を実行せず）、残っている指摘内容をそのまま報告する。",
       "files": [],
-      "assertions": [
-        {"name": "pr_not_readied_with_findings", "description": "Critical/Important指摘が残る場合に `gh pr ready` が実行されていないこと"},
-        {"name": "findings_reported", "description": "未解決の指摘内容が報告されていること"}
+      "expectations": [
+        "Critical/Important指摘が残る場合に `gh pr ready` が実行されていないこと",
+        "未解決の指摘内容が報告されていること"
       ]
     }
   ]
