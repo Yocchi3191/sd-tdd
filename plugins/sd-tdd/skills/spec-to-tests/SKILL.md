@@ -41,6 +41,8 @@ it("issue-12_REQ-3_空文字を送信したら400を返す", () => {
 
 A REQ may need more than one test (happy path, edge cases) — give each the same `issue-N_REQ-XX` prefix; `coverage-check` only requires at least one match per REQ-ID, not exactly one.
 
+`issue-N_REQ-XX` プレフィックス自体（トレーサビリティ用のキー）は上記の英数字表記のまま変更しないこと。一方、それに続く説明文——`test()`/`it()`/`describe()` などに渡す文字列——は日本語で書く。日本語しか読めないレビュアーがテストの説明文を読めない、という指摘が過去にあった(issue #50 / PR #55)。
+
 ## Step 5: Decide where the "why" goes, per test
 
 If the reason a REQ holds is a single sentence derivable from the code/domain itself, put it in the test name or a one-line comment. If it needs the longer treatment (alternatives considered, external context, multi-sentence) it belongs on the ledger, not here — if it isn't already on the ledger, invoke `spec-interview` to draft the new REQ and `task-filing` to append it to the ledger, then add a short pointer comment in the test (e.g. `// see issue #12`).
