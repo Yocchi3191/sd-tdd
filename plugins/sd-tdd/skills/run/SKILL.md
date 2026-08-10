@@ -1,39 +1,39 @@
 ---
 name: run
-description: Use this first for any task in this project that adds, modifies, or deletes files — new features, bug fixes, refactors. This is the entry point and auto-driving orchestrator for the sd-tdd pipeline (test-infra-setup → spec-interview → task-filing → codebase investigation (Explore) → sd-tdd:design-planning → git worktree → spec-to-tests → coverage-check → superpowers:test-driven-development → sd-tdd:submit → sd-tdd:review-pr), all the way to a review-clean PR. Human judgement is only asked for at REQ approval, a multi-task initiative split decision, repeated implementation/review failure, or a design ambiguity mid-implementation — merging the PR always stays a human decision and this skill never performs it. Also use to resume in-progress sd-tdd work on an existing GitHub issue (e.g. "issue 12の続き"). Do NOT use for read-only questions, explanations, or analysis that touches no files.
+description: このプロジェクトでファイルの追加・変更・削除を伴うタスク（新機能、バグ修正、リファクタリング）にはまずこれを使うこと。これはsd-tddパイプライン（test-infra-setup → spec-interview → task-filing → コードベース調査（Explore） → sd-tdd:design-planning → git worktree → spec-to-tests → coverage-check → superpowers:test-driven-development → sd-tdd:submit → sd-tdd:review-pr）の入口であり、レビュークリーンなPRができるまで自律的に駆動するオーケストレーターである。人間の判断を仰ぐのは、REQ承認時、複数タスクの企画（multi-task initiative）の分割判断時、実装・レビューの失敗が繰り返されたとき、または実装途中の設計上の曖昧さが生じたときのみであり、PRのマージは常に人間の判断に委ねられ、このskill自身が実行することはない。既存のGitHub issueで進行中のsd-tdd作業を再開する場合にも使用する（例:「issue 12の続き」）。ファイルに一切触れない読み取り専用の質問・説明・分析には使用しないこと。
 ---
 
 # sd-tdd:run
 
-Drives the whole sd-tdd pipeline end to end — from a task description or issue reference through to a review-clean pull request — so nobody has to remember which skill to invoke next, in what order, or when to isolate work in a worktree. This skill calls the other sd-tdd skills (`test-infra-setup`, `spec-interview`, `task-filing`, `design-planning`, `spec-to-tests`, `coverage-check`, `submit`, `review-pr`), the built-in `Explore` agent, and superpowers skills (`using-git-worktrees`, `test-driven-development`) in sequence, automatically. **Merging the PR is never this skill's job** — it always stops at a ready-for-review Draft PR and hands the merge decision to a human.
+タスクの説明やissue参照からレビュークリーンなプルリクエストまで、sd-tddパイプライン全体をエンドツーエンドで駆動する。これにより、次にどのskillを呼ぶべきか、どの順序で呼ぶべきか、いつ作業をworktreeで隔離すべきかを誰も覚えておく必要がなくなる。このskillは、他のsd-tdd skill群（`test-infra-setup`、`spec-interview`、`task-filing`、`design-planning`、`spec-to-tests`、`coverage-check`、`submit`、`review-pr`）、組み込みの`Explore`エージェント、およびsuperpowers skill群（`using-git-worktrees`、`test-driven-development`）を順番に自動的に呼び出す。**PRのマージはこのskillの仕事では決してない**——常にレビュー可能な状態のDraft PRで止まり、マージの判断は人間に委ねる。
 
-This skill owns no logic of its own beyond sequencing, resume-point detection, and the retry/escalation limits below. It never writes a REQ, generates a test, edits an issue directly, or reviews code itself — it only decides *which* skill to call *next*, and when to stop and ask a human instead.
+このskill自身が持つロジックは、以下のシーケンス制御・再開ポイントの検出・リトライ/エスカレーションの上限管理に限られる。REQを自ら書くことも、テストを生成することも、issueを直接編集することも、コード自体をレビューすることもしない——*次に*どのskillを呼ぶか、そしてどこで止まって人間に確認すべきかを決めるだけである。
 
-## Escalation points — the only places this flow stops for a human
+## エスカレーションポイント — このフローが人間の判断を仰いで止まる箇所
 
-1. REQ ledger approval (inside `spec-interview`, Step 5) — already a built-in stop.
-2. `epic-filing` files a multi-task initiative as an epic issue with task-issues under it (see "Starting new work") — which task-issue to start with is a human call; `run` does not guess.
-3. The same REQ fails implementation 3 times in a row (see "Implementing against the tests").
-4. The same PR fails review (Critical/Important findings) on 3 review rounds in a row (see "Requesting review").
-5. A genuinely ambiguous design decision comes up mid-implementation that no REQ resolves (see "Ambiguity during implementation").
+1. REQ台帳の承認（`spec-interview`のStep 5内）——すでに組み込み済みの停止ポイント。
+2. `epic-filing`が複数タスクの企画（multi-task initiative）をepic issueとその配下のtask-issue群として起票したとき（「新規作業を開始する」参照）——どのtask-issueから着手するかは人間の判断であり、`run`は推測しない。
+3. 同一REQの実装が3回連続で失敗したとき（「テストに対して実装する」参照）。
+4. 同一PRのレビューが3回連続でCritical/Important指摘により失敗したとき（「レビューを依頼する」参照）。
+5. 実装途中で、どのREQも解決しない本当に曖昧な設計判断が生じたとき（「実装中の曖昧さ」参照）。
 
-Everywhere else, keep going without waiting for a response — a short status line between stages is enough (e.g. "REQ台帳を確定、issue #14として起票しました。次にテストを生成します。").
+それ以外の箇所では、応答を待たずに進め続けること——各段階の間には短いステータス行があれば十分である（例:「REQ台帳を確定、issue #14として起票しました。次にテストを生成します。」）。
 
-## Step 1: Determine resume vs. new work
+## Step 1: 再開か新規作業かを判定する
 
-- If the user's request references an existing issue number (e.g. "issue #12", "#12の続き"), this is a **resume** — go to "Resuming an existing issue" below with that issue number.
-- Otherwise, this is **new work** — go to "Starting new work" below. `run` does not itself judge whether the request is a single task or a multi-task initiative; that judgment, and the filing that follows from it, is `epic-filing`'s job (see "Starting new work").
-- If it's genuinely ambiguous whether the request is a resume or new work (the request could plausibly be either), ask the user once which issue number to resume, or confirm it's new work, before proceeding.
+- ユーザーの依頼が既存のissue番号を参照している場合（例:「issue #12」「#12の続き」）、これは**再開**である——そのissue番号を持って以下の「既存issueを再開する」に進む。
+- それ以外の場合は**新規作業**である——以下の「新規作業を開始する」に進む。依頼が単一タスクか複数タスクの企画かの判定を`run`自身は行わない。その判定と、それに続く起票は`epic-filing`の仕事である（「新規作業を開始する」参照）。
+- 依頼が再開なのか新規作業なのか本当に曖昧な場合（どちらの可能性もあり得る場合）は、進める前に一度だけユーザーに、どのissue番号を再開するのか、あるいは新規作業であることを確認する。
 
-## Step 2: Track progress with TodoWrite
+## Step 2: TodoWriteで進捗を追跡する
 
-Before starting either path, create a TodoWrite list with these items (mark items already satisfied as `completed` immediately when resuming — see below):
+どちらの経路を進めるにせよ、開始前に以下の項目でTodoWriteリストを作成する（再開時にはすでに満たされている項目を即座に`completed`にする——詳細は下記）:
 
 1. test-infra-setup — テスト基盤・mutation testing基盤の確認/導入
 2. epic-filing → spec-interview — 単一task/企画の判定と、REQ台帳の作成・承認（新規作業では最初に呼ぶのは `epic-filing`。`spec-interview` はその中から呼ばれる）
 3. task-filing — issueへの記録（企画ならepic-issue + 各task-issue、PRグループ分割ならPRグループ付きの単一issue）
-4. コードベース調査 — `Explore`エージェントによる調査（新規作業のみ。「Starting new work」参照）
-5. 設計フェーズ — `sd-tdd:design-planning`で人間と設計をブラッシュアップ（新規作業のみ。「Starting new work」参照）
+4. コードベース調査 — `Explore`エージェントによる調査（新規作業のみ。「新規作業を開始する」参照）
+5. 設計フェーズ — `sd-tdd:design-planning`で人間と設計をブラッシュアップ（新規作業のみ。「新規作業を開始する」参照）
 6. git worktree — 専用worktreeの作成
 7. spec-to-tests — REQごとの失敗テスト生成
 8. coverage-check — REQとテストの対応検証
@@ -42,112 +42,112 @@ Before starting either path, create a TodoWrite list with these items (mark item
 11. レビュー — sd-tdd:review-prでCritical/Important解消
 12. ready化と完了報告
 
-For a PR-group split, repeat items 6–12 once per group; items 4–5 (investigation/design) don't repeat per group — see "Starting new work" for why the PR-group branch skips them. Mark each `in_progress` right before invoking the corresponding skill, and `completed` right after it returns successfully. Give one short status line between stages — this is a status update, not a checkpoint; do not wait for a response before continuing, except at the escalation points above.
+PRグループ分割の場合は項目6〜12をグループごとに繰り返す。項目4〜5（調査・設計）はグループごとには繰り返さない——PRグループの経路がこれらをスキップする理由は「新規作業を開始する」を参照。各項目は対応するskillを呼び出す直前に`in_progress`にし、正常に返ってきた直後に`completed`にする。各段階の間には短いステータス行を一つ挟めばよい——これはチェックポイントではなくステータス更新であり、上記のエスカレーションポイントを除き、応答を待たずに進め続けること。
 
-## Starting new work
+## 新規作業を開始する
 
-1. Invoke the `test-infra-setup` skill. It is idempotent — if the project already has a test framework and mutation-testing tool wired up, it reports so and does nothing further.
-2. Invoke `epic-filing` to judge whether this is a single work task or a multi-task initiative, and to handle filing accordingly:
-   - **Single work task**: `epic-filing` invokes `spec-interview` itself (its own approval gate still applies — wait for it) and files the result via `task-filing`'s "File a new task" operation. In the ordinary case `spec-interview` confirms a non-empty REQ ledger before this hand-off, same as always — `spec-interview`'s own text isn't changed by this and still defaults to interviewing until the ledger has no ambiguity left. `task-filing`'s "File a new task" operation additionally tolerates a REQ ledger with zero REQ lines (a rough filing): if, during the interview, the human explicitly directs that REQ-level acceptance criteria can't be confirmed before investigation/design happen and asks to file rough instead, `spec-interview` can show an empty list at its Step 5 approval and hand off to this 0-REQ path — but this requires the human to say so; it is not a branch `spec-interview` takes on its own initiative. `epic-filing` reports back the filed issue number `N`. Continue to step 3 below with that `N`.
-   - **PR-group split inside the single-work-task path**: if that same `spec-interview` reports an approved **PR-group** split (one feature staged as dependent steps — *not* independent concerns), `epic-filing` files it via `task-filing`'s "File as PR groups" operation instead of "File a new task", and reports back issue number `N` plus the group→REQ-ID mapping. Go to "Handling a split" with that `N` and mapping instead of continuing to step 3 — the filing is already done, so skip that section's `task-filing` invocation and start at its per-group loop, and skip steps 3–4 below (investigation/design) entirely for this branch — a PR-group split only happens once `spec-interview` has already confirmed a full REQ ledger, so there is no rough-filing gap left for those steps to fill. No epic-issue is involved in this case.
-   - **Multi-task initiative**: `epic-filing` interviews the user on background/goal/success criteria, breaks the initiative into task candidates, files an epic-issue, then files each candidate as its own task-issue (via `spec-interview` → `task-filing`'s "File a task under a parent epic" operation) as a sub-issue of the epic. Once every candidate is filed, `epic-filing` reports back the epic issue number and the list of filed task-issue numbers. **This is a stopping point** — escalate to the human, asking which task-issue to start with (this replaces the old "sub issue split" escalation point; the set of 5 escalation points in this skill's intro is unchanged in count, just relabeled here). Do not invoke `spec-to-tests` or anything past this point automatically until a task-issue is picked. Once picked, that task-issue's `N` continues at step 3 below, same as the single-work-task path.
-   - If, inside the single-work-task path, `spec-interview` itself reports a Step 4 split because it discovered independent concerns mid-interview, `spec-interview` hands off to `epic-filing` directly (its Entry B) instead of returning to `run` — the multi-task initiative bullet above applies once `epic-filing` reports back.
-3. **Investigate the codebase.** Once a single task-issue number `N` is in hand (either directly from the single-work-task path, or picked by the human after a multi-task initiative split), dispatch a built-in `Explore` agent to survey the codebase for anything relevant to issue `N` — existing code touching the same area, related conventions, prior art to reuse or avoid duplicating. No dedicated investigation skill exists for this single dispatch (that would be YAGNI) — call `Explore` directly. Summarize its findings back to the user in one short status line, then continue without waiting for a response.
-4. **Design phase.** Invoke `sd-tdd:design-planning` for issue `N`, handing it the investigation summary from step 3, so a human can pair with `run` on architecture/interface decisions before any test or implementation code is written. `design-planning` decides how to record the outcome, not `run`: finalized design decisions go to `task-filing`'s "Append to an existing task" operation (`## 決定事項` section) for issue `N`; if the discussion surfaces new testable REQs (including the very first ones, if `N` was filed with an empty ledger), `design-planning` hands off to `spec-interview` (continuation of issue `N`) to draft them, then `task-filing`'s append operation to record them — the same append mechanism `run` already uses in "Ambiguity during implementation" below, not a new one. This step is part of `run`'s own sequencing, so keep going once `design-planning` returns — it is not one of the 5 escalation points above.
-5. Run "Implementing one scope" (below) for issue `N` with the full REQ ledger (as it stands after step 4) as the scope.
+1. `test-infra-setup` skillを呼び出す。これは冪等であり——プロジェクトにすでにテストフレームワークとmutation testingツールが導入済みであれば、その旨を報告するだけで、それ以上は何もしない。
+2. `epic-filing`を呼び出し、これが単一のワークタスクか複数タスクの企画かを判定させ、それに応じた起票を行わせる:
+   - **単一のワークタスクの場合**: `epic-filing`は自ら`spec-interview`を呼び出し（その承認ゲートは引き続き適用される——応答を待つ）、結果を`task-filing`の「File a new task」operationで起票する。通常のケースでは、この引き継ぎの前に`spec-interview`が空でないREQ台帳を確定させる——これはいつも通りであり、`spec-interview`自身の文言はこれによって変わらず、台帳に曖昧さが残らなくなるまでヒアリングを続けるのがデフォルトのままである。`task-filing`の「File a new task」operationは、さらにREQ行がゼロ件のREQ台帳（粗い起票）も許容する。ヒアリング中に、人間が「投資・設計が行われるまではREQレベルの受け入れ基準を確定できない」と明示的に指示し、粗い起票を依頼した場合に限り、`spec-interview`はStep 5の承認で空のリストを示し、この0-REQの経路に引き継ぐことができる——ただしこれは人間がそう言うことが前提であり、`spec-interview`が自らの判断で取る分岐ではない。`epic-filing`は起票したissue番号`N`を報告する。そのまま下記のstep 3に、その`N`を持って進む。
+   - **単一ワークタスク経路内でのPRグループ分割**: 同じ`spec-interview`が承認済みの**PRグループ**分割（独立した関心事ではなく、1つの機能を依存関係のあるステップとして段階分けしたもの）を報告した場合、`epic-filing`は「File a new task」ではなく`task-filing`の「File as PR groups」operationで起票し、issue番号`N`とグループ→REQ-IDの対応表を報告する。その`N`と対応表を持って、step 3に進まず「分割を処理する」に進む——起票はすでに完了しているため、そのセクションの`task-filing`呼び出しはスキップし、グループごとのループから開始する。また、この分岐では下記のstep 3〜4（調査・設計）を完全にスキップする——PRグループ分割は`spec-interview`がすでに完全なREQ台帳を確定させた後にのみ発生するため、これらのステップが埋めるべき粗い起票のギャップは残っていない。このケースではepic-issueは作成されない。
+   - **複数タスクの企画の場合**: `epic-filing`が背景・ゴール・成功基準についてユーザーにヒアリングし、企画をタスク候補に分解し、epic-issueを起票した上で、各候補を（`spec-interview` → `task-filing`の「File a task under a parent epic」operationを介して）epicのsub-issueとしてそれぞれtask-issueに起票する。すべての候補が起票されたら、`epic-filing`はepic issue番号と起票されたtask-issue番号の一覧を報告する。**これは停止ポイントである**——人間にエスカレーションし、どのtask-issueから着手するかを尋ねる（これは旧来の「sub issue split」エスカレーションポイントを置き換えるものであり、このskillの冒頭にある5つのエスカレーションポイントの数自体は変わらず、ここで呼び名が変わっただけである）。task-issueが選ばれるまで、`spec-to-tests`やそれ以降を自動的に呼び出さないこと。選ばれたら、そのtask-issueの`N`が、単一ワークタスク経路と同様に下記のstep 3に続く。
+   - 単一ワークタスク経路の内部で、`spec-interview`自身がヒアリング中に独立した関心事を発見してStep 4の分割を報告した場合、`spec-interview`は`run`に戻るのではなく直接`epic-filing`（そのEntry B）に引き継ぐ——`epic-filing`が報告を返した時点で、上記の複数タスクの企画の項目が適用される。
+3. **コードベースを調査する。** 単一のtask-issue番号`N`が確定したら（単一ワークタスク経路から直接得られた場合と、複数タスクの企画分割後に人間が選んだ場合のいずれでも）、組み込みの`Explore`エージェントをディスパッチして、issue `N`に関連する箇所をコードベース全体から調査させる——同じ領域に触れる既存コード、関連する規約、再利用すべき/重複を避けるべき先例など。この単発のディスパッチのために専用の調査skillは存在しない（それはYAGNIである）——`Explore`を直接呼び出す。その調査結果を短いステータス行でユーザーに要約し、応答を待たずに続行する。
+4. **設計フェーズ。** issue `N`に対して`sd-tdd:design-planning`を呼び出し、step 3の調査結果の要約を渡す。これにより、テストや実装コードを書く前に、人間が`run`とアーキテクチャ/インターフェースの判断についてペアで検討できる。結果の記録方法を決めるのは`run`ではなく`design-planning`である。確定した設計判断は、issue `N`に対する`task-filing`の「Append to an existing task」operation（`## 決定事項`セクション）に記録される。議論の中で新たにテスト可能なREQが浮かび上がった場合（`N`が空の台帳で起票されていた場合の最初のREQも含む）、`design-planning`は`spec-interview`（issue `N`の続き）に引き継いでそれらを起草させ、その後`task-filing`のappend operationで記録する——これは下記の「実装中の曖昧さ」で`run`がすでに使っているappendの仕組みと同じものであり、新しい仕組みではない。このステップは`run`自身のシーケンスの一部であるため、`design-planning`が返ってきたら続行する——これは上記5つのエスカレーションポイントのいずれにも該当しない。
+5. issue `N`について、step 4後時点での完全なREQ台帳をスコープとして「1つのスコープを実装する」（下記）を実行する。
 
-## Handling a split
+## 分割を処理する
 
-- **PR group split:** invoke `task-filing`'s "File as PR groups" operation to record the single issue with its `## PRグループ` section — unless `epic-filing` already filed it that way inside the single-work-task path (see "Starting new work"), in which case that filing is done and you start at the per-group loop below with the `N` and mapping it reported. Then, for each group in the order listed (do not reorder), run "Implementing one scope" narrowed to that group's REQ-IDs — `spec-to-tests` targets that group (its Step 2), `coverage-check` is run with `--group <G>`, and a separate Draft PR is created and reviewed per group. Move to the next group automatically once a group's PR reaches ready-for-review; do not escalate to a human just because a group finished. **Groups are dependent, so branches and PRs stack:** group 1's worktree branches off the repository's default branch as usual. Group 2's (and every later group's) worktree branches off **group (G−1)'s branch tip**, not the default branch — otherwise it would be missing the prior group's prerequisite code (see "Implementing one scope" step 1, which applies this rule). Correspondingly, group G's Draft PR (G ≥ 2) targets group (G−1)'s branch as its `--base`, not the default branch, so its diff shows only that group's own changes. **Tag every PR-group PR's title with `[group G]`** (e.g. `[group 2] <title>`) — this is not cosmetic, "Resuming an existing issue" step 2 depends on it to find each group's PR; see "Creating the PR" for how this tag actually gets applied via a `gh pr edit` fixup after `submit` creates the PR (which also handles noting the stacking relationship in the PR body for group ≥2). Do not wait for an earlier group's PR to merge before starting the next group — `run` keeps moving automatically per REQ-4, and rebasing/retargeting a later group's PR onto the default branch after an earlier one merges is left to the human, same as the merge itself.
+- **PRグループ分割:** `task-filing`の「File as PR groups」operationを呼び出し、`## PRグループ`セクション付きで単一のissueを記録する——ただし、単一ワークタスク経路内で`epic-filing`がすでにその形で起票済みの場合を除く（「新規作業を開始する」参照）。その場合はすでに起票が完了しているため、`epic-filing`が報告した`N`と対応表を持ってグループごとのループから開始する。その後、リストされた順序で（順序を入れ替えずに）各グループについて、そのグループのREQ-IDに絞った「1つのスコープを実装する」を実行する——`spec-to-tests`はそのグループを対象とし（そのStep 2）、`coverage-check`は`--group <G>`付きで実行し、グループごとに個別のDraft PRを作成・レビューする。あるグループのPRがready-for-reviewに到達したら、自動的に次のグループへ進む。グループが1つ終わったこと自体を理由に人間へのエスカレーションを行わないこと。**グループは依存関係にあるため、ブランチとPRは積み上げ式になる:** グループ1のworktreeは通常通りリポジトリのデフォルトブランチから分岐する。グループ2（以降の各グループも同様）のworktreeは、デフォルトブランチではなく**グループ(G−1)のブランチ先端**から分岐する——そうしなければ前グループの前提コードが欠けてしまう（「1つのスコープを実装する」step 1がこのルールを適用している）。対応して、グループGのDraft PR（G ≥ 2）は、デフォルトブランチではなくグループ(G−1)のブランチを`--base`として対象にし、その差分がそのグループ自身の変更のみを示すようにする。**すべてのPRグループPRのタイトルに`[group G]`というタグを付ける**（例: `[group 2] <タイトル>`）——これは見た目だけの問題ではなく、「既存issueを再開する」のstep 2が各グループのPRを見つけるためにこのタグに依存している。このタグが実際にどう付与されるかは「PRを作成する」を参照（`submit`がPRを作成した後の`gh pr edit`による修正で行われ、グループ2以降のPR本文にスタッキング関係を記載する処理も同時に行う）。前のグループのPRがマージされるのを待ってから次のグループを開始する必要はない——`run`はREQ-4に従って自動的に進み続け、あるグループがマージされた後に後続グループのPRをデフォルトブランチへリベース/retargetする作業は、マージ自体と同様に人間の判断に委ねる。
 
-## Implementing one scope
+## 1つのスコープを実装する
 
-The shared sequence for one unit of work — either the whole ledger (no split) or one PR group's REQ subset. `N` is the issue being worked; "scope" means the REQ-IDs in play (all active REQs, or just the current group's).
+1つの作業単位（分割なしの場合は台帳全体、分割ありの場合は1つのPRグループのREQサブセット）に共通のシーケンス。`N`は対象issue、「スコープ」は対象となるREQ-ID群（アクティブな全REQ、または現在のグループのものだけ）を意味する。
 
-1. **Isolate the work.** Invoke `superpowers:using-git-worktrees` to create a dedicated git worktree *before* invoking `spec-to-tests`. Every step from here on — test writing, implementation, commits — happens inside that worktree, not the branch `run` was invoked from. For a PR-group step after the first, base this worktree on the *previous group's branch tip*, not the default branch — see "Handling a split" for why. `using-git-worktrees`'s own Step 0 asks for consent before creating a worktree unless "the user has already indicated their worktree preference" — treat this call from `run` as exactly that declared preference (this is what the sd-tdd pipeline always does; it is not optional per task), so answer its consent check as already given and don't surface a separate question to the user. This is not one of the 5 escalation points above.
-2. Invoke `spec-to-tests` for issue `N` (tell it which group, if scoped). `spec-to-tests`'s own Step 2 defaults to *asking* the user which group to process when it isn't told — being told by `run` here preempts that ask, so it proceeds straight to that group without a separate question.
-3. Invoke `coverage-check` for issue `N` (`--group <G>` if scoped) — see "Running coverage-check" below.
-   - Missing REQs: invoke `spec-to-tests` again for exactly those REQ-IDs, then re-run `coverage-check`. Repeat until it passes. Don't ask the user first — this is a mechanical retry.
-   - Orphan tests: follow `coverage-check`'s own guidance (invoke `spec-interview` to draft the missing REQ + `task-filing` to append it, or fix/remove the stray test), then re-run.
-4. Once `coverage-check` passes cleanly, go to "Implementing against the tests".
+1. **作業を隔離する。** `spec-to-tests`を呼び出す*前に*`superpowers:using-git-worktrees`を呼び出して専用のgit worktreeを作成する。以降のすべてのステップ——テスト作成、実装、コミット——は、`run`が呼び出されたブランチではなく、そのworktree内で行う。最初以降のPRグループステップでは、このworktreeをデフォルトブランチではなく*前グループのブランチ先端*を基点として作成する——理由は「分割を処理する」を参照。`using-git-worktrees`自身のStep 0は、「ユーザーがすでにworktreeの希望を示している」場合を除き、worktree作成前に同意を求める——`run`からのこの呼び出しは、まさにその表明済みの希望として扱う（これはsd-tddパイプラインが常に行っていることであり、タスクごとの任意事項ではない）。したがって、その同意確認にはすでに同意済みとして応答し、ユーザーへ別途質問を出さないこと。これは上記5つのエスカレーションポイントには該当しない。
+2. issue `N`について`spec-to-tests`を呼び出す（スコープがある場合はどのグループかを伝える）。`spec-to-tests`自身のStep 2は、どのグループを処理するか伝えられていない場合はユーザーに*尋ねる*のがデフォルトである——ここで`run`から伝えることでその質問を先取りし、別途質問することなくそのグループへ直接進む。
+3. issue `N`について`coverage-check`を呼び出す（スコープがある場合は`--group <G>`付き）——詳細は下記「coverage-checkを実行する」を参照。
+   - REQ不足の場合: 不足しているそのREQ-IDだけを対象に`spec-to-tests`を再度呼び出し、その後`coverage-check`を再実行する。合格するまで繰り返す。先にユーザーへ確認しない——これは機械的なリトライである。
+   - オーファンテストの場合: `coverage-check`自身のガイダンスに従う（`spec-interview`を呼び出して不足しているREQを起草し`task-filing`で追記するか、迷子のテストを修正/削除する）、その後再実行する。
+4. `coverage-check`がクリーンに合格したら「テストに対して実装する」に進む。
 
-## Implementing against the tests
+## テストに対して実装する
 
-Invoke `superpowers:test-driven-development`, telling it which issue/REQ-IDs (scope) it's implementing against, inside the worktree from step 1. If any REQ in scope is tagged `[structural]`, say so explicitly in that same invocation: `spec-to-tests` generated no test for those (see its Step 4), and their implementation is exempt from the Iron Law — implement them directly, without a failing test first. This exemption applies only to `[structural]` REQs; every other REQ in scope still goes through the normal test-first cycle.
+`superpowers:test-driven-development`を呼び出し、step 1で作成したworktree内で、どのissue/REQ-ID（スコープ）に対して実装するのかを伝える。スコープ内のREQに`[structural]`タグが付いているものがあれば、その同じ呼び出しの中で明示的にそう伝えること: `spec-to-tests`はそれらに対してテストを生成していない（そのStep 4を参照）ため、その実装はIron Law（テストファーストの鉄則）の対象外であり、失敗テストなしに直接実装してよい。この免除は`[structural]`タグ付きREQにのみ適用され、スコープ内のそれ以外のREQは引き続き通常のテストファーストサイクルを経る。
 
-Track failures **per REQ**, not per test run: if the test(s) for the same REQ-ID are still failing after 3 consecutive implementation attempts, stop — don't try a 4th time. Escalate to the human with the REQ-ID and a summary of the failure (test name, error). Otherwise, once every test in scope passes, go to "Creating the PR".
+失敗は**テスト実行単位ではなくREQ単位**で追跡すること: 同一REQ-IDに対するテストが3回連続の実装試行後もまだ失敗している場合は停止する——4回目は試みない。REQ-IDと失敗内容の要約（テスト名・エラー内容）を添えて人間にエスカレーションする。それ以外の場合、スコープ内のすべてのテストが通過したら「PRを作成する」に進む。
 
-## Ambiguity during implementation
+## 実装中の曖昧さ
 
-If implementation surfaces a design decision that no REQ in the ledger resolves — multiple reasonable choices, nothing in the ledger dictates one — don't guess and don't let `test-driven-development` guess either. Invoke `spec-interview` (continuation of issue `N`) to draft the missing REQ, then `task-filing`'s append operation to record it, then resume implementation against the now-updated ledger.
+実装中に、台帳内のどのREQも解決しない設計判断——複数の妥当な選択肢があり、台帳内に何もそれを決めるものがない——が浮上した場合は、推測で進めず、`test-driven-development`にも推測させない。`spec-interview`（issue `N`の続き）を呼び出して不足しているREQを起草し、`task-filing`のappend operationで記録した上で、更新された台帳に対して実装を再開する。
 
-## Creating the PR
+## PRを作成する
 
-Once every test in scope passes, invoke `sd-tdd:submit` to turn the worktree's committed work into a pushed branch and a Draft PR — don't run `git push`/`gh pr create` here directly; that logic lives in `submit` now, not in `run`. Pass it:
+スコープ内のすべてのテストが通過したら、`sd-tdd:submit`を呼び出して、worktreeでコミットされた作業をpush済みブランチとDraft PRに変換する——ここで`git push`/`gh pr create`を直接実行しないこと。そのロジックは`run`ではなく現在`submit`にある。渡す内容:
 
-- The issue number `N`, so it links the issue (`submit` always writes `Closes #N` when given an issue number — see the `gh pr edit` fixup below for turning this into `Part of #N` on a non-final PR-group step) and pulls in the REQ list and any `[structural]` REQs for the "## 構造的制約" section (`submit`'s REQ-20) automatically.
-- **For a PR-group step after the first**, the previous group's branch as an explicit base-branch override (`submit`'s REQ-19) — this is what makes `submit`'s Draft PR target that branch instead of the repository's default branch (see "Groups are dependent, so branches and PRs stack" above). For the first step (no split, or the first PR-group step), don't pass a base override; `submit` auto-detects the repository's default branch on its own.
+- issue番号`N`——これによりissueがリンクされ（`submit`はissue番号が渡されると常に`Closes #N`を書く——最終でないPRグループステップでこれを`Part of #N`に変える方法は下記の`gh pr edit`修正を参照）、REQ一覧と「## 構造的制約」セクション用の`[structural]`タグ付きREQ（`submit`のREQ-20）が自動的に取り込まれる。
+- **2回目以降のPRグループステップでは**、明示的なbaseブランチの上書き（`submit`のREQ-19）として前グループのブランチを渡す——これにより`submit`のDraft PRがリポジトリのデフォルトブランチではなくそのブランチを対象にする（上記「グループは依存関係にあるため、ブランチとPRは積み上げ式になる」を参照）。最初のステップ（分割なし、または最初のPRグループステップ）では、base上書きを渡さない——`submit`はリポジトリのデフォルトブランチを自動検出する。
 
-`submit` has no awareness of PR groups (by design — it's a plain single-PR tool), so `run` fixes up the following itself after `submit` reports the created PR's number, **for every PR-group step (any group, including the last)** — skip this whole fixup when there's no PR-group split at all:
+`submit`はPRグループについて関知しない（設計上——単純な単一PR用ツールである）ため、`submit`が作成したPR番号を報告した後、`run`自身が以下の修正を行う。**すべてのPRグループステップ（最終グループを含むすべてのグループ）で行う**——PRグループ分割が全くない場合は、この修正処理全体をスキップする:
 
 ```bash
 gh pr view <PR-number> --json title,body -q '.title, .body'
 ```
 
-- **Title:** `submit`'s inferred title won't include the `[group G]` tag "Resuming an existing issue" depends on — using the title just fetched above, `gh pr edit <PR-number> --title "[group G] <fetched-title>"`.
-- **Stacking note (group ≥ 2 only):** append a note to the body identifying what this PR is stacked on, e.g. "Stacked on #<group (G−1)'s PR number>; targets that branch, not `<default-branch>`, until it merges". Group 1 has nothing to stack on — skip this for group 1.
-- **Closing keyword (REQ-21, non-last group only):** for a PR-group step that is **not** the last group, `submit` will have written `Closes #N` (that's the only form it can produce), which is wrong here — merging this PR would prematurely close issue `N` while later groups are still pending. Replace the `Closes #N` line with `Part of #N`. For the *last* PR-group step, leave `Closes #N` as `submit` wrote it — don't replace it.
+- **タイトル:** `submit`が推測したタイトルには、「既存issueを再開する」が依存する`[group G]`タグが含まれない——上で取得したタイトルを使い、`gh pr edit <PR-number> --title "[group G] <取得したタイトル>"`とする。
+- **スタッキング注記（グループ2以降のみ）:** このPRが何の上に積まれているかを識別する注記を本文に追加する。例:「Stacked on #<グループ(G−1)のPR番号>; targets that branch, not `<default-branch>`, until it merges」。グループ1には積む対象がないため、グループ1ではこれをスキップする。
+- **クローズキーワード（REQ-21、最終グループでない場合のみ）:** 最終グループでないPRグループステップでは、`submit`は`Closes #N`を書いている（それが`submit`が生成できる唯一の形式である）が、ここではそれは誤りである——このPRがマージされると、後続グループがまだ保留中であるにもかかわらずissue `N`が早期にクローズされてしまう。`Closes #N`の行を`Part of #N`に置き換える。*最終*のPRグループステップでは、`submit`が書いた`Closes #N`をそのまま残し、置き換えない。
 
-Apply the body changes (stacking note, and the closing-keyword replacement when applicable) together in one `gh pr edit`:
+本文の変更（スタッキング注記、および該当する場合のクローズキーワードの置き換え）は、1回の`gh pr edit`でまとめて適用する:
 
 ```bash
 gh pr edit <PR-number> --body "$(cat <<'EOF'
-<body from gh pr view above, with Closes #N replaced by Part of #N (non-last group only) and the stacking note appended (group >= 2 only)>
+<上のgh pr viewで取得した本文。Closes #Nは（最終グループでない場合のみ）Part of #Nに置き換え、スタッキング注記を（グループ2以降のみ）追記したもの>
 EOF
 )"
 ```
 
-Then go to "Requesting review" with the PR number `submit` just created.
+その後、`submit`が作成したPR番号を持って「レビューを依頼する」に進む。
 
-## Requesting review
+## レビューを依頼する
 
-Invoke `sd-tdd:review-pr` with the PR number from "Creating the PR" (or, on a re-review round below, the same PR number again) — don't call `superpowers:requesting-code-review` or compute BASE_SHA/HEAD_SHA directly here; `review-pr` (via `sd-tdd:review`) owns that, and it also owns converting the PR to ready-for-review on a clean result (`review-pr`'s REQ-15) or leaving it Draft with findings reported (REQ-16). `run` only owns the retry/escalation loop around it:
+「PRを作成する」で得たPR番号（あるいは下記の再レビューラウンドでは同じPR番号）を渡して`sd-tdd:review-pr`を呼び出す——ここで`superpowers:requesting-code-review`を直接呼んだり、BASE_SHA/HEAD_SHAを自分で計算したりしないこと。それらは`review-pr`（内部で`sd-tdd:review`を介して）が担う。また、クリーンな結果が出たときにPRをready-for-reviewに変換する処理（`review-pr`のREQ-15）や、指摘が残ったままDraftとして報告する処理（REQ-16）も`review-pr`が担う。`run`が担うのは、それを取り巻くリトライ/エスカレーションのループだけである:
 
-1. Invoke `sd-tdd:review-pr` with the PR number.
-2. Read what it reports back:
-   - **It left the PR Draft with Critical/Important findings:** fix them, commit, then repeat this step (invoke `sd-tdd:review-pr` again with the same PR number). Count this as one round. After 3 rounds still carrying an unresolved Critical/Important, stop and escalate to the human with the outstanding findings — don't attempt a 4th round.
-   - **It converted the PR to ready for review:** report the PR URL and its review summary (including any Minor findings, for the human's awareness) to the user. This scope is done — do not merge, ever.
-3. Leave the git worktree in place; `run` never deletes it. Cleanup is the human's call.
+1. PR番号を渡して`sd-tdd:review-pr`を呼び出す。
+2. その報告内容を読む:
+   - **Critical/Important指摘付きでPRをDraftのままにした場合:** それらを修正し、コミットした上で、このステップを繰り返す（同じPR番号で`sd-tdd:review-pr`を再度呼び出す）。これを1ラウンドとして数える。3ラウンド経ってもCritical/Importantが未解決のままなら、停止して未解決の指摘とともに人間にエスカレーションする——4回目のラウンドは試みない。
+   - **PRをready for reviewに変換した場合:** PRのURLとレビュー要約（人間への参考情報としてMinor指摘があればそれも含む）をユーザーに報告する。このスコープはこれで完了である——マージは決して行わない。
+3. git worktreeはそのまま残す。`run`が削除することはない。片付けは人間の判断に委ねる。
 
-## Resuming an existing issue
+## 既存issueを再開する
 
-Given issue number `N`:
+issue番号`N`が与えられた場合:
 
-**First, check whether `N` is an epic-issue — before looking for REQ lines at all:** `gh issue view <N> --json labels -q '.labels[].name'`. If the output contains exactly `epic`, `N` is an epic-issue, not a task-issue. An epic-issue by design carries **no** `REQ-<id>:` lines (see `epic-filing`'s "Constraint: epic-issueにREQ行を書かない"), so the REQ-ledger resume below would read it as "no ledger yet" and append REQ lines straight into the epic — corrupting it. Instead, hand off to `epic-filing` with epic issue number `N` and let its own "Resuming an interrupted epic" logic file whatever task-issue candidates are still missing. When it reports back the epic number and its task-issue numbers, that is the multi-task initiative escalation point (escalation point 2): ask the human which task-issue to start with, then run "Implementing one scope" for *that* task-issue number — never for the epic number. Do not run any of the numbered steps below with an epic number. Only for a non-epic issue, continue:
+**まず、REQ行を探す前に、`N`がepic-issueかどうかを確認する:** `gh issue view <N> --json labels -q '.labels[].name'`。出力に`epic`が含まれる場合、`N`はtask-issueではなくepic-issueである。epic-issueは設計上`REQ-<id>:`行を一切持たない（`epic-filing`の「Constraint: epic-issueにREQ行を書かない」を参照）ため、下記のREQ台帳の再開ロジックはこれを「まだ台帳がない」と読み違え、REQ行をそのままepicに追記してしまい、破壊してしまう。代わりに、epic issue番号`N`を`epic-filing`に渡し、その「Resuming an interrupted epic」ロジックにまだ起票されていないtask-issue候補を起票させる。epic番号とそのtask-issue番号一覧が報告されたら、それが複数タスクの企画のエスカレーションポイント（エスカレーションポイント2）である——どのtask-issueから着手するかを人間に尋ね、*その*task-issue番号に対して「1つのスコープを実装する」を実行する——epic番号に対しては決して実行しない。epic番号に対しては、下記の番号付きステップを一切実行しないこと。epicでないissueの場合のみ、以下を続ける:
 
-1. Fetch the ledger: `gh issue view <N> --json body,state -q .body`. If the command fails or the issue has no `REQ-<id>:` lines, treat this as if no ledger exists yet: this case is otherwise identical to "Starting new work," just filing into existing issue `N` instead of a new one — invoke `test-infra-setup` first (same as step 1 there; `spec-to-tests` only *tells you* to go run it if missing, it doesn't run it for you), then invoke `spec-interview` telling it this is a continuation of issue `N`, then once approved invoke `task-filing`'s **append** operation (not the new-task operation) for issue `N` — or, if `spec-interview`'s Step 4 proposes and the user approves an independent-concerns split, hand off to `epic-filing` (Entry B) instead; or if a PR-group split is proposed and approved, see "Handling a split" — then run "Implementing one scope" for issue `N`.
-2. Detect the test directory (see "Detecting the test directory" below).
-   - **No `## PRグループ` section:** just run `coverage-check` (see "Running coverage-check" below) for issue `N` with no `--group` flag, and go to step 3.
-   - **Has a `## PRグループ` section:** find the group to resume by PR state, not by `coverage-check` alone — `coverage-check` only tells you whether tests exist for a REQ, not whether that group's implementation is finished, so a group with generated-but-still-failing tests would look identical to a genuinely finished one if you went by coverage alone. For each group `G` starting from 1, in listed order: `gh pr list --search "\"[group G]\" in:title" --state all --json state,isDraft,number` (per the `[group G]` title tag required in "Creating the PR"). The first group with **no matching PR**, or whose PR is still a **Draft**, is the group to resume — stop the loop there. (Groups whose PR is ready-for-review or merged are done; skip past them.) Once you have that group `G`, run `coverage-check --group <G>` for issue `N` to find out *how* far it got, and go to step 3.
-3. Interpret the result. In every case below, leave TodoWrite items 4–5 (investigation/design) alone rather than marking them `completed` — those steps belong to "Starting new work" only; a resumed issue is treated as already past that point regardless of whether they actually ran in whatever prior session got this issue this far, so don't assert either way:
-   - **A Draft PR already exists for this group** (found via the `gh pr list` lookup in step 2 — only relevant for a PR-group task): implementation and PR creation already happened in a prior session; mark TodoWrite items 1–3 and 6–10 `completed` and resume directly at "Requesting review" using that PR's number (from the same `gh pr list` lookup) — don't re-run `spec-to-tests`, implementation, or `sd-tdd:submit`.
-   - **No PR yet, and coverage-check reports missing REQs, or the test directory has no `issue-<N>_REQ-` matches at all**: mark TodoWrite items 1–3 `completed`, and resume "Implementing one scope" from its step 1 (worktree creation) — a resumed run still needs its own isolated worktree even if one existed in a prior session, unless that worktree is still present and on the right branch, in which case reuse it.
-   - **No PR yet, and coverage-check passes cleanly**: tests exist but implementation isn't done (no PR was ever created for this group — see "Creating the PR," which only runs once tests pass); mark TodoWrite items 1–3 and 6–8 `completed`, and resume "Implementing one scope" from "Implementing against the tests" onward.
+1. 台帳を取得する: `gh issue view <N> --json body,state -q .body`。このコマンドが失敗するか、issueに`REQ-<id>:`行が1つもない場合は、まだ台帳が存在しないものとして扱う。これは「新規作業を開始する」と実質同じケースであり、新規issueではなく既存issue `N`に起票する点だけが異なる——まず`test-infra-setup`を呼び出し（そちらのstep 1と同様。`spec-to-tests`は未導入の場合それを実行するよう*伝える*だけで、自ら実行はしない）、次に`spec-interview`にissue `N`の続きであることを伝えて呼び出し、承認後は（新規issue操作ではなく）issue `N`に対する`task-filing`の**append**operationを呼び出す——あるいは、`spec-interview`のStep 4が独立した関心事の分割を提案しユーザーが承認した場合は、代わりに`epic-filing`（Entry B）に引き継ぐ。PRグループ分割が提案・承認された場合は「分割を処理する」を参照——その後issue `N`について「1つのスコープを実装する」を実行する。
+2. テストディレクトリを検出する（下記「テストディレクトリを検出する」参照）。
+   - **`## PRグループ`セクションがない場合:** そのまま issue `N`について`--group`フラグなしで`coverage-check`（下記「coverage-checkを実行する」参照）を実行し、step 3へ進む。
+   - **`## PRグループ`セクションがある場合:** `coverage-check`だけでなくPRの状態から再開すべきグループを見つける——`coverage-check`はあるREQに対してテストが存在するかどうかしか教えてくれず、そのグループの実装が完了しているかどうかは教えてくれない。そのため、生成済みだがまだ失敗しているテストを持つグループは、カバレッジだけを見ると本当に完了したグループと見分けがつかなくなってしまう。グループ`G`について1から順に、リストされた順序で: `gh pr list --search "\"[group G]\" in:title" --state all --json state,isDraft,number`（「PRを作成する」で必須とされる`[group G]`タイトルタグに基づく）。**一致するPRがない**、または該当PRがまだ**Draft**である最初のグループが、再開すべきグループである——そこでループを止める（PRがready-for-reviewまたはマージ済みのグループは完了しているので飛ばす）。そのグループ`G`が分かったら、issue `N`について`coverage-check --group <G>`を実行してどこまで進んでいるかを調べ、step 3へ進む。
+3. 結果を解釈する。以下のいずれのケースでも、TodoWrite項目4〜5（調査・設計）はそのままにし、`completed`にしないこと——これらのステップは「新規作業を開始する」にのみ属するものであり、再開されたissueは、それ以前のセッションで実際にこれらが実行されたかどうかに関わらず、すでにそのポイントを過ぎたものとして扱う。どちらとも断定しないこと:
+   - **そのグループのDraft PRがすでに存在する場合**（step 2の`gh pr list`検索で見つかった場合——PRグループタスクにのみ関係する）: 実装とPR作成は前のセッションですでに行われている。TodoWrite項目1〜3と6〜10を`completed`にし、（同じ`gh pr list`検索から得た）そのPR番号を使って「レビューを依頼する」から直接再開する——`spec-to-tests`、実装、`sd-tdd:submit`を再実行しないこと。
+   - **まだPRがなく、coverage-checkが不足しているREQを報告する場合、またはテストディレクトリに`issue-<N>_REQ-`に一致するものが1つもない場合**: TodoWrite項目1〜3を`completed`にし、「1つのスコープを実装する」のstep 1（worktree作成）から再開する——再開されたrunであっても、前のセッションでworktreeが存在していたとしても、独自の隔離されたworktreeが必要である。ただし、そのworktreeがまだ存在し正しいブランチ上にある場合は再利用する。
+   - **まだPRがなく、coverage-checkがクリーンに合格する場合**: テストは存在するが実装は完了していない（このグループに対するPRはまだ一度も作成されていない——「PRを作成する」はテストが通過して初めて実行されることを参照）。TodoWrite項目1〜3と6〜8を`completed`にし、「テストに対して実装する」以降から「1つのスコープを実装する」を再開する。
 
-## Detecting the test directory
+## テストディレクトリを検出する
 
-Needed before invoking `coverage-check`. Check, in order, for the first that exists in the project:
+`coverage-check`を呼び出す前に必要となる。プロジェクト内で以下を順に確認し、最初に存在するものを使う:
 
-1. A directory literally named `test/`, `tests/`, `__tests__/`, or `spec/` at the project root or under `src/`.
-2. Files matching `**/*.test.*` or `**/*.spec.*` anywhere in the project (use their common parent directory, or pass the glob root if they're scattered next to source files).
-3. For a skill/behavioral change with no executable test framework in scope (e.g. an `evals/evals.json` alongside the skill), that `evals/` directory is the test directory.
+1. プロジェクトルートまたは`src/`配下にある、文字通り`test/`、`tests/`、`__tests__/`、`spec/`という名前のディレクトリ。
+2. プロジェクト内のどこかにある`**/*.test.*`または`**/*.spec.*`に一致するファイル（それらの共通の親ディレクトリを使うか、ソースファイルの隣に散らばっている場合はglobのルートを渡す）。
+3. スコープ内に実行可能なテストフレームワークがないskill/振る舞いの変更の場合（例: skillと並んだ`evals/evals.json`）、その`evals/`ディレクトリをテストディレクトリとする。
 
-If none of these resolve to an unambiguous single path (e.g. multiple candidate directories with test files in different frameworks), ask the user once which directory to pass to `coverage-check`.
+これらのいずれによっても曖昧さのない単一のパスに絞り込めない場合（例: 異なるフレームワークのテストファイルを持つ複数の候補ディレクトリがある場合）、`coverage-check`に渡すディレクトリをユーザーに一度だけ確認する。
 
-## Running coverage-check
+## coverage-checkを実行する
 
 ```bash
 node scripts/coverage-check/cli.js --issue <N> --tests <test-directory> [--group <G>]
 ```
 
-Run from the sd-tdd plugin root. Exit 0 with no missing/orphan output means every active REQ (or every REQ in the given group) has a test — proceed. Exit 1 with "Missing tests for: ..." means go back to `spec-to-tests` for exactly those REQ-IDs. See the `coverage-check` skill for full output semantics.
+sd-tddプラグインのルートから実行する。missing/orphanの出力なしで終了コード0であれば、アクティブな全REQ（または指定されたグループ内の全REQ）にテストがあるということなので、そのまま進める。「Missing tests for: ...」とともに終了コード1であれば、その不足しているREQ-IDだけを対象に`spec-to-tests`に戻る。出力の意味の詳細は`coverage-check` skillを参照。
