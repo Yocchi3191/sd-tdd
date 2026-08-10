@@ -1,6 +1,6 @@
 ---
 name: review
-description: ユーザーがPRの存在を前提とせず、現在の作業ブランチをレビューしてほしいときに使う — 例: "reviewして"、"今の変更をレビューして"、"コードレビューして"。superpowers:requesting-code-review経由でcontext-resetされたsubagentをディスパッチし、ブランチの分岐点から最新コミットまでの差分をレビューする。PRをready for reviewに変換することは決して行わない — それはreview-prの役目であり、PR番号が渡されたときにこのskillをラップする。
+description: ユーザーがPRの存在を前提とせず、現在の作業ブランチをレビューしてほしいときに使う。たとえば "reviewして"、"今の変更をレビューして"、"コードレビューして"。superpowers:requesting-code-review経由でcontext-resetされたsubagentをディスパッチし、ブランチの分岐点から最新コミットまでの差分をレビューする。PRをready for reviewに変換することは決して行わない — それはreview-prの役目であり、PR番号が渡されたときにこのskillをラップする。
 ---
 
 # Review
@@ -23,7 +23,7 @@ git branch --show-current
 gh repo view --json defaultBranchRef -q .defaultBranchRef.name
 ```
 
-現在のブランチがこのデフォルトブランチそのものである場合は、レビュー対象が無いことをユーザーに伝えて停止する — レビューには独自のコミットを持つブランチが必要である。
+現在のブランチがこのデフォルトブランチ*そのもの*である場合は、レビュー対象が無いことをユーザーに伝えて停止する — レビューには独自のコミットを持つブランチが必要である。
 
 ここで、`<default-branch>`をデフォルトブランチ名に置き換えたうえで:
 
