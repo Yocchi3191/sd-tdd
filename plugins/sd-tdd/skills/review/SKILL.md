@@ -7,7 +7,7 @@ description: ユーザーがPRの存在を前提とせず、現在の作業ブ�
 
 PRの存在を前提とせず、現在の作業ブランチの差分に対してコードレビューを実行する。これは`sd-tdd:submit`の"レビュー版"にあたるskillで、`submit`が変更をPRに変換するのに対し、`review`は変更をレビューするだけである — 作業の途中、PRがまだ存在しない段階、あるいはセカンドオピニオンが欲しいときにいつでも使える。`sd-tdd:review-pr`は、入力が「現在のブランチ」ではなくPR番号である場合に、このskillの上に被せる薄いアダプタである。
 
-## Step 0: BASE_SHA/HEAD_SHA/PLAN_OR_REQUIREMENTS/DESCRIPTIONは既に揃っているか?
+## Step 0: BASE_SHA/HEAD_SHA/PLAN_OR_REQUIREMENTS/DESCRIPTIONは既に揃っているか？
 
 この呼び出しの時点でこれら4つがすべて解決済みとして渡されている場合(例: `sd-tdd:review-pr`がPRの実際のbase/headとbodyから解決して渡すケース) — Step 1〜3は完全にスキップし、渡された値のままStep 4に進む。以下のStep 1〜3は、何も渡されなかったときに「現在のブランチ」からこれらの値を導出するためだけに存在する。
 
