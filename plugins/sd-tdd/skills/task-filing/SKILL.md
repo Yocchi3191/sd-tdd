@@ -35,7 +35,7 @@ EOF
 )"
 ```
 
-3. 呼び出し元へ報告する: 「Task filed as issue #<N>.」
+3. 呼び出し元へ報告する: 「issue #<N>として起票しました。」
 
 ## 操作: 親epicの配下にタスクを起票する
 
@@ -59,7 +59,7 @@ EOF
 )"
 ```
 
-4. 呼び出し元へ報告する: 「Task filed as issue #<N> (sub-issue of epic #<epic-N>).」
+4. 呼び出し元へ報告する: 「issue #<N>として起票しました（epic #<epic-N>のsub-issue）。」
 
 ## 操作: PRグループとして起票する（単一issue）
 
@@ -67,7 +67,7 @@ EOF
 
 1. 通常どおりタスクを起票する（「新規タスクを起票する」を参照）。
 2. `## PRグループ`セクション（`task-template.md`を参照）を追加し、各グループの名前とREQ-IDを、実装される予定の順序で列挙する。
-3. 呼び出し元へ報告する: 「Task filed as issue #<N> with <count> PR group(s).」
+3. 呼び出し元へ報告する: 「issue #<N>として起票しました（PRグループ<count>件）。」
 
 ## 操作: 既存タスクへ追記する
 
@@ -83,7 +83,7 @@ EOF
 )"
 ```
 
-5. 呼び出し元へ報告する: 「Task #<N> updated with <count> new REQ line(s).」
+5. 呼び出し元へ報告する: 「issue #<N>を更新しました（新規REQ行<count>件）。」
 
 ## 制約: REQ行は逐語的であること
 
