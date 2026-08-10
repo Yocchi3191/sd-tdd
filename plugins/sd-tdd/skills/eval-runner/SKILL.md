@@ -1,6 +1,6 @@
 ---
 name: eval-runner
-description: Use when you want to actually execute a skill's evals/evals.json and grade the result — e.g. "このskillのevalを実行して", "evals.jsonを走らせて判定して", or before merging a skill change to confirm it behaves as the evals describe. Runs each eval's prompt against the target skill as a `claude -p --plugin-dir <worktree>` subprocess, grades the captured output against expected_output/expectations in this same session, and reports a pass/fail summary as text or JSON. Also use for verifying a skill description's trigger accuracy, by invoking skill-creator's run_eval.py directly. This is an on-demand tool only — it is never invoked automatically by sd-tdd:run, and it never runs in CI.
+description: Use when you want to actually execute a skill's evals/evals.json and grade the result — e.g. "このskillのevalを実行して", "evals.jsonを走らせて判定して", or before merging a skill change to confirm it behaves as the evals describe. Runs each eval's prompt against the target skill as a `claude -p --plugin-dir <worktree>` subprocess, grades the captured output against expected_output/expectations in this same session, and reports a pass/fail summary as text or JSON. Also use for verifying a skill description's trigger accuracy, by invoking skill-creator's run_eval.py directly. オンデマンド専用のツールで、sd-tdd:runから自動的に呼ばれることはなく、CIでも動かない(`claude -p`はローカルセッションのサブスクリプション認証に依存しており、CIの認証情報では動かせないため)。1回の実行ごとに実際に`claude -p`サブプロセスが起動し実トークンを消費するため、コミット・PR修正の都度実行する軽いチェックではない。TDDサイクルで同じskillのSKILL.md/evals.jsonを何度も編集する場合も、その都度は実行しない。運用は週末バッチとする。その週に変更のあった内容をまとめて、日曜20時までに人間が手動で一括実行する。バッチで指摘が見つかっても即座に再実行せず、修正後は次回の週末バッチで確認する。
 ---
 
 # Eval Runner
@@ -8,6 +8,8 @@ description: Use when you want to actually execute a skill's evals/evals.json an
 skillの`evals/evals.json`を実際の実行エンジンに接続する: 各evalのpromptを対象skillに対して実行し、出力を採点してpass/failを報告する。このskillがなければ、`evals.json`ファイルは何も読み取らず実行もされない、単なる不活性なドキュメントのままである。
 
 **自動実行はしない。** このskillは人間、またはClaudeが明示的に実行を選んだ場合にのみ、オンデマンドで呼び出される。`sd-tdd:run`のパイプラインのステップではなく（そのパイプラインはこのskillを一切呼び出さない）、CI（GitHub Actionsなど）にも組み込まれていない — mutation testingとunit testは`test-infra-setup`が定めた通常のスケジュールで実行されるが、このskillが採点するevalは常に手動・オンデマンドのチェックである。
+
+**コストが高い — 反射的に実行しない。** 各evalは実際に`claude -p`サブプロセスを最初から最後まで実行するため、あるskillの`evals.json`を採点すると相応の実トークンを消費する — ユニットテストのような安いチェックではなく、変更の都度実行すべきものではない。ミューテーションテストは同じ「コミット毎には高すぎる」問題をCIのスケジュールジョブに逃がすことで解決している(`test-infra-setup`参照)が、この手は使えない — `claude -p`はローカルセッションのサブスクリプション認証に依存しており、CIの認証情報では満たせないためだ。したがって実行頻度はスケジューラではなく人間・Claude双方の判断で守る必要がある: 都度実行やPR個別修正のたびの実行は避け、その週に変更のあった内容をまとめて日曜20時までに週末バッチとして一括実行する。バッチで指摘が見つかっても即座に再実行せず、修正は次回の週末バッチで改めて確認する。
 
 ## 開始前に必要な入力
 
