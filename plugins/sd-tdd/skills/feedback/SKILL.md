@@ -1,6 +1,6 @@
 ---
 name: feedback
-description: Use when a user expresses a complaint, frustration, confusion, or feature request about the sd-tdd plugin itself — its skills (spec-interview, task-filing, spec-to-tests, coverage-check, test-infra-setup) or scripts — not about their own project's code. Trigger on natural phrasing too, e.g. "sd-tddのspec-interviewが使いにくい", "coverage-checkにこの機能が欲しい", "sd-tddのここが不便". Also use when explicitly invoked to file feedback about sd-tdd. Interviews the user about the issue, checks for duplicate GitHub issues in Yocchi3191/sd-tdd, and files a new issue (or comments on an existing one) only after explicit user approval — never files without asking first.
+description: ユーザーがsd-tddプラグイン自体（spec-interview、task-filing、spec-to-tests、coverage-check、test-infra-setupなどのskillやスクリプト）について不満・戸惑い・機能要望を口にしたときに使う——自分自身のプロジェクトのコードについての話ではない場合に限る。自然な言い回しにも反応する。例:「sd-tddのspec-interviewが使いにくい」「coverage-checkにこの機能が欲しい」「sd-tddのここが不便」。sd-tddへのフィードバックを起票するよう明示的に呼ばれた場合も使う。状況をヒアリングし、Yocchi3191/sd-tddの既存GitHub issueとの重複を確認した上で、ユーザーの明示的な承認を得てから新規issueを作成する（または既存issueにコメントする）——承認を得る前に起票することは決してない。
 ---
 
 # Feedback
