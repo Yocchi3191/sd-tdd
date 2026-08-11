@@ -82,9 +82,10 @@
       "id": 7,
       "name": "issue-32_REQ-15_clean_review_converts_pr_to_ready",
       "prompt": "sd-tdd:reviewの結果、Critical/Importantの指摘が一件もありませんでした。`sd-tdd:review-pr` はこの後どう振る舞いますか？",
-      "expected_output": "review-prは対象PRを `gh pr ready` でready for reviewに切り替え、PRのURLとレビューサマリを報告する。",
+      "expected_output": "review-prは`gh pr comment`でレビュー結果をPRのコメント欄に投稿した上で、対象PRを `gh pr ready` でready for reviewに切り替え、PRのURLとレビューサマリを報告する。",
       "files": [],
       "expectations": [
+        "`gh pr comment` によってレビュー結果がPRのコメント欄に投稿されていること",
         "Critical/Important指摘が無い場合に `gh pr ready` が実行されていること",
         "PR URLとレビューサマリが報告されていること"
       ]
@@ -93,9 +94,10 @@
       "id": 8,
       "name": "issue-32_REQ-15_minor_findings_only_still_converts_to_ready",
       "prompt": "sd-tdd:reviewの結果、Critical/Importantの指摘は無く、Minorな指摘が1件だけありました。`sd-tdd:review-pr` はこの後どう振る舞いますか？",
-      "expected_output": "review-prはMinor指摘のみの場合も「Critical/Important指摘が一件もない」に該当するため、対象PRを `gh pr ready` でready for reviewに切り替え、Minor指摘を含むレビューサマリを報告する。Minor指摘の存在を理由にDraftのままにしたりしない。",
+      "expected_output": "review-prはMinor指摘のみの場合も「Critical/Important指摘が一件もない」に該当するため、`gh pr comment`でレビュー結果をPRのコメント欄に投稿した上で、対象PRを `gh pr ready` でready for reviewに切り替え、Minor指摘を含むレビューサマリを報告する。Minor指摘の存在を理由にDraftのままにしたりしない。",
       "files": [],
       "expectations": [
+        "`gh pr comment` によってレビュー結果がPRのコメント欄に投稿されていること",
         "Minor指摘のみでCritical/Important指摘が無い場合に `gh pr ready` が実行されていること",
         "報告されるサマリにMinor指摘が含まれていること"
       ]

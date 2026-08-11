@@ -1,6 +1,6 @@
 ---
 name: review-pr
-description: Use when the user wants a specific PR reviewed and, if clean, converted to ready for review — e.g. "PR #40をレビューして", "review-pr 40", or when run's own review step (after a Draft PR already exists) delegates here. Resolves BASE_SHA/HEAD_SHA/PLAN_OR_REQUIREMENTS/DESCRIPTION from the PR itself, then delegates to sd-tdd:review for the actual review. Posts the review result to the PR via `gh pr comment` before acting on it. On a clean result (no Critical/Important findings), converts the PR to ready for review via `gh pr ready`; otherwise leaves it Draft and reports the outstanding findings. If the reviewer subagent violated its read-only instructions, leaves the PR Draft and relays the violation report as-is instead (without posting it as a PR comment).
+description: ユーザーが特定のPRのレビューを求めており、クリーンならready for reviewへ変換したい場合に使う — 例:「PR #40をレビューして」「review-pr 40」、または`run`自身のレビューステップ（既にDraft PRが存在する後）からの委譲時。PR自体からBASE_SHA/HEAD_SHA/PLAN_OR_REQUIREMENTS/DESCRIPTIONを解決し、実際のレビューは`sd-tdd:review`に委譲する。レビュー結果はPR状態を変更する前に`gh pr comment`でPRへ投稿する。クリーンな結果（Critical/Important指摘なし）の場合は`gh pr ready`でPRをready for reviewに変換し、そうでなければDraftのまま残った指摘を報告する。レビュアーサブエージェントが読み取り専用の指示に違反した場合は、PRをDraftのまま維持し違反レポートをそのまま伝える（この場合はPRコメントとしては投稿しない）。
 ---
 
 # Review PR
