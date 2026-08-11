@@ -1,6 +1,6 @@
 {
   "name": "sd-tdd",
-  "version": "0.1.36",
+  "version": "0.1.37",
   "private": true,
   "scripts": {
     "test:coverage-check": "node --test",
