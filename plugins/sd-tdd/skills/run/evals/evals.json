@@ -347,6 +347,52 @@
         "push操作がrun自身によって行われており、レビューsubagentが行うものとされていないこと",
         "push後に同じPR番号で`sd-tdd:review-pr`が再度呼び出されていること"
       ]
+    },
+    {
+      "id": 31,
+      "name": "issue-44_REQ-1_req_completion_shows_diff_before_next_req",
+      "prompt": "スコープに3つのREQ（REQ-1, REQ-2, REQ-3）があり、superpowers:test-driven-developmentがちょうどREQ-1の実装を完了しテストがgreenになったところです。runはこの後、REQ-2の実装に進む前に何をしますか？",
+      "expected_output": "runはREQ-1の実装が完了した時点で、REQ-2の実装に進む前にREQ-1の差分を人間に提示する（短いステータス行と差分）。これは人間の明示的な承認を待つエスカレーションポイントではないため、通常は応答を待たずにREQ-2の実装へ進む。",
+      "files": [],
+      "expectations": [
+        "REQ-1完了後、REQ-2の実装に進む前にREQ-1の差分が人間に提示されていること",
+        "全REQ完了後にまとめて提示するのではなく、REQ単位で提示されていること",
+        "この提示が承認待ちのエスカレーションポイントとして扱われていない（応答を待たずに次のREQへ進む）こと"
+      ]
+    },
+    {
+      "id": 32,
+      "name": "issue-44_REQ-1_structural_req_also_gets_diff_presented",
+      "prompt": "スコープ内のREQ-2が`[structural]`タグ付きのため、失敗するテストなしで直接実装されました。実装が完了した直後、runはこの後何をしますか？",
+      "expected_output": "runは`[structural]`REQであっても、実装が完了した時点でREQ-2の差分を人間に提示してから次のREQに進む。テストの有無（green/redサイクルの対象かどうか）は差分提示の要否に影響しない。",
+      "files": [],
+      "expectations": [
+        "`[structural]`REQの実装完了後にも差分が人間に提示されていること",
+        "テストが存在しないことを理由に差分提示が省略されていないこと"
+      ]
+    },
+    {
+      "id": 33,
+      "name": "issue-44_REQ-2_repetitive_pattern_detected_asks_once_then_batches",
+      "prompt": "スコープに5つのREQがあり、最初の2つ（REQ-1, REQ-2）を実装したところ、残りの3つ（REQ-3, REQ-4, REQ-5）が同じCRUD操作を異なるエンティティに対して繰り返すだけの同一パターンだと分かりました。runはこの後どう振る舞いますか？",
+      "expected_output": "runはこの時点で一度だけ人間に、残りのREQをまとめて進めてよいか確認する。承認された場合、REQ-3〜REQ-5を個別に都度提示せず、まとめて実装したうえで一度に差分を提示する。",
+      "files": [],
+      "expectations": [
+        "残りのREQが繰り返しパターンだと判断した時点で、まとめて進めてよいか人間に一度確認していること",
+        "承認された場合、残りのREQについて個別の都度提示ではなく、まとめて実装・提示する挙動になっていること",
+        "この確認が1回のみであり、繰り返しパターンが続く限り再度尋ねていないこと"
+      ]
+    },
+    {
+      "id": 34,
+      "name": "issue-44_REQ-2_declined_batch_keeps_per_req_presentation",
+      "prompt": "スコープに5つのREQがあり、最初の2つ（REQ-1, REQ-2）を実装したところ、残りの3つ（REQ-3, REQ-4, REQ-5）が同じCRUD操作を異なるエンティティに対して繰り返すだけの同一パターンだと分かり、runが「まとめて進めてよいか」を人間に確認しましたが、人間はこれを断りました。runはこの後どう振る舞いますか？",
+      "expected_output": "runはまとめて進めることをせず、REQ-3以降も引き続きREQ単位で実装・差分提示を続ける。まとめる可否を再度尋ねることはしない。",
+      "files": [],
+      "expectations": [
+        "まとめて進めることが拒否された場合、REQ単位の個別提示が継続されていること",
+        "拒否後に再度まとめる可否を尋ねていないこと"
+      ]
     }
   ]
 }
