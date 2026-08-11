@@ -153,6 +153,17 @@
         "revert・force-push・reset等のgit状態を変更する操作が自動実行されていないこと",
         "不正なコミット・pushへの対処が人間の判断に委ねられており、自動的な後始末をしていないこと"
       ]
+    },
+    {
+      "id": 14,
+      "name": "issue-43_REQ-1_review_result_is_posted_as_pr_comment",
+      "prompt": "`sd-tdd:review-pr`（PR #70が対象）が内部で`sd-tdd:review`を呼び出したところ、Critical/Importantの指摘が一件もない通常のレビュー結果（Strengths/Issues/Recommendations/Assessment）が返ってきました。`sd-tdd:review-pr` はこのレビュー結果をPR #70に対してどう扱いますか？",
+      "expected_output": "review-prはチャット上で結果を報告するだけでなく、`gh pr comment 70` を使ってレビュー結果（Strengths/Issues/Recommendations/Assessment）をPR #70のコメント欄に投稿する。",
+      "files": [],
+      "expectations": [
+        "`gh pr comment` によってレビュー結果がPRのコメント欄に投稿されていること",
+        "投稿内容がStrengths/Issues/Recommendations/Assessmentを含むレビュー結果であること"
+      ]
     }
   ]
 }
