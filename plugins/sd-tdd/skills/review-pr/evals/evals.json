@@ -82,9 +82,10 @@
       "id": 7,
       "name": "issue-32_REQ-15_clean_review_converts_pr_to_ready",
       "prompt": "sd-tdd:reviewの結果、Critical/Importantの指摘が一件もありませんでした。`sd-tdd:review-pr` はこの後どう振る舞いますか？",
-      "expected_output": "review-prは対象PRを `gh pr ready` でready for reviewに切り替え、PRのURLとレビューサマリを報告する。",
+      "expected_output": "review-prは`gh pr comment`でレビュー結果をPRのコメント欄に投稿した上で、対象PRを `gh pr ready` でready for reviewに切り替え、PRのURLとレビューサマリを報告する。",
       "files": [],
       "expectations": [
+        "`gh pr comment` によってレビュー結果がPRのコメント欄に投稿されていること",
         "Critical/Important指摘が無い場合に `gh pr ready` が実行されていること",
         "PR URLとレビューサマリが報告されていること"
       ]
@@ -93,9 +94,10 @@
       "id": 8,
       "name": "issue-32_REQ-15_minor_findings_only_still_converts_to_ready",
       "prompt": "sd-tdd:reviewの結果、Critical/Importantの指摘は無く、Minorな指摘が1件だけありました。`sd-tdd:review-pr` はこの後どう振る舞いますか？",
-      "expected_output": "review-prはMinor指摘のみの場合も「Critical/Important指摘が一件もない」に該当するため、対象PRを `gh pr ready` でready for reviewに切り替え、Minor指摘を含むレビューサマリを報告する。Minor指摘の存在を理由にDraftのままにしたりしない。",
+      "expected_output": "review-prはMinor指摘のみの場合も「Critical/Important指摘が一件もない」に該当するため、`gh pr comment`でレビュー結果をPRのコメント欄に投稿した上で、対象PRを `gh pr ready` でready for reviewに切り替え、Minor指摘を含むレビューサマリを報告する。Minor指摘の存在を理由にDraftのままにしたりしない。",
       "files": [],
       "expectations": [
+        "`gh pr comment` によってレビュー結果がPRのコメント欄に投稿されていること",
         "Minor指摘のみでCritical/Important指摘が無い場合に `gh pr ready` が実行されていること",
         "報告されるサマリにMinor指摘が含まれていること"
       ]
@@ -104,9 +106,10 @@
       "id": 9,
       "name": "issue-32_REQ-16_unresolved_findings_keep_pr_draft",
       "prompt": "sd-tdd:reviewの結果、Importantな指摘が1件残っていました。`sd-tdd:review-pr` はこの後どう振る舞いますか？",
-      "expected_output": "review-prは対象PRをDraftのままにし（`gh pr ready` を実行せず）、残っている指摘内容をそのまま報告する。",
+      "expected_output": "review-prは`gh pr comment`でレビュー結果をPRのコメント欄に投稿した上で、対象PRをDraftのままにし（`gh pr ready` を実行せず）、残っている指摘内容をそのまま報告する。",
       "files": [],
       "expectations": [
+        "`gh pr comment` によってレビュー結果がPRのコメント欄に投稿されていること",
         "Critical/Important指摘が残る場合に `gh pr ready` が実行されていないこと",
         "未解決の指摘内容が報告されていること"
       ]
@@ -152,6 +155,17 @@
       "expectations": [
         "revert・force-push・reset等のgit状態を変更する操作が自動実行されていないこと",
         "不正なコミット・pushへの対処が人間の判断に委ねられており、自動的な後始末をしていないこと"
+      ]
+    },
+    {
+      "id": 14,
+      "name": "issue-43_REQ-1_review_result_is_posted_as_pr_comment",
+      "prompt": "`sd-tdd:review-pr`（PR #70が対象）が内部で`sd-tdd:review`を呼び出したところ、Critical/Importantの指摘が一件もない通常のレビュー結果（Strengths/Issues/Recommendations/Assessment）が返ってきました。`sd-tdd:review-pr` はこのレビュー結果をPR #70に対してどう扱いますか？",
+      "expected_output": "review-prはチャット上で結果を報告するだけでなく、`gh pr comment 70` を使ってレビュー結果（Strengths/Issues/Recommendations/Assessment）をPR #70のコメント欄に投稿する。",
+      "files": [],
+      "expectations": [
+        "`gh pr comment` によってレビュー結果がPRのコメント欄に投稿されていること",
+        "投稿内容がStrengths/Issues/Recommendations/Assessmentを含むレビュー結果であること"
       ]
     }
   ]
