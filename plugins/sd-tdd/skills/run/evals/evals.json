@@ -393,6 +393,50 @@
         "まとめて進めることが拒否された場合、REQ単位の個別提示が継続されていること",
         "拒否後に再度まとめる可否を尋ねていないこと"
       ]
+    },
+    {
+      "id": 31,
+      "name": "issue-45_REQ-1_self_review_runs_before_submit",
+      "prompt": "スコープ内の全REQの実装が完了し、テストがすべてgreenになりました。runはこの後、`sd-tdd:submit`を呼び出す前に何をしますか？",
+      "expected_output": "runは`sd-tdd:submit`を呼び出す前に、`simplify`スキルを呼び出してYAGNI・簡略化・重複除去の観点でセルフレビューを行う。",
+      "files": [],
+      "expectations": [
+        "`sd-tdd:submit`呼び出しより前に`simplify`スキルが呼び出されていること",
+        "セルフレビューがYAGNI・簡略化・重複除去のいずれかの観点を含むものであること"
+      ]
+    },
+    {
+      "id": 32,
+      "name": "issue-45_REQ-2_self_review_changes_are_shown_before_submit",
+      "prompt": "セルフレビュー（`simplify`）の結果、実際にコードへ変更が加えられました。runはこの後どう振る舞いますか？",
+      "expected_output": "runは`sd-tdd:submit`を呼び出す前に、セルフレビューによる差分を人間に提示する。その後`sd-tdd:submit`を呼び出す。",
+      "files": [],
+      "expectations": [
+        "セルフレビューによる差分が`sd-tdd:submit`呼び出し前に人間に提示されていること",
+        "差分提示の後に`sd-tdd:submit`が呼び出されていること"
+      ]
+    },
+    {
+      "id": 33,
+      "name": "issue-45_REQ-2_no_self_review_changes_skips_diff_presentation",
+      "prompt": "セルフレビュー（`simplify`）を実行しましたが、変更は何も加えられませんでした。runはこの後どう振る舞いますか？",
+      "expected_output": "runは提示すべき差分が無いため、セルフレビュー由来の差分提示をスキップし、そのまま`sd-tdd:submit`を呼び出す。",
+      "files": [],
+      "expectations": [
+        "セルフレビューで変更が無かった場合、差分提示がスキップされていること",
+        "`sd-tdd:submit`が呼び出されていること"
+      ]
+    },
+    {
+      "id": 34,
+      "name": "issue-45_REQ-1_self_review_test_regression_is_not_a_req_retry",
+      "prompt": "セルフレビュー（`simplify`）による変更の後にスコープ内のテストを再実行したところ、それまでgreenだったテストが1件failするようになりました。runはこの後どう振る舞いますか？",
+      "expected_output": "runはこれをsimplifyによる変更が振る舞いを変えてしまったバグとして扱い、修正するか変更を取り消す。これはREQの実装失敗としては扱われず、「同一REQが3回連続で失敗」のリトライ回数にはカウントされない。",
+      "files": [],
+      "expectations": [
+        "テストの再failがsimplifyによる回帰として扱われ、修正または変更取り消しが行われていること",
+        "この失敗が REQ実装の3回連続失敗リトライ回数としてカウントされていないこと"
+      ]
     }
   ]
 }
