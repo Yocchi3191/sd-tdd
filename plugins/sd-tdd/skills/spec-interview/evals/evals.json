@@ -7,8 +7,8 @@
       "prompt": "ユーザーから「Unity側の12ファイルのnamespaceをFoo.Barに揃えたい」という依頼を受け、spec-interviewでREQを書き起こす場面です。このREQは、入力→出力の振る舞いではなく、コードのnamespaceという構造的性質を記述しています。spec-interviewはこのREQをどう記述しますか？",
       "expected_output": "spec-interviewはREQ行の`REQ-<id>:`直後に`[structural]`タグを付与する（例: `REQ-3: [structural] namespaceがFoo.Barであること`）。",
       "files": [],
-      "assertions": [
-        {"name": "structural_tag_applied", "description": "構造的性質を記述するREQ行にREQ番号直後の[structural]タグが付与されていること"}
+      "expectations": [
+        "構造的性質を記述するREQ行に、REQ番号直後の[structural]タグが付与されていること"
       ]
     },
     {
@@ -17,8 +17,8 @@
       "prompt": "同じインタビューの中で、別のREQとして「空文字を送信したら400を返す」という振る舞いのREQも作成する場面です。spec-interviewはこのREQをどう記述しますか？",
       "expected_output": "spec-interviewはこのREQに[structural]タグを付与せず、通常のREQ行として記述する。",
       "files": [],
-      "assertions": [
-        {"name": "no_structural_tag_for_behavioral_req", "description": "振る舞いを記述するREQには[structural]タグが付与されていないこと"}
+      "expectations": [
+        "振る舞いを記述するREQには[structural]タグが付与されていないこと"
       ]
     },
     {
@@ -27,8 +27,8 @@
       "prompt": "「ネットワーク障害のシミュレートが難しいが、3回リトライして失敗したらエラーを返す」という、テストの実装は難しいものの本質的には振る舞いを記述するREQを作成する場面です。spec-interviewはこのREQに[structural]タグを付与すべきですか？",
       "expected_output": "付与すべきではない。[structural]タグは「テストが書きにくい」ことを理由に付与するものではなく、REQがコードの構造的性質（namespace、ファイル配置、命名規則等）を記述している場合にのみ使う。このREQは振る舞い（入力条件→出力結果）を記述しているため、タグを付けず通常通りテストを書く対象として扱う。",
       "files": [],
-      "assertions": [
-        {"name": "not_tagged_merely_for_test_difficulty", "description": "テストが書きにくいことのみを理由に[structural]タグが付与されていないこと"}
+      "expectations": [
+        "テストが書きにくいことのみを理由に[structural]タグが付与されていないこと"
       ]
     }
     ,{
@@ -37,8 +37,8 @@
       "prompt": "REQ台帳を集めている途中、実は互いに独立した2つの機能（決済ログの整備、通知テンプレートの追加）が混在していると判明しました。spec-interviewはStep4でどう振る舞いますか？",
       "expected_output": "spec-interviewはグループ分け案（各REQ-IDがどちらのグループに属するか）を提示し、ユーザーが承認したら、task-filingのsub issue split操作ではなくepic-filing（Entry B）に確定REQ台帳とグループ分けを渡してハンドオフする。",
       "files": [],
-      "assertions": [
-        {"name": "epic_filing_invoked_not_task_filing_split", "description": "独立した関心事の分割が承認された場合、task-filingのsub issue split相当ではなくepic-filingが呼ばれていること"}
+      "expectations": [
+        "独立した関心事の分割が承認された場合、task-filingのsub issue split相当ではなくepic-filingが呼ばれていること"
       ]
     },
     {
@@ -47,8 +47,63 @@
       "prompt": "REQ台帳を集めている途中、これは同じ機能の実装ステップ（基本ケース→エラーハンドリング）に分かれることがわかりました。spec-interviewはStep4でどう振る舞いますか？",
       "expected_output": "spec-interviewはPR-groupのロールアウトを提案し、ユーザーが承認すればグループ→REQ-IDマッピングをtask-filingの『File as PR groups』operationに渡す。epic-filingは呼ばない。",
       "files": [],
-      "assertions": [
-        {"name": "pr_group_stays_with_task_filing", "description": "依存したステップの分割の場合、epic-filingではなくtask-filingのFile as PR groups operationが使われていること"}
+      "expectations": [
+        "依存したステップの分割の場合、epic-filingではなくtask-filingのFile as PR groups operationが使われていること"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "issue-92_REQ-1_step5_presents_counterargument_alongside_req_list",
+      "prompt": "ヒアリングが終わり、REQ-1からREQ-4までの台帳が固まりました。spec-interviewはStep 5でユーザーに何を提示しますか？",
+      "expected_output": "spec-interviewは最終REQリストを提示するだけでなく、REQリストとは別に「反対の立場からの検討」を必ず併記した上で承認を求める。",
+      "files": [],
+      "expectations": [
+        "Step 5の承認提示に、REQリストとは別立てで反対の立場からの検討が併記されていること",
+        "反対の立場からの検討を示さないまま承認を求めていないこと"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "issue-92_REQ-2_counterargument_not_omitted_when_conclusion_is_agreement",
+      "prompt": "ヒアリングの結果、依頼内容には特に問題がなく、そのまま進めるのが妥当だと判断しました。spec-interviewはStep 5の「反対の立場からの検討」をどう書きますか？",
+      "expected_output": "結論が賛成であっても省略せず、検討した反対材料を最低1つ具体的に明示する。「検討したが妥当と判断しました」のような、反対材料を挙げない一文で済ませることはしない。",
+      "files": [],
+      "expectations": [
+        "結論が賛成の場合でも、具体的な反対材料が最低1つ明示されていること",
+        "「検討したが妥当と判断した」旨の一文のみで済ませていないこと"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "issue-92_REQ-3_each_counterargument_states_its_disposition",
+      "prompt": "Step 5の承認提示で、反対材料として「この機能は既存の仕組みと重複する可能性がある」を挙げました。spec-interviewはこれをどう提示しますか？",
+      "expected_output": "反対材料を挙げるだけで終わらせず、それを採用しなかった理由、または採用して台帳をどう変更したかを、その反対材料ごとに併記する。",
+      "files": [],
+      "expectations": [
+        "挙げた反対材料に対して、採用しなかった理由または採用して台帳をどう変更したかが併記されていること",
+        "反対材料を列挙するだけで終わっていないこと"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "issue-92_REQ-4_wording_level_nitpick_is_not_a_counterargument",
+      "prompt": "Step 5の承認提示にあたり、反対の立場からの検討として「REQ-2の文言にある『適切に』という表現が曖昧です」という指摘だけを思いつきました。spec-interviewはこれを反対材料として扱ってよいですか？",
+      "expected_output": "扱ってはならない。反対材料の対象は依頼そのものの前提・必要性であり、REQ行の文言レベルの指摘はこれに該当しない。文言の曖昧さはStep 2で解消すべきものであり、別途、依頼の前提や必要性に対する反対材料を挙げる必要がある。",
+      "files": [],
+      "expectations": [
+        "REQ行の文言レベルの指摘が反対材料として扱われていないこと",
+        "依頼そのものの前提・必要性を対象とした反対材料が別途求められていること"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "issue-92_REQ-9_append_session_scopes_counterargument_to_the_new_req",
+      "prompt": "実装中に不足していた要件が見つかり、issue #12の既存台帳にREQ-6を1本追記する追記セッションです。Step 5で「反対の立場からの検討」を書くにあたり、何を対象にしますか？",
+      "expected_output": "追記セッションでは、検討の対象は追記するREQ-6自体の必要性である。issue #12の元依頼の前提は初回の承認時に既に検討済みであるため、それを再度検討し直すことは求められない。",
+      "files": [],
+      "expectations": [
+        "反対の立場からの検討が、追記するREQの必要性を対象として書かれていること",
+        "既に承認済みの元依頼の前提を再度蒸し返す検討が要求されていないこと"
       ]
     }
   ]
