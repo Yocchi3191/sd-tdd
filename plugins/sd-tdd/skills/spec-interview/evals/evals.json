@@ -50,6 +50,46 @@
       "assertions": [
         {"name": "pr_group_stays_with_task_filing", "description": "依存したステップの分割の場合、epic-filingではなくtask-filingのFile as PR groups operationが使われていること"}
       ]
+    },
+    {
+      "id": 5,
+      "name": "issue-92_REQ-1_step5_presents_counterargument_alongside_req_list",
+      "prompt": "ヒアリングが終わり、REQ-1からREQ-4までの台帳が固まりました。spec-interviewはStep 5でユーザーに何を提示しますか？",
+      "expected_output": "spec-interviewは最終REQリストを提示するだけでなく、REQリストとは別に「反対の立場からの検討」を必ず併記した上で承認を求める。",
+      "files": [],
+      "assertions": [
+        {"name": "counterargument_section_present", "description": "Step 5の承認提示に、REQリストとは別立てで反対の立場からの検討が併記されていること"}
+      ]
+    },
+    {
+      "id": 6,
+      "name": "issue-92_REQ-2_counterargument_not_omitted_when_conclusion_is_agreement",
+      "prompt": "ヒアリングの結果、依頼内容には特に問題がなく、そのまま進めるのが妥当だと判断しました。spec-interviewはStep 5の「反対の立場からの検討」をどう書きますか？",
+      "expected_output": "結論が賛成であっても省略せず、検討した反対材料を最低1つ具体的に明示する。「検討したが妥当と判断しました」のような、反対材料を挙げない一文で済ませることはしない。",
+      "files": [],
+      "assertions": [
+        {"name": "at_least_one_counterargument_even_when_agreeing", "description": "結論が賛成の場合でも、具体的な反対材料が最低1つ明示されており、検討した旨の一文のみで済ませていないこと"}
+      ]
+    },
+    {
+      "id": 7,
+      "name": "issue-92_REQ-3_each_counterargument_states_its_disposition",
+      "prompt": "Step 5の承認提示で、反対材料として「この機能は既存の仕組みと重複する可能性がある」を挙げました。spec-interviewはこれをどう提示しますか？",
+      "expected_output": "反対材料を挙げるだけで終わらせず、それを採用しなかった理由、または採用して台帳をどう変更したかを、その反対材料ごとに併記する。",
+      "files": [],
+      "assertions": [
+        {"name": "disposition_stated_per_counterargument", "description": "挙げた反対材料ごとに、採用しなかった理由または採用して台帳をどう変更したかが併記されていること"}
+      ]
+    },
+    {
+      "id": 8,
+      "name": "issue-92_REQ-4_wording_level_nitpick_is_not_a_counterargument",
+      "prompt": "Step 5の承認提示にあたり、反対の立場からの検討として「REQ-2の文言にある『適切に』という表現が曖昧です」という指摘だけを思いつきました。spec-interviewはこれを反対材料として扱ってよいですか？",
+      "expected_output": "扱ってはならない。反対材料の対象は依頼そのものの前提・必要性であり、REQ行の文言レベルの指摘はこれに該当しない。文言の曖昧さはStep 2で解消すべきものであり、別途、依頼の前提や必要性に対する反対材料を挙げる必要がある。",
+      "files": [],
+      "assertions": [
+        {"name": "wording_nitpick_rejected_as_counterargument", "description": "REQ行の文言レベルの指摘が反対材料として扱われておらず、依頼そのものの前提・必要性を対象とした反対材料が求められていること"}
+      ]
     }
   ]
 }

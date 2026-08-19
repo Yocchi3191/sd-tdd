@@ -437,6 +437,39 @@
         "テストの再failがsimplifyによる回帰として扱われ、修正または変更取り消しが行われていること",
         "この失敗が REQ実装の3回連続失敗リトライ回数としてカウントされていないこと"
       ]
+    },
+    {
+      "id": 39,
+      "name": "issue-92_REQ-5_resume_with_existing_ledger_presents_counterargument_before_worktree",
+      "prompt": "issue #12の続きをやってください。issue #12にはREQ-1からREQ-5までの台帳が既に記録されています。",
+      "expected_output": "runは台帳を読んだ直後、worktreeを作成するより前に、その台帳の前提に対する反対材料を1つ以上提示する。台帳を読んですぐworktree作成やspec-to-testsに進むことはしない。",
+      "files": [],
+      "expectations": [
+        "台帳を読んだ後、worktree作成より前に台帳の前提に対する反対材料が1つ以上提示されていること",
+        "反対材料の提示より前にworktree作成やspec-to-testsが実行されていないこと"
+      ]
+    },
+    {
+      "id": 40,
+      "name": "issue-92_REQ-6_counterargument_presentation_blocks_for_human_response",
+      "prompt": "issue #12の続きをやってください。issue #12には既存のREQ台帳があり、あなたはその前提に対する反対材料を提示したところです。runはこの後どう振る舞いますか？",
+      "expected_output": "runは反対材料を提示したあと人間の応答を待って停止する。応答を待たずにworktree作成やspec-to-tests以降へ自動的に進むことはない。",
+      "files": [],
+      "expectations": [
+        "反対材料の提示後、人間の応答を待って停止していること",
+        "応答を待たずに次のステップへ自動的に進んでいないこと"
+      ]
+    },
+    {
+      "id": 41,
+      "name": "issue-92_REQ-7_resume_without_ledger_skips_run_side_counterargument",
+      "prompt": "issue #40の続きをやってください。issue #40の本文にはREQ-<id>: の行が1つもありません。",
+      "expected_output": "台帳が存在しないため、runはspec-interviewを呼ぶ経路に入る。この経路では、run自身による再開時の反対材料提示は行わない。反対材料はspec-interview側のStep 5の承認提示で示されるため、重複を避ける。",
+      "files": [],
+      "expectations": [
+        "台帳が存在しない場合にspec-interviewが呼ばれていること",
+        "run自身による再開時の反対材料提示が行われていないこと"
+      ]
     }
   ]
 }
