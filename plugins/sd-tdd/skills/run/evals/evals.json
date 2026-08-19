@@ -28,11 +28,11 @@
       "id": 2,
       "name": "issue-22_REQ-3_resume-existing-issue-skips-spec-interview-new-ledger",
       "prompt": "issue #12の続きをやってください。",
-      "expected_output": "既存issue番号（#12）への参照があるため、runはtask-filingの『fetch current ledger』操作でREQ台帳を取得し、spec-interviewでの新規台帳作成はスキップして、test-infra-setup/spec-to-tests以降から再開する。",
+      "expected_output": "既存issue番号（#12）への参照があるため、runはtask-filingの『fetch current ledger』操作でREQ台帳を取得し、spec-interviewでの新規台帳作成はスキップする。台帳の前提に対する反対材料を提示して応答を待ち、続行が承認された後にtest-infra-setup/spec-to-tests以降から再開する。",
       "files": [],
       "expectations": [
         "task-filingのfetch current ledger操作でissue #12の本文が取得されていること",
-        "REQ-1から始まる新規ヒアリング（新規台帳作成）が行われていないこと。既存REQ台帳がある前提でspec-to-tests以降に進んでいること"
+        "REQ-1から始まる新規ヒアリング（新規台帳作成）が行われていないこと。既存REQ台帳がある前提で、反対材料の提示と続行承認を経てspec-to-tests以降に進んでいること"
       ]
     },
     {
