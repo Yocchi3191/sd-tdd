@@ -28,7 +28,7 @@
       "id": 2,
       "name": "issue-22_REQ-3_resume-existing-issue-skips-spec-interview-new-ledger",
       "prompt": "issue #12の続きをやってください。",
-      "expected_output": "既存issue番号（#12）への参照があるため、runはtask-filingの『fetch current ledger』操作でREQ台帳を取得し、spec-interviewでの新規台帳作成はスキップする。台帳の前提に対する反対材料を提示して応答を待ち、続行が承認された後にtest-infra-setup/spec-to-tests以降から再開する。",
+      "expected_output": "既存issue番号（#12）への参照があるため、runはissue #12の本文からREQ台帳を取得し、spec-interviewでの新規台帳作成はスキップする。台帳の前提に対する反対材料を提示して応答を待ち、続行が承認された後にtest-infra-setup/spec-to-tests以降から再開する。",
       "files": [],
       "expectations": [
         "issue #12の本文からREQ台帳が取得されていること",
@@ -463,7 +463,7 @@
     {
       "id": 41,
       "name": "issue-92_REQ-7_resume_without_ledger_skips_run_side_counterargument",
-      "prompt": "issue #77の続きをやってください。issue #77にepicラベルは付いておらず、本文にはREQ-<id>: の行が1つもありません。",
+      "prompt": "issue #150の続きをやってください。issue #150にepicラベルは付いておらず、本文にはREQ-<id>: の行が1つもありません。",
       "expected_output": "台帳が存在しないため、runはspec-interviewを呼ぶ経路に入る。この経路では、run自身による再開時の反対材料提示は行わない。反対材料はspec-interview側のStep 5の承認提示で示されるため、重複を避ける。",
       "files": [],
       "expectations": [
