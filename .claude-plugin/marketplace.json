@@ -25,6 +25,15 @@
       }
     },
     {
+      "name": "rally",
+      "description": "人間がドライバー、Claudeがコ・ドライバー。要件・仕様・設計は人間が先に出し、Claudeは差分で詰める。実装コードは人間が書く。",
+      "version": "0.1.0",
+      "source": "./plugins/rally",
+      "author": {
+        "name": "Yocchi3191"
+      }
+    },
+    {
       "name": "dev-knowledge",
       "description": "他プロジェクトでも通用する設計・テスト・プロセスの知見を蓄積し、非自明な判断の場面で自然に参照するナレッジベース。",
       "version": "0.1.0",
