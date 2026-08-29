@@ -1,0 +1,180 @@
+{
+  "skill_name": "design",
+  "evals": [
+    {
+      "id": 0,
+      "name": "issue-95_REQ-11_declares_classification_first",
+      "prompt": "「既存のログ出力に、出力先をファイルにも切り替えられるフラグを足したい」と相談されました。rally:designはまず何をしますか？",
+      "expected_output": "最初の質問より前に、調査 / 改修 / 構造変更のどれに当たるかを分類して宣言する。この依頼は既に読める既存フローに手を入れるので「改修」。ユーザーが上書きできるよう声に出して宣言してから、要件の聞き取りに入る。",
+      "files": [],
+      "expectations": [
+        "最初の質問より前に、調査 / 改修 / 構造変更 のいずれかの分類が宣言されていること",
+        "分類をユーザーが上書きできる形で提示していること"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "issue-95_REQ-11_ambiguous_takes_heavier_path",
+      "prompt": "rally:designで、改修と構造変更のどちらとも取れる依頼を受けました。どちらに分類しますか？また、途中で想定より複雑だと分かった場合はどうしますか？",
+      "expected_output": "迷ったら重い方（構造変更）を取る。分類は一方通行で、途中で複雑さが出てきたら上げるが、下げることはしない。",
+      "files": [],
+      "expectations": [
+        "迷った場合に重い方の分類を選んでいること",
+        "分類の変更が一方通行（上げるのみ、下げない）であると述べていること"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "issue-95_REQ-3_no_proposal_before_user_states_theirs",
+      "prompt": "rally:designで「通知機能を作りたいんだよね」とだけ言われました。まだユーザーからは具体的な要件も設計も出ていません。rally:designは次に何を言いますか？",
+      "expected_output": "Claude側の要件案・仕様案・設計案は一切出さない。「要件をどう置きますか、根拠も添えてください」と聞いて待つ。漠然とした要望はまだ案ではないので、案が出るまで待ち続ける。",
+      "files": [],
+      "expectations": [
+        "Claude側の要件案・仕様案・設計案が一切提示されていないこと",
+        "ユーザーに先に案と根拠を述べさせる問いかけになっていること"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "issue-95_REQ-4_diff_only_no_zero_based_alternative",
+      "prompt": "rally:designで、ユーザーが「通知はキュー経由で非同期に送る。理由は送信失敗時にリトライしたいから」という設計案を出しました。rally:designは何を返しますか？ゼロベースで自分の設計案を組み立てて提示してよいですか？",
+      "expected_output": "ゼロベースの対案は出さない。出してよいのはユーザーの案への差分だけ — 削る（本当に要るか、YAGNIではないか）、穴を指摘する（このケースが漏れている、ここがきつくなる）、差し替えを提案する（こうすれば実装が楽になる）の3種類。ユーザーの案と無関係にClaudeが一から組み立てた案は出してはならない。",
+      "files": [],
+      "expectations": [
+        "ユーザーの案と無関係なゼロベースの設計案が提示されていないこと",
+        "返答がユーザーの案に対する差分（削る・穴の指摘・差し替え提案）に限定されていること"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "issue-95_REQ-5_backs_off_on_specific_reason",
+      "prompt": "rally:designで差し替えを提案したところ、ユーザーが「いや、こっちにする。Unityのasmdef境界と一致するから」と答えました。rally:designはどうしますか？その理由が技術的に正しいかを検証すべきですか？",
+      "expected_output": "理由が当該選択に固有か（他の案にも同じことが言えないか）だけを見る。「asmdef境界と一致するから」はその案にしか言えないので固有 — 引く。理由の正しさをClaudeが判定してはならない。事実として間違っている理由でも、固有であれば引く。",
+      "files": [],
+      "expectations": [
+        "理由が当該選択に固有かどうかだけで引く判断をしていること",
+        "理由の妥当性・正しさをClaudeが判定していないこと"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "issue-95_REQ-6_generic_reason_does_not_end_it",
+      "prompt": "rally:designで差し替えを提案したところ、ユーザーが「うーん、こっちのほうがシンプルだから」と答えました。rally:designは引きますか？",
+      "expected_output": "引かない。「シンプルだから」はどの案にも言えるので固有ではない。「他の案にも同じことが言えませんか」と問い返す。",
+      "files": [],
+      "expectations": [
+        "汎用的な理由では引いていないこと",
+        "他の案にも同じことが言えないかを問い返していること"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "issue-95_REQ-6_no_reason_gets_asked",
+      "prompt": "rally:designで差し替えを提案したところ、ユーザーが「これで行きます」とだけ答えました。理由は述べられていません。rally:designはどうしますか？",
+      "expected_output": "無言で引かない。引く前にまず理由を尋ねる。",
+      "files": [],
+      "expectations": [
+        "理由が述べられていない段階で引いていないこと",
+        "理由を尋ねていること"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "issue-95_REQ-18_third_round_holds_and_backs_off",
+      "prompt": "rally:designで、モジュール分割の同じ論点についてユーザーと2回やり取りしましたが、まだ納得できていません。3回目はどうしますか？",
+      "expected_output": "同じ論点での問い返しは2回まで。3回目は「腑に落ちていないが進める」と保留を明示した上で引く。",
+      "files": [],
+      "expectations": [
+        "同一論点での問い返しが2回を超えていないこと",
+        "3回目で保留を明示した上で引いていること"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "issue-95_REQ-8_no_false_agreement_when_unconvinced",
+      "prompt": "rally:designで、ユーザーが述べた理由はその選択に固有でしたが、Claude自身はまだ腑に落ちていません。rally:designは何と言って引きますか？「なるほど、納得しました」と言ってよいですか？",
+      "expected_output": "言ってはならない。納得していないのに納得したと言わない。「理由は固有なので引くが、腑に落ちてはいない」と保留を明示して引く。同意は理由に本当に納得したときだけ行う。",
+      "files": [],
+      "expectations": [
+        "納得していない状態で納得したと述べていないこと",
+        "保留を明示した上で引いていること"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "issue-95_REQ-7_speaks_with_own_position",
+      "prompt": "rally:designでユーザーの設計案に気になる点があります。rally:designは自分の考えを隠して質問だけを投げるべきですか？",
+      "expected_output": "隠さない。採点者ではなく一意見者として「ここはこう思う、理由は〜」の形で自分の立場と根拠を述べる。手の内を隠して問い続けると相談相手ではなく試験官になり、対話を消耗させる。",
+      "files": [],
+      "expectations": [
+        "Claude自身の立場と根拠が明示されていること",
+        "質問だけを投げる採点者的な姿勢になっていないこと"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "issue-95_REQ-9_limits_to_one_or_two_points",
+      "prompt": "rally:designで、ユーザーの設計案に単一責任・依存の向き・テスト容易性・YAGNIの4観点すべてで気になる点がありました。rally:designは何点指摘しますか？",
+      "expected_output": "観点を順に全部消化しない。気になった1〜2点だけを、弱いと感じたものから出す。質問形式も強制せず、平叙文で伝えてよい。",
+      "files": [],
+      "expectations": [
+        "指摘が1〜2点に絞られていること",
+        "全観点を順に消化するチェックリスト的な進め方になっていないこと"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "issue-95_REQ-10_does_not_call_brainstorming_unasked",
+      "prompt": "rally:designでユーザーが要件を出しあぐねています。ユーザーからは案出しの依頼はありません。rally:designはsuperpowers:brainstormingを呼んでよいですか？",
+      "expected_output": "呼んではならない。brainstormingは「Claudeが2〜3案を提示し、人間が承認する」向きで、rally:designと真逆。呼ぶとユーザーの役割が承認者に固定され、rally:designの目的が消える。委譲してよいのはユーザーが明示的にゼロベースの案出しを求めたときだけ。Claude側から「案を出しましょうか」と誘うこともしない。",
+      "files": [],
+      "expectations": [
+        "superpowers:brainstormingが呼ばれていないこと",
+        "Claude側から案出しを提案・誘導していないこと"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "issue-95_REQ-10_delegates_when_explicitly_asked",
+      "prompt": "rally:designの対話中、ユーザーが「もう詰まったから、ゼロベースで案出して」と明示的に依頼しました。rally:designはどうしますか？",
+      "expected_output": "脱出ハッチとしてsuperpowers:brainstormingに委譲する。ハッチを使ったことを咎めない。",
+      "files": [],
+      "expectations": [
+        "明示要求を受けてsuperpowers:brainstormingへ委譲していること",
+        "ハッチを使ったことを咎めていないこと"
+      ]
+    },
+    {
+      "id": 13,
+      "name": "issue-95_REQ-2_single_process_across_phases",
+      "prompt": "rally:designで要件が固まりました。次に機能仕様、その次に設計へ進みます。rally:designは工程ごとに別のskillへ切り替えたり、工程の境界で改まった宣言をしたりしますか？",
+      "expected_output": "しない。要件定義・機能仕様検討・設計は1つの対話プロセスとして扱う。工程が変わっても詰め方は同じなので分けず、境界で改まった宣言もしない。",
+      "files": [],
+      "expectations": [
+        "要件・仕様・設計が1つの対話プロセスとして扱われていること",
+        "工程の境界で別skillへの切り替えや改まった宣言が行われていないこと"
+      ]
+    },
+    {
+      "id": 14,
+      "name": "issue-95_REQ-17_records_to_issue_not_docs",
+      "prompt": "rally:designで設計が固まりました。決定内容をどこに記録しますか？docs/配下に設計ドキュメントとして残してよいですか？",
+      "expected_output": "残さない。ドキュメントの恒久的な置き場所はissue。rally:task-filingに渡してissueへ記録し、rally:design自身はgh issueを叩かない。対話が長引いて引き渡しまでに内容を失う懸念がある場合のみ一時ファイルに退避してよく、引き渡し後は削除する。",
+      "files": [],
+      "expectations": [
+        "設計成果物がdocs/配下のファイルとして残されていないこと",
+        "rally:task-filingに渡してissueへ記録する形になっていること"
+      ]
+    },
+    {
+      "id": 15,
+      "name": "issue-95_REQ-4_decision_summary_has_three_parts",
+      "prompt": "rally:designで「キャッシュはRedisではなくインメモリLRUにする」という設計判断が固まりました。rally:designはこの決定をどうまとめますか？",
+      "expected_output": "決定内容（インメモリLRUを採用）・検討した代替案（Redis等）・却下理由（なぜRedisを採らなかったか）の3点でまとめる。却下理由が書けない代替案は実際には検討していないので、詰め直す。",
+      "files": [],
+      "expectations": [
+        "決定内容・検討した代替案・却下理由の3点が揃っていること"
+      ]
+    }
+  ]
+}

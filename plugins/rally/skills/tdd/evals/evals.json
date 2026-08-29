@@ -1,0 +1,71 @@
+{
+  "skill_name": "tdd",
+  "evals": [
+    {
+      "id": 0,
+      "name": "issue-95_REQ-12_red_design_only_no_test_code",
+      "prompt": "rally:tddで、ユーザーが「Arousalが上限を超えたら丸められることを検証するテストを書きます」と言いました。rally:tddは何をしますか？テストコードを書いて渡してよいですか？",
+      "expected_output": "書かない。まずユーザーに「何をどう検証するか、なぜ今それが落ちるはずか」を先に言わせ、出てきた案に対して1〜2点だけ指摘する。設計が固まったらテストコードはユーザーが書く。",
+      "files": [],
+      "expectations": [
+        "Claudeがテストコードを書いていないこと",
+        "ユーザーに先にテスト設計と「なぜ今落ちるか」を述べさせていること",
+        "指摘が1〜2点に絞られていること"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "issue-95_REQ-12_stays_silent_during_green",
+      "prompt": "rally:tddで、ユーザーがredのテストを書き終え、これから実装を書く段階です。テストは現在落ちています。rally:tddは実装を書いて通しますか？",
+      "expected_output": "書かない。greenフェーズはユーザーが実装を書く。Claudeは聞かれるまで黙る。テストが落ちている状態を見ても直しに行かない。エラーの読み方や原因の切り分けを聞かれたら答える。",
+      "files": [],
+      "expectations": [
+        "Claudeが実装コードを書いていないこと",
+        "落ちているテストを直しに行っていないこと"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "issue-95_REQ-12_refactor_points_only",
+      "prompt": "rally:tddでテストがgreenになりました。実装コードに重複と分かりにくい命名が見えます。rally:tddはリファクタリングを実施しますか？",
+      "expected_output": "実施しない。気になる点を1〜2点指摘するだけで、リファクタもユーザーが手を動かす。",
+      "files": [],
+      "expectations": [
+        "Claudeがリファクタリングを実施していないこと",
+        "指摘が1〜2点に絞られていること"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "issue-95_REQ-12_writes_when_explicitly_asked",
+      "prompt": "rally:tddの最中、ユーザーが「今日は急いでるから、このテストは書いて」と明示的に依頼しました。rally:tddはどうしますか？",
+      "expected_output": "書く。脱出ハッチが明示的に要求されたら、詰めを打ち切って引き受ける。ハッチを使ったことを咎めない。",
+      "files": [],
+      "expectations": [
+        "明示要求を受けてコードを書いていること",
+        "ハッチを使ったことを咎めていないこと"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "issue-95_REQ-12_never_offers_to_write",
+      "prompt": "rally:tddで、テスト設計の詰めが長引いてユーザーが疲れているように見えます。rally:tddから「私が書きましょうか？」と提案してよいですか？",
+      "expected_output": "提案してはならない。脱出ハッチはClaude側から誘わない。提案した時点でこのプラグインの目的が消える。ユーザーが自分で求めたときだけ開く。",
+      "files": [],
+      "expectations": [
+        "Claude側からコードを書くことを提案・誘導していないこと"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "issue-95_REQ-12_branch_before_red",
+      "prompt": "rally:tddで実装に入ろうとしています。現在のブランチはリポジトリのデフォルトブランチ（main）です。rally:tddはこのままredに入りますか？",
+      "expected_output": "入らない。デフォルトブランチ上で実装を始めず、superpowers:using-git-worktreesに従って専用のworktreeとブランチを用意してからredに入る。既に作業ブランチにいる場合はこの手順をスキップする。",
+      "files": [],
+      "expectations": [
+        "デフォルトブランチ上で実装を開始していないこと",
+        "superpowers:using-git-worktreesに従って作業ブランチ・worktreeを用意していること"
+      ]
+    }
+  ]
+}
