@@ -1,6 +1,6 @@
 ---
 name: merge-cleanup
-description: Use when the user reports that a PR/branch has just been merged (e.g. "merge done", "マージ完了", "マージ済みです") — verifies the merge actually happened via gh/git before touching anything, then updates the default branch and removes the merged branch and its dedicated worktree if any. Never runs based on the utterance alone; always confirms actual merged state first. Does not reinstall dependencies (node_modules etc.).
+description: rallyワークフローで、PR・ブランチがマージされたとユーザーが報告したときに使う（例:「マージ完了」「マージ済みです」）。触る前にgh/gitで実際にマージ済みかを確認し、その上でデフォルトブランチを更新し、マージ済みブランチと専用worktreeがあれば削除する。発話だけを根拠に実行することは決してなく、必ず実際のマージ状態を先に確認する。依存関係の再インストール（node_modules等）は行わない。
 ---
 
 # Merge Cleanup

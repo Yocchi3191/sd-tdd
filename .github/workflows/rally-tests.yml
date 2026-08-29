@@ -1,0 +1,26 @@
+name: rally tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'plugins/rally/**'
+  pull_request:
+    paths:
+      - 'plugins/rally/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: plugins/rally
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run tests
+        run: npm test
