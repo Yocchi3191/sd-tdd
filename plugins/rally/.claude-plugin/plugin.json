@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "rally",
+  "version": "0.1.0",
+  "description": "人間がドライバー、Claudeがコ・ドライバー。要件・仕様・設計は人間が先に出し、Claudeは差分で詰める。実装コードは人間が書く。",
+  "author": {
+    "name": "Yocchi3191"
+  }
+}
