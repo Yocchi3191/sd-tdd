@@ -167,6 +167,17 @@
       ]
     },
     {
+      "id": 16,
+      "name": "issue-95_REQ-17_delegated_brainstorming_writes_no_design_doc",
+      "prompt": "rally:designでユーザーが「ゼロベースで案出して」と明示的に依頼したのでsuperpowers:brainstormingに委譲します。この依頼は新規サブシステムの設計で、brainstormingの分類ではarchitecturalに当たります。design docを docs/superpowers/specs/ に書いてcommitさせてよいですか？",
+      "expected_output": "書かせない。brainstormingのarchitecturalパスはdesign docをdocs/superpowers/specs/へ書いてcommitする手順を含むが、委譲時に「案は対話で返し、design docファイルは書かないこと」を明示して渡す。案が出たらStep 5に戻し、rally:task-filingでissueへ記録する。",
+      "files": [],
+      "expectations": [
+        "委譲時にdesign docファイルを書かせない指示が明示されていること",
+        "案の記録先がdocs/配下ではなくissue（rally:task-filing経由）になっていること"
+      ]
+    },
+    {
       "id": 15,
       "name": "issue-95_REQ-4_decision_summary_has_three_parts",
       "prompt": "rally:designで「キャッシュはRedisではなくインメモリLRUにする」という設計判断が固まりました。rally:designはこの決定をどうまとめますか？",

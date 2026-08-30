@@ -62,3 +62,5 @@ Claude側の要件案・仕様案・設計案は出さない。こう聞く:
 brainstorming は「Claudeが2〜3案を提示し、人間が承認する」向きで、このskillと真逆。呼ぶとユーザーの役割が承認者に固定され、このskillの目的が消える。
 
 委譲してよいのは、ユーザーが明示的にゼロベースの案出しを求めたときだけ（`references/pairing.md` の脱出ハッチ）。
+
+委譲する場合も、brainstormingのarchitecturalパスが `docs/superpowers/specs/` へdesign docを書いてcommitする手順は踏ませない。案は対話で返させ、記録はStep 5に戻して `rally:task-filing` でissueへ入れる。
