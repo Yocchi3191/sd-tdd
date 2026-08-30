@@ -16,15 +16,6 @@
       }
     },
     {
-      "name": "dev-dojo",
-      "description": "要件定義・ソフトウェア設計・テスト設計の意思決定の直前にソクラテス式で問い返し、判断力を鍛える修行用プラグイン。",
-      "version": "0.1.0",
-      "source": "./plugins/dev-dojo",
-      "author": {
-        "name": "Yocchi3191"
-      }
-    },
-    {
       "name": "rally",
       "description": "人間がドライバー、Claudeがコ・ドライバー。要件・仕様・設計は人間が先に出し、Claudeは差分で詰める。実装コードは人間が書く。",
       "version": "0.1.0",

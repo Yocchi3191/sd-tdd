@@ -1,12 +1,11 @@
 # sd-tdd
 
-Claude Code向けプラグインのモノレポ。スペック駆動TDDワークフローを提供する `sd-tdd` を中心に、`rally`・`dev-dojo`・`dev-knowledge` を含む(詳細は [.claude-plugin/marketplace.json](.claude-plugin/marketplace.json))。
+Claude Code向けプラグインのモノレポ。スペック駆動TDDワークフローを提供する `sd-tdd` を中心に、`rally`・`dev-knowledge` を含む(詳細は [.claude-plugin/marketplace.json](.claude-plugin/marketplace.json))。
 
 ## プラグイン一覧
 
 - **sd-tdd** — 要件をテスト可能なREQ台帳に落とし込み、REQと対応付けた失敗テストを生成し、カバレッジを検証した上でsuperpowersのTDDに実装を引き渡す。
 - **rally** — 人間がドライバー、Claudeがコ・ドライバー。要件・仕様・設計は人間が先に出し、Claudeは差分で詰める。実装コードは人間が書く。
-- **dev-dojo** — 要件定義・ソフトウェア設計・テスト設計の意思決定の直前にソクラテス式で問い返し、判断力を鍛える修行用プラグイン。
 - **dev-knowledge** — 他プロジェクトでも通用する設計・テスト・プロセスの知見を蓄積し、非自明な判断の場面で自然に参照するナレッジベース。
 
 ## sd-tdd の主要フロー
