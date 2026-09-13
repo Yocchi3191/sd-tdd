@@ -15,3 +15,4 @@
 - [bind-mount-vs-named-volume-for-secrets](references/infra/bind-mount-vs-named-volume-for-secrets.md): 認証情報等の永続化キャッシュはbind mountでなくnamed volumeにして誤コミット・誤持ち出しリスクを構造的に無くす
 - [data-driven-content-as-master-data](references/design/data-driven-content-as-master-data.md): ゲーム上の「モノ」はマスタデータ(レジストリ)として記述し、コードは機能(振る舞い)のみを持つ
 - [unity-serialized-field-rename-formerlyserializedas](references/unity/unity-serialized-field-rename-formerlyserializedas.md): SerializeFieldのリネームはFormerlySerializedAsを付け、実際にdirty化して保存確認するまで外してはいけない
+- [interface-vs-composition-for-inheritance-alternatives](references/design/interface-vs-composition-for-inheritance-alternatives.md): 継承の使いどころを、ポリモーフィズム目的ならinterface、上書き禁止&呼び出し必須ならコンポジションに絞り込む判断基準
