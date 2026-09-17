@@ -69,9 +69,10 @@ test('issue-103_REQ-9_designはissueにADRを書かず一時markdownファイル
   assert.match(designBody, /\.rally\/adr\.md/);
 });
 
-test('issue-103_REQ-10_designはworktreeを自分で作成しない', () => {
-  assert.match(designBody, /worktreeを(自分で)?作成しない/);
+test('issue-103_REQ-17_designは自身でworktreeを作成する', () => {
+  assert.match(designBody, /using-git-worktrees/);
   assert.match(designBody, /rally:tdd/);
+  assert.doesNotMatch(designBody, /このskill自身はworktreeを作成しない/);
 });
 
 test('issue-103_REQ-11_designは決定がまとまったらrally:tddに引き渡す', () => {

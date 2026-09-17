@@ -114,11 +114,11 @@
       "id": 10,
       "name": "issue-95_REQ-17_delegated_brainstorming_writes_no_design_doc",
       "prompt": "rally:designでユーザーが「ゼロベースで案出して」と明示的に依頼したのでsuperpowers:brainstormingに委譲します。この依頼は新規サブシステムの設計で、brainstormingの分類ではarchitecturalに当たります。design docを docs/superpowers/specs/ に書いてcommitさせてよいですか？",
-      "expected_output": "書かせない。brainstormingのarchitecturalパスはdesign docをdocs/superpowers/specs/へ書いてcommitする手順を含むが、委譲時に「案は対話で返し、design docファイルは書かないこと」を明示して渡す。案が出たらStep 5に戻し、rally:task-filingでissueへ記録する。",
+      "expected_output": "書かせない。brainstormingのarchitecturalパスはdesign docをdocs/superpowers/specs/へ書いてcommitする手順を含むが、委譲時に「案は対話で返し、design docファイルは書かないこと」を明示して渡す。案が出たらStep 5の3点フォーマット（決定内容/検討した代替案/却下理由）でまとめ、worktree内の.rally/adr.mdに記録する — issueには書かない。",
       "files": [],
       "expectations": [
         "委譲時にdesign docファイルを書かせない指示が明示されていること",
-        "案の記録先がdocs/配下ではなくissue（rally:task-filing経由）になっていること"
+        "案の記録先が.rally/adr.md（issueではない）になっていること"
       ]
     },
     {
