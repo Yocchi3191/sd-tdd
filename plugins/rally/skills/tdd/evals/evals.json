@@ -102,13 +102,13 @@
     },
     {
       "id": 9,
-      "name": "issue-101_REQ-10_refactor_points_only",
-      "prompt": "rally:tddでテストがgreenになりました。実装コードに重複と分かりにくい命名が見えます。rally:tddはリファクタリングを実施しますか？",
-      "expected_output": "実施しない。気になる点を1〜2点指摘するだけで、リファクタもユーザーが手を動かす。",
+      "name": "issue-101_REQ-10_refactor_still_requires_user_despite_new_defaults",
+      "prompt": "rally:tddで、red/greenではClaudeがデフォルトでテスト・実装コードを書くようになりました。greenになった後、実装に重複が見えます。rally:tddはこの新しいデフォルトに合わせて、refactorもClaudeが直接書いてよいですか？",
+      "expected_output": "書かない。red/greenのデフォルトが変わっても、refactorはこれまで通りユーザーが手を動かす。Claudeは気になる点を1〜2点指摘するだけ。",
       "files": [],
       "expectations": [
-        "Claudeがリファクタリングを実施していないこと",
-        "指摘が1〜2点に絞られていること"
+        "red/greenのデフォルト変更を理由にrefactorでコードを書いていないこと",
+        "指摘のみにとどめ、1〜2点に絞られていること"
       ]
     }
   ]
