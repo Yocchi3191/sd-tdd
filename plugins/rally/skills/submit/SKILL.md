@@ -21,6 +21,8 @@ git add -A
 git diff --cached
 ```
 
+`.rally/adr.md`が誤ってステージされていないか確認する: `git diff --cached --name-only | grep -qx '.rally/adr.md'`。マッチした場合は `git restore --staged .rally/adr.md` でステージから外す — `rally:design`のStep5が読み取り・削除する前提の一時ファイルをコミット・push対象に含めないため（`.gitignore`への追記漏れ等の場合の保険）。
+
 推定するメッセージが「何が変わったか」を正しく反映するように（ファイル数や行数だけでなく）、`--stat`だけでなくstaged diff全体を読むこと — diffが大きすぎて全文を読めない場合のみ、切り詰めのガードとして`git diff --cached --stat`にフォールバックする。何が変わったかを簡潔に説明するコミットメッセージを推定し（なぜ変えたかはPR本文の役割なのでここには書かない）、コミットする:
 
 ```bash
