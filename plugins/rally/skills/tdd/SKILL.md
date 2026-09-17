@@ -1,6 +1,6 @@
 ---
 name: tdd
-description: ユーザー自身がTDDで実装を進める間の伴走に使う。何を検証するか・どの順で進めるかの判断はユーザーが持ち、テスト・実装コードはデフォルトでClaudeが書く（ユーザーが「自分で書く」と示した場合を除く）。rally:design で設計が固まった後の実装フェーズで使う。TDD実装中はsuperpowers:systematic-debugging / superpowers:test-driven-developmentより先にこのskillを使うこと — 稼働中はそれらを呼ばない。
+description: ユーザー自身がTDDで実装を進める間の伴走に使う。何を検証するか・どの順で進めるかの判断はユーザーが持ち、テスト・実装コードはデフォルトでClaudeが書く（ユーザーが「自分で書く」と示した場合を除く）。rally:spec-interviewで要件・仕様が固まり、rally:designで設計・ADRが固まった後の実装フェーズで使う。TDD実装中はsuperpowers:systematic-debugging / superpowers:test-driven-developmentより先にこのskillを使うこと — 稼働中はそれらを呼ばない。
 ---
 
 # TDD

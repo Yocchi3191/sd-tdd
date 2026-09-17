@@ -9,3 +9,8 @@ Closes #<ISSUE_NUMBER>
 ## 変更対象のREQ
 <!-- issueのREQ台帳から、このPRのスコープに含まれるREQ-IDを列挙する -->
 <REQ_LIST>
+
+<!-- .rally/adr.md が無い場合、このセクションごと省略する -->
+## 決定事項（ADR）
+<!-- .rally/adr.md の決定を1決定1行に圧縮して列挙する。書式: - <決定内容>（却下: <却下した代替案> — <却下理由>） -->
+<ADR_LIST>
