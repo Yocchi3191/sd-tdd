@@ -3,25 +3,24 @@
   "evals": [
     {
       "id": 0,
-      "name": "issue-95_REQ-12_red_design_only_no_test_code",
-      "prompt": "rally:tddで、ユーザーが「Arousalが上限を超えたら丸められることを検証するテストを書きます」と言いました。rally:tddは何をしますか？テストコードを書いて渡してよいですか？",
-      "expected_output": "書かない。まずユーザーに「何をどう検証するか、なぜ今それが落ちるはずか」を先に言わせ、出てきた案に対して1〜2点だけ指摘する。設計が固まったらテストコードはユーザーが書く。",
+      "name": "issue-101_REQ-5_writes_test_by_default",
+      "prompt": "rally:tddのredステップで、ユーザーが「Arousalが上限を超えたら丸められることを検証したい」と一言で言いました。rally:tddは何をしますか？",
+      "expected_output": "デフォルトでそのテストコードをClaudeが書く。ユーザーが自分で書くとは言っていないので、書かずに待つことはしない。",
       "files": [],
       "expectations": [
-        "Claudeがテストコードを書いていないこと",
-        "ユーザーに先にテスト設計と「なぜ今落ちるか」を述べさせていること",
-        "指摘が1〜2点に絞られていること"
+        "Claudeがテストコードを書いていること",
+        "ユーザーに書かせようと待つだけの応答になっていないこと"
       ]
     },
     {
       "id": 1,
-      "name": "issue-95_REQ-12_stays_silent_during_green",
-      "prompt": "rally:tddで、ユーザーがredのテストを書き終え、これから実装を書く段階です。テストは現在落ちています。rally:tddは実装を書いて通しますか？",
-      "expected_output": "書かない。greenフェーズはユーザーが実装を書く。Claudeは聞かれるまで黙る。テストが落ちている状態を見ても直しに行かない。エラーの読み方や原因の切り分けを聞かれたら答える。",
+      "name": "issue-101_REQ-6_writes_implementation_by_default",
+      "prompt": "rally:tddで、redのテストが書き終わり落ちている状態です。ユーザーからは特に指示がありません。rally:tddは実装を書いて通しますか？",
+      "expected_output": "デフォルトでClaudeが実装コードを書いて通す。ユーザーが自分で書くと言っていない限り、黙って待つことはしない。",
       "files": [],
       "expectations": [
-        "Claudeが実装コードを書いていないこと",
-        "落ちているテストを直しに行っていないこと"
+        "Claudeが実装コードを書いていること",
+        "指示がないまま何もせず待っているだけの応答になっていないこと"
       ]
     },
     {
@@ -37,23 +36,24 @@
     },
     {
       "id": 3,
-      "name": "issue-95_REQ-12_writes_when_explicitly_asked",
-      "prompt": "rally:tddの最中、ユーザーが「今日は急いでるから、このテストは書いて」と明示的に依頼しました。rally:tddはどうしますか？",
-      "expected_output": "書く。脱出ハッチが明示的に要求されたら、詰めを打ち切って引き受ける。ハッチを使ったことを咎めない。",
+      "name": "issue-101_REQ-5_defers_when_user_wants_to_write",
+      "prompt": "rally:tddのredステップで、ユーザーが「このテストは自分で書く」と言いました。rally:tddはどうしますか？",
+      "expected_output": "ユーザーに書かせる。デフォルトはClaudeが書くことだが、ユーザーが自分で書くと示した場合はそれに従い、Claudeは書かない。",
       "files": [],
       "expectations": [
-        "明示要求を受けてコードを書いていること",
-        "ハッチを使ったことを咎めていないこと"
+        "ユーザーが自分で書くと言った場合、Claudeがテストコードを書いていないこと",
+        "ユーザーに書く役割を譲っていること"
       ]
     },
     {
       "id": 4,
-      "name": "issue-95_REQ-12_never_offers_to_write",
-      "prompt": "rally:tddで、テスト設計の詰めが長引いてユーザーが疲れているように見えます。rally:tddから「私が書きましょうか？」と提案してよいですか？",
-      "expected_output": "提案してはならない。脱出ハッチはClaude側から誘わない。提案した時点でこのプラグインの目的が消える。ユーザーが自分で求めたときだけ開く。",
+      "name": "issue-101_REQ-5_does_not_ask_permission_before_writing",
+      "prompt": "rally:tddで、ユーザーが検証したい内容を一言示しました。rally:tddは書く前に「書いていいですか？」と許可を求めるべきですか？",
+      "expected_output": "求めない。書くことがデフォルトなので、許可を求めずにそのままテストコードを書く。",
       "files": [],
       "expectations": [
-        "Claude側からコードを書くことを提案・誘導していないこと"
+        "書く前に許可を求める応答になっていないこと",
+        "Claudeがそのままテストコードを書いていること"
       ]
     },
     {
@@ -65,6 +65,50 @@
       "expectations": [
         "デフォルトブランチ上で実装を開始していないこと",
         "superpowers:using-git-worktreesに従って作業ブランチ・worktreeを用意していること"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "issue-101_REQ-7_one_test_unit_at_a_time",
+      "prompt": "rally:tddで、ユーザーが検証したい内容を3つまとめて挙げました。rally:tddはこの3つ分のテストと実装を一度にまとめて提示しますか？",
+      "expected_output": "しない。提示単位は基本1テスト分。3つあっても1つずつ提示する。",
+      "files": [],
+      "expectations": [
+        "複数テストが一度にまとめて提示されていないこと",
+        "1テスト分ずつの提示になっていること"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "issue-101_REQ-8_adjusts_unit_size_by_reaction",
+      "prompt": "rally:tddで1テスト分を提示したところ、ユーザーが「このくらいのペースならもう少しまとめて出してくれていい」と反応しました。rally:tddは次からどうしますか？",
+      "expected_output": "その反応に応じて、次に提示する単位を大きくしてよい。逆に訂正や戸惑いが返れば、さらに小さく割ってよい。固定の手順に縛られない。",
+      "files": [],
+      "expectations": [
+        "直前の反応に応じて次の提示単位を調整していること",
+        "固定された手順のまま変えない応答になっていないこと"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "issue-101_REQ-9_offers_options_when_unclear",
+      "prompt": "rally:tddで、これから書く統合テストについて、ユーザーが「何をどう検証すればいいか分からない」と言いました。rally:tddはどうしますか？",
+      "expected_output": "ユーザーに考えさせるだけで待たない。検証対象・検証方法の選択肢をClaudeが提示する。",
+      "files": [],
+      "expectations": [
+        "検証対象・検証方法の選択肢が提示されていること",
+        "何も提示せずユーザーに考えさせたまま待っていないこと"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "issue-101_REQ-10_refactor_points_only",
+      "prompt": "rally:tddでテストがgreenになりました。実装コードに重複と分かりにくい命名が見えます。rally:tddはリファクタリングを実施しますか？",
+      "expected_output": "実施しない。気になる点を1〜2点指摘するだけで、リファクタもユーザーが手を動かす。",
+      "files": [],
+      "expectations": [
+        "Claudeがリファクタリングを実施していないこと",
+        "指摘が1〜2点に絞られていること"
       ]
     }
   ]
