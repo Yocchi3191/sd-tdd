@@ -15,7 +15,7 @@ issueの仕様（REQ）をもとに設計を行い、ADRを作成する。issue�
 
 `superpowers:using-git-worktrees` に従って専用のworktreeとブランチを用意する。既に作業ブランチにいる場合はスキップする。
 
-呼び出し順は spec-interview → design → tdd であり、design はこの時点で最初に実装作業へ入る skill である — `rally:tdd` のStep 0を待たず、このskill自身が確立する。Step 4で書く `.rally/adr.md` はworktree内の未追跡ファイルという前提のため、worktreeが無い状態で書き始めてはならない。専用worktreeが確立していれば、後続の `rally:tdd` のStep 0は「既に作業ブランチにいる場合はスキップする」の分岐でそのまま素通りする。
+呼び出し順は spec-interview → design → tdd であり、design はこの時点で最初に実装作業へ入る skill である — `rally:tdd` のStep 0を待たず、このskill自身が確立する。Step 5で書く `.rally/adr.md` はworktree内の未追跡ファイルという前提のため、worktreeが無い状態で書き始めてはならない。専用worktreeが確立していれば、後続の `rally:tdd` のStep 0は「既に作業ブランチにいる場合はスキップする」の分岐でそのまま素通りする。
 
 ## Step 2: issueの仕様を読む
 
