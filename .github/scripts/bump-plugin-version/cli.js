@@ -3,11 +3,11 @@
 const fs = require('node:fs');
 const { bumpPatch } = require('./version');
 const { setPluginVersion } = require('./marketplace');
+const { buildCommitMessage, buildTags } = require('./commit-message');
 
-const PLUGIN_JSON_PATH = 'plugins/sd-tdd/.claude-plugin/plugin.json';
-const PACKAGE_JSON_PATH = 'plugins/sd-tdd/package.json';
 const MARKETPLACE_JSON_PATH = '.claude-plugin/marketplace.json';
-const PLUGIN_NAME = 'sd-tdd';
+// plugins/<name>/ のパスセグメントとして安全な名前のみ許可する。
+const PLUGIN_NAME_RE = /^[a-z0-9][a-z0-9-]*$/;
 
 function readJson(relPath) {
   return JSON.parse(fs.readFileSync(relPath, 'utf8'));
@@ -17,30 +17,59 @@ function writeJson(relPath, doc) {
   fs.writeFileSync(relPath, `${JSON.stringify(doc, null, 2)}\n`);
 }
 
-function main() {
-  const pluginJson = readJson(PLUGIN_JSON_PATH);
-  const packageJson = readJson(PACKAGE_JSON_PATH);
-  const marketplaceJson = readJson(MARKETPLACE_JSON_PATH);
+function bumpPlugin(name, marketplaceJson) {
+  if (!PLUGIN_NAME_RE.test(name)) {
+    throw new Error(`Invalid plugin name: "${name}"`);
+  }
 
+  const pluginJsonPath = `plugins/${name}/.claude-plugin/plugin.json`;
+  const packageJsonPath = `plugins/${name}/package.json`;
+
+  const pluginJson = readJson(pluginJsonPath);
   const newVersion = bumpPatch(pluginJson.version);
-
   pluginJson.version = newVersion;
-  packageJson.version = newVersion;
-  setPluginVersion(marketplaceJson, PLUGIN_NAME, newVersion);
+  writeJson(pluginJsonPath, pluginJson);
 
-  writeJson(PLUGIN_JSON_PATH, pluginJson);
-  writeJson(PACKAGE_JSON_PATH, packageJson);
+  if (fs.existsSync(packageJsonPath)) {
+    const packageJson = readJson(packageJsonPath);
+    packageJson.version = newVersion;
+    writeJson(packageJsonPath, packageJson);
+  }
+
+  setPluginVersion(marketplaceJson, name, newVersion);
+
+  return { name, version: newVersion };
+}
+
+function writeGithubOutput(commitMessage, tags) {
+  if (!process.env.GITHUB_OUTPUT) return;
+  const delimiter = `EOF_${Date.now()}`;
+  fs.appendFileSync(
+    process.env.GITHUB_OUTPUT,
+    `commit_message<<${delimiter}\n${commitMessage}\n${delimiter}\ntags=${tags.join(' ')}\n`
+  );
+}
+
+function main() {
+  const pluginNames = process.argv.slice(2);
+  if (pluginNames.length === 0) {
+    console.error('Usage: cli.js <plugin-name> [<plugin-name> ...]');
+    process.exit(1);
+  }
+
+  const marketplaceJson = readJson(MARKETPLACE_JSON_PATH);
+  const bumps = pluginNames.map((name) => bumpPlugin(name, marketplaceJson));
   writeJson(MARKETPLACE_JSON_PATH, marketplaceJson);
 
-  console.log(newVersion);
+  const commitMessage = buildCommitMessage(bumps);
+  const tags = buildTags(bumps);
 
-  if (process.env.GITHUB_OUTPUT) {
-    fs.appendFileSync(process.env.GITHUB_OUTPUT, `version=${newVersion}\n`);
-  }
+  console.log(commitMessage);
+  writeGithubOutput(commitMessage, tags);
 }
 
 if (require.main === module) {
   main();
 }
 
-module.exports = { main };
+module.exports = { main, bumpPlugin };

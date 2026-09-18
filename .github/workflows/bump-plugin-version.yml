@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'plugins/sd-tdd/**'
+      - 'plugins/**'
 
 concurrency:
   group: bump-plugin-version
@@ -22,24 +22,52 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
 
+      - name: Detect changed plugins
+        id: detect
+        run: |
+          CHANGED=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" -- 'plugins/*/**' \
+            | sed -E 's#^plugins/([^/]+)/.*#\1#' \
+            | sort -u | tr '\n' ' ')
+          echo "plugins=$CHANGED" >> "$GITHUB_OUTPUT"
+
       - name: Bump version
         id: bump
-        run: node .github/scripts/bump-plugin-version/cli.js
+        if: steps.detect.outputs.plugins != ''
+        env:
+          CHANGED_PLUGINS: ${{ steps.detect.outputs.plugins }}
+        run: node .github/scripts/bump-plugin-version/cli.js $CHANGED_PLUGINS
 
       - name: Commit version bump
+        if: steps.detect.outputs.plugins != ''
+        env:
+          CHANGED_PLUGINS: ${{ steps.detect.outputs.plugins }}
+          COMMIT_MESSAGE: ${{ steps.bump.outputs.commit_message }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add plugins/sd-tdd/.claude-plugin/plugin.json plugins/sd-tdd/package.json .claude-plugin/marketplace.json
-          git commit -m "chore: sd-tdd v${{ steps.bump.outputs.version }}"
+          for p in $CHANGED_PLUGINS; do
+            git add "plugins/$p/.claude-plugin/plugin.json"
+            if [ -f "plugins/$p/package.json" ]; then
+              git add "plugins/$p/package.json"
+            fi
+          done
+          git add .claude-plugin/marketplace.json
+          git commit -m "$COMMIT_MESSAGE"
           git push
 
       - name: Tag release
+        if: steps.detect.outputs.plugins != ''
+        env:
+          TAGS: ${{ steps.bump.outputs.tags }}
         run: |
-          git tag "sd-tdd--v${{ steps.bump.outputs.version }}"
-          git push origin "sd-tdd--v${{ steps.bump.outputs.version }}" || echo "tag already exists, skipping"
+          for t in $TAGS; do
+            git tag "$t"
+            git push origin "$t" || echo "tag already exists, skipping"
+          done

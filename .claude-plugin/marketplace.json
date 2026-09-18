@@ -18,7 +18,7 @@
     {
       "name": "rally",
       "description": "人間がドライバー、Claudeがコ・ドライバー。要件・仕様・設計は人間が先に出し、Claudeは差分で詰める。実装コードは人間が書く。",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "source": "./plugins/rally",
       "author": {
         "name": "Yocchi3191"
