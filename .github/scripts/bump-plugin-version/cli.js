@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // .github/scripts/bump-plugin-version/cli.js
 const fs = require('node:fs');
+const path = require('node:path');
 const { bumpPatch } = require('./version');
 const { setPluginVersion } = require('./marketplace');
 const { buildCommitMessage, buildTags } = require('./commit-message');
@@ -17,13 +18,20 @@ function writeJson(relPath, doc) {
   fs.writeFileSync(relPath, `${JSON.stringify(doc, null, 2)}\n`);
 }
 
-function bumpPlugin(name, marketplaceJson) {
+// 削除・リネームされたプラグインディレクトリ名がdiffに残っていても
+// plugin.jsonがもう存在しない場合はスキップする（対象外はnullを返す）。
+function bumpPlugin(name, marketplaceJson, baseDir = process.cwd()) {
   if (!PLUGIN_NAME_RE.test(name)) {
     throw new Error(`Invalid plugin name: "${name}"`);
   }
 
-  const pluginJsonPath = `plugins/${name}/.claude-plugin/plugin.json`;
-  const packageJsonPath = `plugins/${name}/package.json`;
+  const pluginJsonPath = path.join(baseDir, 'plugins', name, '.claude-plugin', 'plugin.json');
+  const packageJsonPath = path.join(baseDir, 'plugins', name, 'package.json');
+
+  if (!fs.existsSync(pluginJsonPath)) {
+    console.warn(`Skipping "${name}": ${pluginJsonPath} not found (deleted or renamed?)`);
+    return null;
+  }
 
   const pluginJson = readJson(pluginJsonPath);
   const newVersion = bumpPatch(pluginJson.version);
@@ -58,7 +66,15 @@ function main() {
   }
 
   const marketplaceJson = readJson(MARKETPLACE_JSON_PATH);
-  const bumps = pluginNames.map((name) => bumpPlugin(name, marketplaceJson));
+  const bumps = pluginNames
+    .map((name) => bumpPlugin(name, marketplaceJson))
+    .filter(Boolean);
+
+  if (bumps.length === 0) {
+    console.log('No plugins to bump.');
+    return;
+  }
+
   writeJson(MARKETPLACE_JSON_PATH, marketplaceJson);
 
   const commitMessage = buildCommitMessage(bumps);

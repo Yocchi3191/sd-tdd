@@ -31,8 +31,19 @@ jobs:
 
       - name: Detect changed plugins
         id: detect
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.sha }}
         run: |
-          CHANGED=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" -- 'plugins/*/**' \
+          # 新規/再作成されたブランチへの最初のpushではbeforeが全ゼロSHAになる。
+          # その場合はafterの直前コミットとの差分にフォールバックする。
+          ZERO_SHA="0000000000000000000000000000000000000000"
+          if [ "$BEFORE_SHA" = "$ZERO_SHA" ]; then
+            DIFF_RANGE="${AFTER_SHA}^..${AFTER_SHA}"
+          else
+            DIFF_RANGE="${BEFORE_SHA}..${AFTER_SHA}"
+          fi
+          CHANGED=$(git diff --name-only $DIFF_RANGE -- 'plugins/*/**' \
             | sed -E 's#^plugins/([^/]+)/.*#\1#' \
             | sort -u | tr '\n' ' ')
           echo "plugins=$CHANGED" >> "$GITHUB_OUTPUT"
@@ -45,7 +56,7 @@ jobs:
         run: node .github/scripts/bump-plugin-version/cli.js $CHANGED_PLUGINS
 
       - name: Commit version bump
-        if: steps.detect.outputs.plugins != ''
+        if: steps.bump.outputs.commit_message != ''
         env:
           CHANGED_PLUGINS: ${{ steps.detect.outputs.plugins }}
           COMMIT_MESSAGE: ${{ steps.bump.outputs.commit_message }}
@@ -53,7 +64,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           for p in $CHANGED_PLUGINS; do
-            git add "plugins/$p/.claude-plugin/plugin.json"
+            # 削除・リネームされたプラグインはcli.js側でスキップされファイルが
+            # 存在しないので、addも対応して見送る。
+            if [ -f "plugins/$p/.claude-plugin/plugin.json" ]; then
+              git add "plugins/$p/.claude-plugin/plugin.json"
+            fi
             if [ -f "plugins/$p/package.json" ]; then
               git add "plugins/$p/package.json"
             fi
@@ -63,7 +78,7 @@ jobs:
           git push
 
       - name: Tag release
-        if: steps.detect.outputs.plugins != ''
+        if: steps.bump.outputs.tags != ''
         env:
           TAGS: ${{ steps.bump.outputs.tags }}
         run: |
