@@ -3,7 +3,7 @@
     "plugin-dev@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
     "sd-tdd@sd-tdd": true,
-    "dev-knowledge@sd-tdd": true
+    "knowledge@sd-tdd": true
   },
   "extraKnownMarketplaces": {
     "sd-tdd": {

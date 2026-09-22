@@ -1,6 +1,6 @@
-# dev-knowledge INDEX
+# knowledge INDEX
 
-`dev-knowledge` プラグインが蓄積した知見の索引。各行が1知見への1行フックで、詳細本文は `references/<domain>/<slug>.md` にある。
+`knowledge` プラグインが蓄積した知見の索引。各行が1知見への1行フックで、詳細本文は `references/<domain>/<slug>.md` にある。
 
 `recall-insight` はまずこのファイルだけを読み、関連しそうな行が見つかった時だけ対応するファイル本体を読み込む(全文grepはしない)。`capture-insight` は新規知見を確認した後、ここに1行追記する。
 

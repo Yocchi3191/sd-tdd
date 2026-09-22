@@ -1,11 +1,11 @@
 ---
 name: recall-insight
-description: Use automatically (in any project) at a nontrivial, hard-to-reverse design/test/process decision point, to check whether `dev-knowledge` already holds a relevant insight worth surfacing. Unlike design-mentor, this never blocks the answer or interrogates the user — it only surfaces a relevant insight inline, as a data point the user can weigh, never as a challenge. If nothing relevant is found, stay silent and do not mention this skill ran.
+description: Use automatically (in any project) at a nontrivial, hard-to-reverse design/test/process decision point, to check whether `knowledge` already holds a relevant insight worth surfacing. It never blocks the answer or interrogates the user — it only surfaces a relevant insight inline, as a data point the user can weigh, never as a challenge. If nothing relevant is found, stay silent and do not mention this skill ran.
 ---
 
 # Recall Insight
 
-`dev-knowledge` に蓄積された知見を、非自明な判断の場面で会話に自然に引用するskill。design-mentorのように回答をブロックしたり問い詰めたりしない — あくまで判断材料を差し出すだけの、動的に引ける参照データベースとして振る舞う。
+`knowledge` に蓄積された知見を、非自明な判断の場面で会話に自然に引用するskill。回答をブロックしたり問い詰めたりはしない — あくまで判断材料を差し出すだけの、動的に引ける参照データベースとして振る舞う。
 
 ## Step 1: 発火判定
 
@@ -15,7 +15,7 @@ description: Use automatically (in any project) at a nontrivial, hard-to-reverse
 
 ## Step 2: INDEXから絞り込む
 
-`dev-knowledge` の `INDEX.md` を読み、今の話題に関連しそうな行があるか確認する。全知見ファイルを総当たりでgrepすることはしない — INDEXの1行フックだけで関連候補を絞り込む。
+`knowledge` の `INDEX.md` を読み、今の話題に関連しそうな行があるか確認する。全知見ファイルを総当たりでgrepすることはしない — INDEXの1行フックだけで関連候補を絞り込む。
 
 関連候補が無ければ Step 5 へ。
 

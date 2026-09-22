@@ -5,7 +5,7 @@ description: Use only when the user explicitly asks to preserve a design/test/pr
 
 # Capture Insight
 
-他プロジェクトでも通用する設計・テスト・プロセスの知見を `dev-knowledge` に蓄積するskill。ユーザーが明示的に依頼した時だけ動く — 会話を監視して「これは汎用的だ」とClaudeが自発的に判断し提案することはしない。
+他プロジェクトでも通用する設計・テスト・プロセスの知見を `knowledge` に蓄積するskill。ユーザーが明示的に依頼した時だけ動く — 会話を監視して「これは汎用的だ」とClaudeが自発的に判断し提案することはしない。
 
 ## Step 1: 発火判定
 
@@ -33,7 +33,7 @@ description: Use only when the user explicitly asks to preserve a design/test/pr
 
 ## Step 4: ファイル作成とINDEX追記
 
-1. `references/<domain>/<slug>.md` を新規作成する(このskillが属する `dev-knowledge` プラグインのルート相対)。フォーマット:
+1. `references/<domain>/<slug>.md` を新規作成する(このskillが属する `knowledge` プラグインのルート相対)。フォーマット:
 
 ```markdown
 ---
