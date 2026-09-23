@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "knowledge",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "他プロジェクトでも通用する設計・テスト・プロセスの知見を蓄積し、非自明な判断の場面で自然に参照するナレッジベース。",
   "author": {
     "name": "donchan3191"
