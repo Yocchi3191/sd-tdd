@@ -1,6 +1,6 @@
 ---
 name: review
-description: ユーザーがPRの存在を前提とせず、現在の作業ブランチをレビューしてほしいときに使う。たとえば "reviewして"、"今の変更をレビューして"、"コードレビューして"。superpowers:requesting-code-review経由でcontext-resetされたsubagentをディスパッチし、ブランチの分岐点から最新コミットまでの差分をレビューする。PRをready for reviewに変換することは決して行わない — それはreview-prの役目であり、PR番号が渡されたときにこのskillをラップする。
+description: ユーザーがPRの存在を前提とせず、現在の作業ブランチをレビューしてほしいときに使う。たとえば "reviewして"、"今の変更をレビューして"、"コードレビューして"。会話の文脈を持たないレビュー用サブエージェントを起動し、ブランチの分岐点から最新コミットまでの差分をレビューする。PRをready for reviewに変換することは決して行わない — それはreview-prの役目であり、PR番号が渡されたときにこのskillをラップする。
 ---
 
 # Review
@@ -65,13 +65,16 @@ Step 1がすでに`git branch --show-current`で算出したブランチ名を�
 node "<review-guard>" snapshot --branch <current-branch> > /tmp/review-guard-before.json
 ```
 
-## Step 5: superpowers:requesting-code-review経由でレビュアーをディスパッチする
+## Step 5: レビュアーサブエージェントを起動する
 
-`superpowers:requesting-code-review`をそこに記載されている通りに呼び出す — このskillは新しいレビュー用プロンプトやテンプレートを一切導入しない。そのテンプレートには以下を埋める:
+このskill自身のディレクトリ（この`SKILL.md`と同じ場所）にある`reviewer-prompt.md`を読み込み、プレースホルダを埋めて、Agentツールでサブエージェントを1つ起動する。会話の文脈を持たない新しいサブエージェントに任せるのは、実装した本人の思い込みを持ち込まずに差分を見させるためである。レビュー用の指示はこのテンプレートだけを正とし、ここに重複して書かない:
 
-- `DESCRIPTION`: Step 3の結果。
-- `PLAN_OR_REQUIREMENTS`: Step 2の結果。
-- `BASE_SHA` / `HEAD_SHA`: Step 1の結果。
+- `<REPO_PATH>`: レビュー対象リポジトリのルート（`git rev-parse --show-toplevel`）。
+- `<DESCRIPTION>`: Step 3の結果。
+- `<PLAN_OR_REQUIREMENTS>`: Step 2の結果。
+- `<BASE_SHA>` / `<HEAD_SHA>`: Step 1の結果。
+
+サブエージェントが返したStrengths / Issues / Assessmentを、Step 6の確認の後にStep 7で使う。
 
 ## Step 6: ディスパッチ後のスナップショットを記録して比較する
 
@@ -90,13 +93,13 @@ node "<review-guard>" compare --before /tmp/review-guard-before.json --after /tm
 
 ## Step 7: 結果を報告する — PRの状態は決して変更しない
 
-レビュアーのStrengths / Issues / Recommendations / Assessmentをそのままユーザーに報告する。
+レビュアーのStrengths / Issues / Assessmentをそのままユーザーに報告する。
 
 レビューの結果がどうであれ — Critical/Importantな指摘が一件も無いクリーンな結果であっても — このskillは`gh pr ready`、`gh pr merge`、その他PRの状態を変更するコマンドを一切実行しない。Draft PRをready for reviewに変換するのは`review-pr`の責務であり、このskillの責務ではない。`review`はPRの存在すら前提としないため、PRの状態について一切関与しない。
 
 ## Step 7a: 読み取り専用違反を代わりに報告する
 
-Step 6で`violated: true`だった場合にのみ到達する。通常のStrengths/Issues/Recommendations/Assessment形式の代わりに、違反レポートを返す — これを通常のレビュー結果であるかのように提示しないこと。以下を含める:
+Step 6で`violated: true`だった場合にのみ到達する。通常のStrengths/Issues/Assessment形式の代わりに、違反レポートを返す — これを通常のレビュー結果であるかのように提示しないこと。以下を含める:
 
 - レビュアーサブエージェントが読み取り専用の指示に違反したことの明示的な記述。
 - Step 6の`compare`出力からの具体的な`reasons`(例: HEAD SHA・作業ツリーの状態・リモート追跡ブランチのうちどれが変化したか、変化前後の値)。
