@@ -1,11 +1,11 @@
 ---
 name: test-infra-setup
-description: Use before spec-to-tests, or whenever a target project might be missing a test framework or mutation-testing setup. Detects and installs both, and makes sure mutation testing runs as a scheduled CI job instead of per-commit. Idempotent — skips anything already present.
+description: Use before writing tests in a project, or whenever a target project might be missing a test framework or mutation-testing setup. Detects and installs both, and makes sure mutation testing runs as a scheduled CI job instead of per-commit. Idempotent — skips anything already present.
 ---
 
 # Test Infrastructure Setup
 
-`spec-to-tests`は、プロジェクトがテストを実行できて初めて意味のあるものを生み出せる。また「テストがパスする」ことも、`expect(result).toBeDefined()`のような弱いテストがミューテーションの下で実際に失敗するのでなければ、何も証明したことにならない。このスキルは、REQからテストへの生成が始まる前に、その両方が揃っていることを確認する。
+テストを書いても、プロジェクトがテストを実行できなければ意味がない。また「テストがパスする」ことも、`expect(result).toBeDefined()`のような弱いテストがミューテーションの下で実際に失敗するのでなければ、何も証明したことにならない。このスキルは、テストを書き始める前に、その両方が揃っていることを確認する。
 
 ## Step 1: テストフレームワークの検出またはインストール
 
