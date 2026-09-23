@@ -63,7 +63,7 @@ PRが何を行うかの簡潔な要約。タイトルと本文（Step 2）から
 
 ## Step 5: development:reviewに委譲する
 
-`development:review`を呼び出し、上記で解決した4つの値（BASE_SHA、HEAD_SHA、PLAN_OR_REQUIREMENTS、DESCRIPTION）を渡す。これにより`review`はStep 0のショートカットを取り、`superpowers:requesting-code-review`のディスパッチへ直行する — `review`に「現在の作業ブランチ」からこれらを再算出させてはならず、ここから直接`superpowers:requesting-code-review`を呼び出してもいけない。必ず`review`を経由させ、実際のレビューディスパッチを担う場所を一箇所に保つ。
+`development:review`を呼び出し、上記で解決した4つの値（BASE_SHA、HEAD_SHA、PLAN_OR_REQUIREMENTS、DESCRIPTION）を渡す。これにより`review`はStep 0のショートカットを取り、レビュアーサブエージェントの起動へ直行する — `review`に「現在の作業ブランチ」からこれらを再算出させてはならず、ここから直接レビュアーサブエージェントを起動してもいけない。必ず`review`を経由させ、実際のレビューディスパッチを担う場所を一箇所に保つ。
 
 ## Step 6: レビュー結果に応じて行動する
 
@@ -71,7 +71,7 @@ PRが何を行うかの簡潔な要約。タイトルと本文（Step 2）から
 
 ```bash
 gh pr comment <N> --body "$(cat <<'EOF'
-<reviewが報告したレビュー結果: Strengths/Issues/Recommendations/Assessment>
+<reviewが報告したレビュー結果: Strengths/Issues/Assessment>
 EOF
 )"
 ```
