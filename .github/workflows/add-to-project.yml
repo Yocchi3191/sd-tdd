@@ -1,4 +1,4 @@
-name: sd-tdd add to project
+name: add to project
 
 # User-owned Projects (v2) require a `project` scope to add items, which the
 # default GITHUB_TOKEN cannot be granted. ADD_TO_PROJECT_PAT must be a
