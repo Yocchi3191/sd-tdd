@@ -167,4 +167,4 @@ gh pr view <N> --json isDraft -q .isDraft
 gh pr ready <N>
 ```
 
-  すでにDraftでなければ切り替えは不要。最後に、対応報告のURLをユーザーに伝える。
+  すでにDraftでなければ切り替えは不要。直していないCritical・Importantが残っていてもreadyにする — 残っているのは、見送る・別issueに切り出す・3回目を直さないのいずれかをStep 4でユーザーが決めたものだけだから。最後に、対応報告のURLをユーザーに伝える。
