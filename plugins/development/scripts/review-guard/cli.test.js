@@ -1,4 +1,4 @@
-// plugins/sd-tdd/scripts/review-guard/cli.test.js
+// plugins/development/scripts/review-guard/cli.test.js
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { parseArgs, main } = require('./cli');

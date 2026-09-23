@@ -1,4 +1,4 @@
-// plugins/sd-tdd/scripts/review-guard/snapshot.js
+// plugins/development/scripts/review-guard/snapshot.js
 const { execFileSync } = require('node:child_process');
 
 function defaultGit(args) {

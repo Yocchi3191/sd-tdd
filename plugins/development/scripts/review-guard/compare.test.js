@@ -1,4 +1,4 @@
-// plugins/sd-tdd/scripts/review-guard/compare.test.js
+// plugins/development/scripts/review-guard/compare.test.js
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { compareSnapshots } = require('./compare');

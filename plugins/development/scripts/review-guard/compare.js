@@ -1,4 +1,4 @@
-// plugins/sd-tdd/scripts/review-guard/compare.js
+// plugins/development/scripts/review-guard/compare.js
 function compareSnapshots(before, after) {
   const reasons = [];
 
