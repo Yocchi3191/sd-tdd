@@ -1,29 +1,11 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "sd-tdd",
-  "description": "sd-tddプラグイン用マーケットプレイス: Claude Code向けのスペック駆動TDDワークフロー",
+  "description": "Yocchi3191のClaude Codeプラグイン集",
   "owner": {
     "name": "Yocchi3191"
   },
   "plugins": [
-    {
-      "name": "sd-tdd",
-      "description": "スペック駆動TDD: 要件をテスト可能なREQ台帳に落とし込み、REQと対応付けた失敗テストを生成し、カバレッジを検証した上でsuperpowersのTDDに実装を引き渡す。",
-      "version": "0.1.40",
-      "source": "./plugins/sd-tdd",
-      "author": {
-        "name": "Yocchi3191"
-      }
-    },
-    {
-      "name": "rally",
-      "description": "人間がドライバー、Claudeがコ・ドライバー。要件・仕様・設計は人間が先に出し、Claudeは差分で詰める。実装コードは人間が書く。",
-      "version": "0.1.3",
-      "source": "./plugins/rally",
-      "author": {
-        "name": "Yocchi3191"
-      }
-    },
     {
       "name": "knowledge",
       "description": "他プロジェクトでも通用する設計・テスト・プロセスの知見を蓄積し、非自明な判断の場面で自然に参照するナレッジベース。",
