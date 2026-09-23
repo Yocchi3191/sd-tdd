@@ -59,10 +59,10 @@ Step 5でディスパッチするレビュアーサブエージェントは厳�
 
 Step 1がすでに`git branch --show-current`で算出したブランチ名を再利用する。Step 0のショートカット経由でここに来た場合(Step 1が実行されていない場合)は、同じ方法でここで算出する。この`<current-branch>`の値をStep 6でも同じものを使うこと — 再クエリしないこと。再クエリすると、まさにチェックしようとしている変化そのものを覆い隠しかねないため。
 
-以下の`review-guard`コマンドを、このskillが属するプラグイン(development)のルートから実行する:
+`review-guard`は、カレントディレクトリのgitリポジトリの状態を記録する。そのため**カレントディレクトリはレビュー対象のリポジトリのまま**実行し、スクリプトだけをこのskillのベースディレクトリ（skill読み込み時に示される）からの相対パス `../../scripts/review-guard/cli.js` で指定する — プラグインのディレクトリに移動して実行すると、レビュー対象ではなくプラグイン自身のリポジトリを監視してしまい、違反を検出できない。以下の`<review-guard>`はこのパスを指す:
 
 ```bash
-node scripts/review-guard/cli.js snapshot --branch <current-branch> > /tmp/review-guard-before.json
+node "<review-guard>" snapshot --branch <current-branch> > /tmp/review-guard-before.json
 ```
 
 ## Step 5: superpowers:requesting-code-review経由でレビュアーをディスパッチする
@@ -78,8 +78,8 @@ node scripts/review-guard/cli.js snapshot --branch <current-branch> > /tmp/revie
 サブエージェントが結果を返したら、同じ方法で2回目のスナップショットを取得し、Step 4のものと比較する:
 
 ```bash
-node scripts/review-guard/cli.js snapshot --branch <current-branch> > /tmp/review-guard-after.json
-node scripts/review-guard/cli.js compare --before /tmp/review-guard-before.json --after /tmp/review-guard-after.json
+node "<review-guard>" snapshot --branch <current-branch> > /tmp/review-guard-after.json
+node "<review-guard>" compare --before /tmp/review-guard-before.json --after /tmp/review-guard-after.json
 ```
 
 `compare`は2つのスナップショットが異なる場合に終了コード1(`"violated": true`と`reasons`配列を出力)を返し、一致する場合は終了コード0(`"violated": false`)を返す。

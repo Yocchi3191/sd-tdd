@@ -1,6 +1,6 @@
 ---
 name: test-infra-setup
-description: Use before writing tests in a project, or whenever a target project might be missing a test framework or mutation-testing setup. Detects and installs both, and makes sure mutation testing runs as a scheduled CI job instead of per-commit. Idempotent — skips anything already present.
+description: プロジェクトでテストを書き始める前、または対象プロジェクトにテストフレームワークやミューテーションテストの仕組みが無さそうなときに使う。両方を検出・導入し、ミューテーションテストがコミットごとではなくスケジュール実行のCIジョブで走るようにする。冪等 — 既にあるものはスキップする。
 ---
 
 # Test Infrastructure Setup

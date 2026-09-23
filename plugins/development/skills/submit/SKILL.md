@@ -1,6 +1,6 @@
 ---
 name: submit
-description: Use when the user wants to commit the current working-tree changes and open a Draft PR — e.g. "submitして", "今の変更をPRにして". Commits any uncommitted changes with an inferred message, auto-detects the head/base branches, pushes, and opens a Draft PR from pr-template.md. If design left an ADR memo for this branch, expands it into the PR body and deletes the memo. Never converts a PR to ready for review — that is review-pr's job.
+description: 現在の作業ツリーの変更をコミットしてDraft PRを開きたいときに使う — 例:「submitして」「今の変更をPRにして」。未コミットの変更を推定メッセージでコミットし、head/baseブランチを自動検出してpushし、pr-template.mdからDraft PRを作成する。designがこのブランチのADRメモを残していれば、PR本文に展開してメモを削除する。PRをready for reviewに変換することはしない — それはreview-prの役目である。
 ---
 
 # Submit
@@ -17,23 +17,23 @@ git branch --show-current
 
 これが何も出力しない場合（detached HEAD）、submitにはPRを開くための名前付きブランチが必要である旨をユーザーに伝えて停止する — まずブランチをcheckoutまたは作成してもらう。
 
-次に、`design` が残したADRメモ（`<ドキュメント置き場>/adr/<head-branch>.md`）を探す。リポジトリルートの `docs/adr/<head-branch>.md`、`doc/adr/<head-branch>.md` の順に確認し、最初に見つかったものを`<adr-path>`とする。どちらも無ければADRメモ無しとして扱う — エラーではない。
+次に、`design` が残したADRメモ（`<ドキュメント置き場>/adr/<head-branch>.md`）を探す。リポジトリルート（`git rev-parse --show-toplevel`）の `docs/adr/<head-branch>.md`、`doc/adr/<head-branch>.md` の順に確認し、最初に見つかったものを`<adr-path>`（リポジトリルートからの相対パス）とする。どちらも無ければADRメモ無しとして扱う — エラーではない。
 
 `<adr-path>`が見つかった場合は、その内容を読み込んでおく（Step 4でPR本文に使う）。このメモはPR本文に展開した後に削除する一時ファイルであり、コミットには含めない。
 
 ## Step 2: 未コミットの変更をコミットする
 
-以下、`<adr-path>`が無い場合は各コマンドの`':(exclude)<adr-path>'`を省く。
+以下のpathspecはリポジトリルート基準（`:/`・`:(top,...)`）で書く — カレントディレクトリがサブディレクトリでも、リポジトリ全体を対象にし、ADRメモだけを除外するため。`<adr-path>`が無い場合は各コマンドの`':(top,exclude)<adr-path>'`を省く。
 
 ```bash
-git status --porcelain -- . ':(exclude)<adr-path>'
+git status --porcelain -- ':/' ':(top,exclude)<adr-path>'
 ```
 
 - **出力なし（クリーン）:** コミット対象なし — そのままStep 3へ進む。空コミットは絶対に作成しない。
 - **何らかの出力がある（staged・unstaged・untrackedのいずれか）:** ADRメモ以外のすべてをstageし、変更内容から推定したメッセージでコミットする — メッセージをユーザーに尋ねることは絶対にしない:
 
 ```bash
-git add -A -- . ':(exclude)<adr-path>'
+git add -A -- ':/' ':(top,exclude)<adr-path>'
 git diff --cached
 ```
 
@@ -81,13 +81,10 @@ PRタイトルは要約から、あるいはissue番号が渡されていればi
 gh issue view <N> --json title -q .title
 ```
 
-PRの本文はバッククォートや引用符を含みうる複数行のmarkdownなので、heredocを使ってPRを作成する:
+PRの本文はバッククォートや引用符を含みうる複数行のmarkdownで、ユーザーが書いたADRメモもそのまま入るため、シェルに埋め込まず一時ファイル（リポジトリ外の一時ディレクトリ）に書き出してから渡す:
 
 ```bash
-gh pr create --draft --base <base-branch> --title "<title>" --body "$(cat <<'EOF'
-<filled-in template>
-EOF
-)"
+gh pr create --draft --base <base-branch> --title "<title>" --body-file <埋めたテンプレートを書いた一時ファイル>
 ```
 
 作成されたPRのURLをユーザーに報告する。ここで`gh pr ready`を実行することは絶対にない — このskillはDraft PRの作成のみを行い、レビュー可能状態への変換は`review-pr`の責務である。
@@ -101,14 +98,14 @@ ADRメモが無ければこのステップはスキップする。
 内容はPR本文に残ったので、`<adr-path>`を削除する。gitで追跡されているか（過去に誤ってコミットされていないか）で扱いが変わる:
 
 ```bash
-git ls-files --error-unmatch <adr-path>
+git ls-files --error-unmatch -- ":(top)<adr-path>"
 ```
 
 - **失敗する（未追跡）:** ファイルを削除するだけでよい。
 - **成功する（追跡済み）:** ブランチ上からも消すため、削除をコミットしてpushする:
 
 ```bash
-git rm <adr-path>
+git rm -f -- ":(top)<adr-path>"
 git commit -m "ADRメモを削除（内容はPR本文に展開済み）"
 git push
 ```
