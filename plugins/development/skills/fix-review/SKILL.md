@@ -13,34 +13,42 @@ PRに付いたレビュー指摘に対応する。レビューそのもの（指
 
 ## Step 2: まだ対応していない指摘を集める
 
-指摘はPR上の3か所に付く。すべて取得する:
+指摘はPR上の3か所に付く。対応済みかどうかの状態と合わせて、1回のクエリですべて取得する:
 
 ```bash
-gh pr view <N> --json comments
-gh api repos/{owner}/{repo}/pulls/<N>/reviews --paginate
-gh api repos/{owner}/{repo}/pulls/<N>/comments --paginate
+gh api graphql -F owner='{owner}' -F repo='{repo}' -F number=<N> -f query='
+query($owner:String!,$repo:String!,$number:Int!){
+  repository(owner:$owner,name:$repo){
+    pullRequest(number:$number){
+      comments(first:100){nodes{id url isMinimized body}}
+      reviews(first:100){nodes{id url isMinimized state body}}
+      reviewThreads(first:100){nodes{id isResolved comments(first:100){nodes{url path line body}}}}
+    }
+  }
+}'
 ```
 
 - `comments`: PR全体へのコメント。`review-pr`のレビュー結果もここに入る。
-- `pulls/<N>/reviews`: 人がレビューを提出したときの本文（Request changesなど）。
-- `pulls/<N>/comments`: 差分の行に付いたコメント。
+- `reviews`: 人がレビューを提出したときの本文（Request changesなど）。
+- `reviewThreads`: 差分の行に付いたコメントのスレッド。
 
-`{owner}`・`{repo}`は`gh`が今のリポジトリの値で自動的に埋めるので、そのまま書く。
+`{owner}`・`{repo}`は`gh`が今のリポジトリの値で自動的に埋めるので、そのまま書く。それぞれ100件を超えるPRは想定しない。
 
-**どこから先が未対応か:** このskillはStep 6で投稿するコメントの本文の先頭に目印を入れる。対応報告には`<!-- fix-review -->`、行コメントのスレッドへの個別の返信には`<!-- fix-review:reply -->`を使う。`<!-- fix-review -->`を含むコメントのうち最も新しいものの投稿時刻より後に書かれたものだけを、未対応として扱う。`<!-- fix-review -->`付きのコメントが1件も無ければ、すべてが未対応である。投稿者では見分けない — `review-pr`もこのskillも、ユーザーのGitHubアカウントで投稿するため。
+**どれが未対応か:** このskillはStep 6で、対応を終えた指摘に「対応済み」の印を付ける — 行コメントのスレッドはresolveし、PR全体へのコメントとレビュー本文は「解決済み」として非表示にする。したがって、次のものが未対応である:
 
-比べる時刻は取得元ごとに次を使う:
+- `comments`・`reviews`: `isMinimized`が`false`のもの
+- `reviewThreads`: `isResolved`が`false`のスレッド
 
-- `comments`: `createdAt`（目印付きの対応報告の時刻もこれ）
-- `pulls/<N>/reviews`: `submitted_at`
-- `pulls/<N>/comments`: `pull_request_review_id`があれば、そのレビューの`submitted_at`（`pulls/<N>/reviews`の`id`と突き合わせて引く）。無ければ`created_at`。行コメントは書きためてからまとめて提出されることがあり、`created_at`は書いた時刻のままなので、対応報告より前に書いて後から提出されたコメントを取りこぼすため。
+時刻では判定しない — 状態で判定すれば、取得後に付いたコメントや、途中で止まった回に拾った指摘も、次の回に正しく未対応として残るため。
 
-拾うのは指摘と質問。目印付きのコメント（どちらの目印も）と、そのどちらとも読めないコメント（お礼、単なる相づちなど）は拾わない。
+このうち、このskill自身の投稿は拾わない。このskillはStep 6で投稿するコメントの本文の1行目に目印を入れる — 対応報告には`<!-- fix-review -->`、行コメントのスレッドへの個別の返信には`<!-- fix-review:reply -->`。1行目がこのどちらかであるコメントは拾わない。「1行目」で判定し「含む」では判定しない — レビュー結果などが目印を引用しただけで、そのコメントを取りこぼさないようにするため。投稿者では見分けない — `review-pr`もこのskillも、ユーザーのGitHubアカウントで投稿するため。
+
+拾うのは指摘と質問。そのどちらとも読めないコメント（お礼、単なる相づちなど）は拾わない。
 
 **回数を数える:** 次の2つを数えておく。
 
-- 対応の回数: `<!-- fix-review -->`付きのコメントの件数（`<!-- fix-review:reply -->`は数えない）。Step 6の見出しに使う。
-- 再レビューの回数: `<!-- fix-review:rereview -->`付きのコメントの件数。このskillが再レビューを頼んだ回の対応報告にだけ付く目印で、質問に答えただけの回やMinorだけを直した回は数えない。Step 3とStep 7で、再レビューを続けるかどうかの判断に使う。
+- 対応の回数: 1行目が`<!-- fix-review -->`のコメントの件数。Step 6の見出しに使う。
+- 再レビューの回数: 1行目が`<!-- fix-review -->`で、2行目が`<!-- fix-review:rereview -->`のコメントの件数。このskillが再レビューを頼んだ回の対応報告にだけ付く目印で、質問に答えただけの回やMinorだけを直した回は数えない。Step 3とStep 7で、再レビューを続けるかどうかの判断に使う。
 
 未対応の指摘・質問が1件も無ければ、その旨をユーザーに伝えて停止する。
 
@@ -101,35 +109,45 @@ git push
 
 pushに失敗した場合は、Step 6へ進まず停止してユーザーに伝える — pushされていない修正を「直した」とPRに返信しないため。
 
-## Step 6: PRに対応内容を返信する
+## Step 6: PRに返信し、対応済みの印を付ける
 
-返信は2か所に分けて投稿する。
+次の順で進める。どの投稿・操作に失敗した場合も、Step 7へ進まず停止してユーザーに伝える。
 
-**行コメントへの個別の返信:** 未対応として拾った指摘・質問のうち、差分の行に付いたもの（`pulls/<N>/comments`由来）には、そのスレッドに直接返信する。本文の先頭には目印`<!-- fix-review:reply -->`を入れ、直したならそのコミットのSHA、答えるならその回答、見送った・別issueに切り出したならその旨と理由（issueのリンク）を書く:
+本文はどれもバッククォートや引用符を含みうるので、シェルに埋め込まず一時ファイル（リポジトリ外の一時ディレクトリ）に書き出し、`-F body=@<一時ファイル>`（`gh pr comment`では`--body-file`）で渡す。
+
+**1. 行コメントへの個別の返信:** 未対応として拾ったスレッドには、そのスレッドに直接返信する。本文の1行目は目印`<!-- fix-review:reply -->`にし、直したならそのコミットのSHA、答えるならその回答、見送った・別issueに切り出したならその旨と理由（issueのリンク）を書く:
 
 ```bash
-gh api repos/{owner}/{repo}/pulls/<N>/comments/<comment_id>/replies -F body=@<一時ファイル>
+gh api graphql -F threadId=<スレッドのid> -F body=@<一時ファイル> -f query='
+mutation($threadId:ID!,$body:String!){
+  addPullRequestReviewThreadReply(input:{pullRequestReviewThreadId:$threadId,body:$body}){comment{url}}
+}'
 ```
 
-`<comment_id>`には、スレッドの先頭のコメントのIDを使う — このAPIは返信への返信を受け付けないため。拾ったコメントに`in_reply_to_id`があればその値、無ければそのコメント自身の`id`を使う。返信本文は、対応報告と同じく一時ファイルに書き出してから渡す（理由は対応報告の説明を参照）。
+応答の`comment.url`を控えておく（対応報告から返信へリンクするため）。
 
-**対応報告:** 最後に、今回の対応全体をまとめたコメントをPRに投稿する。本文の先頭には目印`<!-- fix-review -->`を入れる。見出しは次のとおりで、該当するものが無い見出しは省く:
+**2. 対応済みの印を付ける:** 拾った指摘・質問すべてに印を付ける — 直したものだけでなく、答えたもの・見送ったもの・別issueに切り出したものも。Step 4で全件の扱いを決めているので、ここで印を付けられないものは無い。スレッドはresolveし、PR全体へのコメントとレビュー本文は「解決済み」として非表示にする:
+
+```bash
+gh api graphql -F threadId=<スレッドのid> -f query='
+mutation($threadId:ID!){resolveReviewThread(input:{threadId:$threadId}){thread{isResolved}}}'
+gh api graphql -F id=<コメントまたはレビューのid> -f query='
+mutation($id:ID!){minimizeComment(input:{subjectId:$id,classifier:RESOLVED}){minimizedComment{isMinimized}}}'
+```
+
+指摘として拾わなかったコメント（お礼など）には印を付けない。
+
+**3. 対応報告:** 最後に、今回の対応全体をまとめたコメントをPRに投稿する。本文の1行目は目印`<!-- fix-review -->`にする。Step 7で再レビューを頼む場合（Critical・Importantを直し、再レビューの回数が2回未満のとき）は、2行目を`<!-- fix-review:rereview -->`にする。見出しは次のとおりで、該当するものが無い見出しは省く:
 
 - `## レビュー対応（<n>回目）` — `<n>`はStep 2で数えた対応の回数 + 1
 - `### 直したもの` — 指摘ごとに、場所・直した内容・コミットのSHA
 - `### 見送ったもの` — 指摘ごとに、理由
 - `### 別issueに切り出したもの` — 指摘ごとに、issueのリンク
-- `### 質問への回答` — PR全体へのコメントやレビュー本文に書かれた質問への回答。行コメントの質問はスレッドで答えたので、ここにはリンクだけを並べる
-
-Step 7で再レビューを頼む場合（Critical・Importantを直し、再レビューの回数が2回未満のとき）は、本文の先頭に`<!-- fix-review:rereview -->`も入れる。
-
-本文はバッククォートや引用符を含みうるので、シェルに埋め込まず一時ファイル（リポジトリ外の一時ディレクトリ）に書き出してから渡す:
+- `### 質問への回答` — PR全体へのコメントやレビュー本文に書かれた質問への回答。行コメントの質問はスレッドで答えたので、ここには1で控えた返信のURLだけを並べる
 
 ```bash
 gh pr comment <N> --body-file <一時ファイル>
 ```
-
-対応報告は個別の返信をすべて投稿した後に投稿する — 報告から個別の返信へリンクするため。どちらの投稿に失敗した場合も、Step 7へ進まず停止してユーザーに伝える。
 
 ## Step 7: 次に進む
 
