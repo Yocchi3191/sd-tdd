@@ -1,6 +1,6 @@
 ---
 name: review
-description: ユーザーがPRの存在を前提とせず、現在の作業ブランチをレビューしてほしいときに使う。たとえば "reviewして"、"今の変更をレビューして"、"コードレビューして"。会話の文脈を持たないレビュー用サブエージェントを起動し、ブランチの分岐点から最新コミットまでの差分をレビューする。PRをready for reviewに変換することは決して行わない — それはreview-prの役目であり、PR番号が渡されたときにこのskillをラップする。
+description: ユーザーがPRの存在を前提とせず、現在の作業ブランチをレビューしてほしいときに使う。たとえば "reviewして"、"今の変更をレビューして"、"コードレビューして"。会話の文脈を持たないレビュー用サブエージェントを起動し、ブランチの分岐点から最新コミットまでの差分をレビューする。PRをready for reviewに変換することは決して行わない — それはreview-prとfix-reviewの役目である（review-prはPR番号が渡されたときにこのskillをラップする）。
 ---
 
 # Review
@@ -95,7 +95,7 @@ node "<review-guard>" compare --before /tmp/review-guard-before.json --after /tm
 
 レビュアーのStrengths / Issues / Assessmentをそのままユーザーに報告する。
 
-レビューの結果がどうであれ — Critical/Importantな指摘が一件も無いクリーンな結果であっても — このskillは`gh pr ready`、`gh pr merge`、その他PRの状態を変更するコマンドを一切実行しない。Draft PRをready for reviewに変換するのは`review-pr`の責務であり、このskillの責務ではない。`review`はPRの存在すら前提としないため、PRの状態について一切関与しない。
+レビューの結果がどうであれ — Critical/Importantな指摘が一件も無いクリーンな結果であっても — このskillは`gh pr ready`、`gh pr merge`、その他PRの状態を変更するコマンドを一切実行しない。Draft PRをready for reviewに変換するのは`review-pr`と`fix-review`の責務であり、このskillの責務ではない。`review`はPRの存在すら前提としないため、PRの状態について一切関与しない。
 
 ## Step 7a: 読み取り専用違反を代わりに報告する
 

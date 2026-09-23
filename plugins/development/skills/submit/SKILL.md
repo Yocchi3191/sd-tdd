@@ -1,6 +1,6 @@
 ---
 name: submit
-description: 現在の作業ツリーの変更をコミットしてDraft PRを開きたいときに使う — 例:「submitして」「今の変更をPRにして」。未コミットの変更を推定メッセージでコミットし、head/baseブランチを自動検出してpushし、pr-template.mdからDraft PRを作成する。designがこのブランチのADRメモを残していれば、PR本文に展開してメモを削除する。PRをready for reviewに変換することはしない — それはreview-prの役目である。
+description: 現在の作業ツリーの変更をコミットしてDraft PRを開きたいときに使う — 例:「submitして」「今の変更をPRにして」。未コミットの変更を推定メッセージでコミットし、head/baseブランチを自動検出してpushし、pr-template.mdからDraft PRを作成する。designがこのブランチのADRメモを残していれば、PR本文に展開してメモを削除する。PRを作成したら、確認せずに続けてreview-prでレビューする。PRをready for reviewに変換することは自分ではしない — それはreview-prとfix-reviewの役目である。
 ---
 
 # Submit
@@ -87,7 +87,7 @@ PRの本文はバッククォートや引用符を含みうる複数行のmarkdo
 gh pr create --draft --base <base-branch> --title "<title>" --body-file <埋めたテンプレートを書いた一時ファイル>
 ```
 
-作成後、`--body-file` 用の一時ファイルは削除する。作成されたPRのURLをユーザーに報告する。ここで`gh pr ready`を実行することは絶対にない — このskillはDraft PRの作成のみを行い、レビュー可能状態への変換は`review-pr`の責務である。
+作成後、`--body-file` 用の一時ファイルは削除する。作成されたPRのURLをユーザーに報告する。ここで`gh pr ready`を実行することは絶対にない — レビュー可能状態への変換は`review-pr`と`fix-review`の責務である（Step 6で`review-pr`へ引き継ぐ）。
 
 `gh pr create`が失敗した場合は、Step 5へ進まず停止する — ADRメモの内容がPRに残っていないまま削除してしまうのを防ぐため。
 
@@ -109,3 +109,11 @@ git rm -f -- ':(top)<adr-path>'
 git commit -m "ADRメモを削除（内容はPR本文に展開済み）"
 git push
 ```
+
+## Step 6: レビューへ引き継ぐ
+
+Step 5のコミットやpushが失敗した場合は、Step 6へ進まずユーザーに伝えて停止する — 手元とPRのheadがずれたままレビューを始めても、`fix-review`が手元の状態の確認で止まるため。
+
+PRの作成に成功したら（Step 5があればその後で）、ユーザーに確認せず、続けて`development:review-pr`を作成したPRの番号で呼び出す。以降、指摘があれば`review-pr`が`fix-review`へ引き継ぎ、指摘が無くなればどちらかがready for reviewに切り替える。
+
+PRを作るたびにユーザーがレビューを頼み直す手間をなくすため、この引き継ぎは省かない。
