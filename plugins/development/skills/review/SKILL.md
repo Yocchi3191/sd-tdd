@@ -53,55 +53,56 @@ gh issue view <N> --json body -q .body
 
 Step 2で使ったのと同じコミットログ/差分から推定した、実装内容の簡潔な要約 — 1〜2文。
 
-## Step 4: ディスパッチ前のgit状態のスナップショットを記録する
+## Step 4: チェックアウト中のコミットがHEAD_SHAと一致するか確かめる
 
-Step 5でディスパッチするレビュアーサブエージェントは厳密に読み取り専用であるよう指示されるが、プロンプトレベルの指示は強制力のある保証ではない — そのため、Step 6でその指示が実際に守られたかを機械的にチェックできるよう、ここでスナップショットを記録しておく。
-
-Step 1がすでに`git branch --show-current`で算出したブランチ名を再利用する。Step 0のショートカット経由でここに来た場合(Step 1が実行されていない場合)は、同じ方法でここで算出する。この`<current-branch>`の値をStep 6でも同じものを使うこと — 再クエリしないこと。再クエリすると、まさにチェックしようとしている変化そのものを覆い隠しかねないため。
-
-`review-guard`は、カレントディレクトリのgitリポジトリの状態を記録する。そのため**カレントディレクトリはレビュー対象のリポジトリのまま**実行し、スクリプトだけをこのskillのベースディレクトリ（skill読み込み時に示される）からの相対パス `../../scripts/review-guard/cli.js` で指定する — プラグインのディレクトリに移動して実行すると、レビュー対象ではなくプラグイン自身のリポジトリを監視してしまい、違反を検出できない。以下の`<review-guard>`はこのパスを指す:
+レビュー役は差分の前後の文脈を、チェックアウト中のファイルを読んで確認する。そのため、チェックアウト中のコミットがレビュー対象と違うと、差分と文脈が食い違う。
 
 ```bash
-node "<review-guard>" snapshot --branch <current-branch> > /tmp/review-guard-before.json
+git rev-parse HEAD
 ```
 
-## Step 5: レビュアーサブエージェントを起動する
+出力が`HEAD_SHA`と違う場合は、レビュー対象のブランチをチェックアウトし、最新の状態に更新（pull）してから呼び直すようユーザーに伝えて停止する。このskillがチェックアウトや更新をすることはしない — 作業中の変更を巻き込みかねないため。
 
-このskill自身のディレクトリ（この`SKILL.md`と同じ場所）にある`reviewer-prompt.md`を読み込み、プレースホルダを埋めて、Agentツールでサブエージェントを1つ起動する。会話の文脈を持たない新しいサブエージェントに任せるのは、実装した本人の思い込みを持ち込まずに差分を見させるためである。レビュー用の指示はこのテンプレートだけを正とし、ここに重複して書かない:
-
-- `<REPO_PATH>`: レビュー対象リポジトリのルート（`git rev-parse --show-toplevel`）。
-- `<DESCRIPTION>`: Step 3の結果。
-- `<PLAN_OR_REQUIREMENTS>`: Step 2の結果。
-- `<BASE_SHA>` / `<HEAD_SHA>`: Step 1の結果。
-
-サブエージェントが返したStrengths / Issues / Assessmentを、Step 6の確認の後にStep 7で使う。
-
-## Step 6: ディスパッチ後のスナップショットを記録して比較する
-
-サブエージェントが結果を返したら、同じ方法で2回目のスナップショットを取得し、Step 4のものと比較する:
+コミットしていない変更があるかも確かめる:
 
 ```bash
-node "<review-guard>" snapshot --branch <current-branch> > /tmp/review-guard-after.json
-node "<review-guard>" compare --before /tmp/review-guard-before.json --after /tmp/review-guard-after.json
+git status --porcelain --untracked-files=no
 ```
 
-`compare`は2つのスナップショットが異なる場合に終了コード1(`"violated": true`と`reasons`配列を出力)を返し、一致する場合は終了コード0(`"violated": false`)を返す。
+出力があっても停止はしない（作業の途中でも使えるskillなので）。代わりにStep 6で、文脈として読むファイルがコミット時点と違う可能性があることをレビュー役に伝える。
 
-- **`violated: false`:** 読み取り専用違反なし — Step 7に進み、通常通り報告する。
-- **`violated: true`:** レビュアーサブエージェントがStep 5の読み取り専用指示にもかかわらず、作業ツリー・git履歴・リモート追跡ブランチのいずれかを変更した。Step 7の通常の報告は行わず、代わりにStep 7aに進む。
-- **`snapshot`または`compare`自体がクリーンに実行できなかった場合**(JSON以外の出力、`git`/`node`のエラー、スナップショットファイルの一方が欠落している、など)、明確な`violated: true`/`false`の結果で終了しなかった場合は、「違反なし」ではなく判定不能として扱う。この場合は通常のレビュー結果として報告せず、読み取り専用チェック自体を完了できなかった旨をユーザーに伝え、どちらにせよ信頼する前に調査できるようにする。
+## Step 5: 差分とコミットログをファイルに書き出す
+
+レビュー役はgitコマンドを実行できないので、差分とコミットログを事前にファイルへ書き出して渡す。書き出し先は`.git`の中の決まったパスで、毎回上書きする（作業ツリーを汚さず、ファイルも溜まらない）:
+
+```bash
+set -e
+out="$(git rev-parse --absolute-git-dir)/development-review"
+mkdir -p "$out"
+git diff -M <BASE_SHA>..<HEAD_SHA> > "$out/diff.patch"
+git log <BASE_SHA>..<HEAD_SHA> > "$out/log.txt"
+test -s "$out/diff.patch"
+echo "$out"
+```
+
+どれかのコマンドが失敗した場合、または差分が空の場合は、レビュー役を起動せず、理由をユーザーに伝えて停止する — 空の差分をレビューさせると「指摘なし」が返り、呼び出し元の`review-pr`がPRをreadyにしてしまうため。
+
+## Step 6: レビュー役を起動する
+
+Agentツールで`development:reviewer`エージェントを1つ起動する。会話の文脈を持たない新しいエージェントに任せるのは、実装した本人の思い込みを持ち込まずに差分を見させるためである。レビュー役はファイルを読む道具しか持たないので、コードやgitの状態を変えることはできない。
+
+プロンプトには次の値を渡す。レビューの観点と出力形式はエージェント定義に書かれているので、ここで重ねて指示しない:
+
+- リポジトリのパス: `git rev-parse --show-toplevel`の出力
+- レビュー範囲: `BASE_SHA`と`HEAD_SHA`
+- 差分ファイルのパス: Step 5で出力されたパスの下の`diff.patch`
+- コミットログファイルのパス: Step 5で出力されたパスの下の`log.txt`
+- 変更の概要: Step 3の結果
+- 要件: Step 2の結果
+- （Step 4でコミットしていない変更があった場合のみ）作業ツリーにコミットしていない変更があり、読んだファイルの内容がコミット時点と違う可能性があること
 
 ## Step 7: 結果を報告する — PRの状態は決して変更しない
 
-レビュアーのStrengths / Issues / Assessmentをそのままユーザーに報告する。
+レビュー役のStrengths / Issues / Assessmentをそのままユーザーに報告する。
 
 レビューの結果がどうであれ — Critical/Importantな指摘が一件も無いクリーンな結果であっても — このskillは`gh pr ready`、`gh pr merge`、その他PRの状態を変更するコマンドを一切実行しない。Draft PRをready for reviewに変換するのは`review-pr`と`fix-review`の責務であり、このskillの責務ではない。`review`はPRの存在すら前提としないため、PRの状態について一切関与しない。
-
-## Step 7a: 読み取り専用違反を代わりに報告する
-
-Step 6で`violated: true`だった場合にのみ到達する。通常のStrengths/Issues/Assessment形式の代わりに、違反レポートを返す — これを通常のレビュー結果であるかのように提示しないこと。以下を含める:
-
-- レビュアーサブエージェントが読み取り専用の指示に違反したことの明示的な記述。
-- Step 6の`compare`出力からの具体的な`reasons`(例: HEAD SHA・作業ツリーの状態・リモート追跡ブランチのうちどれが変化したか、変化前後の値)。
-
-このレポートは修正して再レビューすべきCritical/Important指摘ではない — レビュー対象のコードについてではなく、レビュープロセスそのものについての報告である。このskillも`review-pr`も、これに対して`git revert`、`git push --force`、`git reset`、その他git状態を変更するコマンドを実行することはない。是正は人間の判断である。`review-pr`は違反レポートを通常の指摘を含む結果とは異なる扱いをする — PRをDraftのまま残し、レポートをそのまま伝える方法については`review-pr`自身のStep 6を参照。
