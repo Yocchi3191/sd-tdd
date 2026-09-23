@@ -1,6 +1,6 @@
 ---
 name: fix-review
-description: PRに付いたレビュー指摘に対応したいときに使う — 例:「レビュー対応して」「PR #40の指摘を直して」「fix-review 40」。review-prが指摘ありと判断したときにも、review-prから続けて呼ばれる。PRのコメントからまだ対応していない指摘を集め（review-prの結果も人のコメントも対象）、直し方が1つに決まるものは確認せずに直し、判断が要るものだけユーザーに聞く。直したらコミット・pushし、対応内容をPRに返信する。Critical・Importantを直したときはreview-prで再レビューし（繰り返しは2回まで）、Minorだけならready for reviewに切り替える。
+description: PRに付いたレビュー指摘に対応したいときに使う — 例:「レビュー対応して」「PR #40の指摘を直して」「fix-review 40」。PRのコメントからまだ対応していない指摘を集め（review-prの結果も人のコメントも対象）、直し方が1つに決まるものは確認せずに直し、判断が要るものだけユーザーに聞く。直したらコミット・pushし、対応内容をPRに返信する。Critical・Importantを直したときはreview-prで再レビューし（繰り返しは2回まで）、Minorだけならready for reviewに切り替える。
 ---
 
 # Fix Review
