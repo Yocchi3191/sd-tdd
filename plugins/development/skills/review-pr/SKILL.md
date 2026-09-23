@@ -1,6 +1,6 @@
 ---
 name: review-pr
-description: ユーザーが特定のPRのレビューを求めている場合に使う — 例:「PR #40をレビューして」「review-pr 40」。PR自体からBASE_SHA/HEAD_SHA/PLAN_OR_REQUIREMENTS/DESCRIPTIONを解決し、実際のレビューは`development:review`に委譲する。レビュー結果はPR状態を変更する前に`gh pr comment`でPRへ投稿する。指摘が無ければ`gh pr ready`でPRをready for reviewに変換し、指摘があればDraftのまま`development:fix-review`に対応を引き継ぐ。submitやfix-reviewからも続けて呼ばれる。レビュアーサブエージェントが読み取り専用の指示に違反した場合は、PRをDraftのまま維持し違反レポートをそのまま伝える（この場合はPRコメントとしては投稿しない）。
+description: ユーザーが特定のPRのレビューを求めている場合に使う — 例:「PR #40をレビューして」「review-pr 40」。PR自体からBASE_SHA/HEAD_SHA/PLAN_OR_REQUIREMENTS/DESCRIPTIONを解決し、実際のレビューは`development:review`に委譲する。レビュー結果はPR状態を変更する前に`gh pr comment`でPRへ投稿する。指摘が無ければ`gh pr ready`でPRをready for reviewに変換し、指摘があればDraftのまま`development:fix-review`に対応を引き継ぐ。submitやfix-reviewからも続けて呼ばれる。指摘があるとfix-reviewが修正とpushまで行うので、直さずにレビューだけが欲しい場合は`development:review`を使う。レビュアーサブエージェントが読み取り専用の指示に違反した場合は、PRをDraftのまま維持し違反レポートをそのまま伝える（この場合はPRコメントとしては投稿しない）。
 ---
 
 # Review PR
