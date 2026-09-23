@@ -82,6 +82,7 @@ mkdir -p "$out"
 git diff -M <BASE_SHA>..<HEAD_SHA> > "$out/diff.patch"
 git log <BASE_SHA>..<HEAD_SHA> > "$out/log.txt"
 test -s "$out/diff.patch"
+echo "$out"
 ```
 
 どれかのコマンドが失敗した場合、または差分が空の場合は、レビュー役を起動せず、理由をユーザーに伝えて停止する — 空の差分をレビューさせると「指摘なし」が返り、呼び出し元の`review-pr`がPRをreadyにしてしまうため。
@@ -94,8 +95,8 @@ Agentツールで`development:reviewer`エージェントを1つ起動する。�
 
 - リポジトリのパス: `git rev-parse --show-toplevel`の出力
 - レビュー範囲: `BASE_SHA`と`HEAD_SHA`
-- 差分ファイルのパス: Step 5の`$out/diff.patch`
-- コミットログファイルのパス: Step 5の`$out/log.txt`
+- 差分ファイルのパス: Step 5で出力されたパスの下の`diff.patch`
+- コミットログファイルのパス: Step 5で出力されたパスの下の`log.txt`
 - 変更の概要: Step 3の結果
 - 要件: Step 2の結果
 - （Step 4でコミットしていない変更があった場合のみ）作業ツリーにコミットしていない変更があり、読んだファイルの内容がコミット時点と違う可能性があること
