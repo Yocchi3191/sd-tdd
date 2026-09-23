@@ -87,7 +87,7 @@ PRの本文はバッククォートや引用符を含みうる複数行のmarkdo
 gh pr create --draft --base <base-branch> --title "<title>" --body-file <埋めたテンプレートを書いた一時ファイル>
 ```
 
-作成されたPRのURLをユーザーに報告する。ここで`gh pr ready`を実行することは絶対にない — このskillはDraft PRの作成のみを行い、レビュー可能状態への変換は`review-pr`の責務である。
+作成後、`--body-file` 用の一時ファイルは削除する。作成されたPRのURLをユーザーに報告する。ここで`gh pr ready`を実行することは絶対にない — このskillはDraft PRの作成のみを行い、レビュー可能状態への変換は`review-pr`の責務である。
 
 `gh pr create`が失敗した場合は、Step 5へ進まず停止する — ADRメモの内容がPRに残っていないまま削除してしまうのを防ぐため。
 
@@ -98,14 +98,14 @@ ADRメモが無ければこのステップはスキップする。
 内容はPR本文に残ったので、`<adr-path>`を削除する。gitで追跡されているか（過去に誤ってコミットされていないか）で扱いが変わる:
 
 ```bash
-git ls-files --error-unmatch -- ":(top)<adr-path>"
+git ls-files --error-unmatch -- ':(top)<adr-path>'
 ```
 
 - **失敗する（未追跡）:** ファイルを削除するだけでよい。
 - **成功する（追跡済み）:** ブランチ上からも消すため、削除をコミットしてpushする:
 
 ```bash
-git rm -f -- ":(top)<adr-path>"
+git rm -f -- ':(top)<adr-path>'
 git commit -m "ADRメモを削除（内容はPR本文に展開済み）"
 git push
 ```
