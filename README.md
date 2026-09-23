@@ -1,4 +1,4 @@
-# sd-tdd
+# yocchi-plugins
 
 Claude Code向けプラグインのモノレポ(詳細は [.claude-plugin/marketplace.json](.claude-plugin/marketplace.json))。
 

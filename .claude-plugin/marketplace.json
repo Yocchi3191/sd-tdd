@@ -1,6 +1,6 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "sd-tdd",
+  "name": "yocchi-plugins",
   "description": "Yocchi3191のClaude Codeプラグイン集",
   "owner": {
     "name": "Yocchi3191"
@@ -18,7 +18,7 @@
     {
       "name": "development",
       "description": "日々の開発作業（PR作成・レビュー・テスト基盤など）を支えるskill集。",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "source": "./plugins/development",
       "author": {
         "name": "Yocchi3191"
