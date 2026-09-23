@@ -1,11 +1,11 @@
 ---
 name: feedback
-description: ユーザーがsd-tddプラグイン自体（spec-interview、task-filing、spec-to-tests、coverage-check、test-infra-setupなどのskillやスクリプト）について不満・戸惑い・機能要望を口にしたときに使う——自分自身のプロジェクトのコードについての話ではない場合に限る。自然な言い回しにも反応する。例:「sd-tddのspec-interviewが使いにくい」「coverage-checkにこの機能が欲しい」「sd-tddのここが不便」。sd-tddへのフィードバックを起票するよう明示的に呼ばれた場合も使う。状況をヒアリングし、Yocchi3191/sd-tddの既存GitHub issueとの重複を確認した上で、ユーザーの明示的な承認を得てから新規issueを作成する（または既存issueにコメントする）——承認を得る前に起票することは決してない。
+description: ユーザーがdevelopmentプラグイン自体（submit、review、review-pr、test-infra-setup、designなどのskillやスクリプト）について不満・戸惑い・機能要望を口にしたときに使う——自分自身のプロジェクトのコードについての話ではない場合に限る。自然な言い回しにも反応する。例:「developmentのreviewが使いにくい」「submitにこの機能が欲しい」「developmentのここが不便」。developmentへのフィードバックを起票するよう明示的に呼ばれた場合も使う。状況をヒアリングし、Yocchi3191/sd-tddの既存GitHub issueとの重複を確認した上で、ユーザーの明示的な承認を得てから新規issueを作成する（または既存issueにコメントする）——承認を得る前に起票することは決してない。
 ---
 
 # Feedback
 
-sd-tdd プラグイン自体（`spec-interview` / `task-filing` / `spec-to-tests` / `coverage-check` / `test-infra-setup` などのskillやスクリプト）への要望・クレームを受け付け、`Yocchi3191/sd-tdd` リポジトリのGitHub issueとして記録する。**扱うのは sd-tdd というツール自体へのフィードバックだけ** — ユーザー自身のプロジェクトの仕様やバグは対象外なので、そちらの話であれば通常通り会話や別skillに任せる。
+development プラグイン自体（`submit` / `review` / `review-pr` / `test-infra-setup` / `design` などのskillやスクリプト）への要望・クレームを受け付け、`Yocchi3191/sd-tdd` リポジトリのGitHub issueとして記録する。**扱うのは development というツール自体へのフィードバックだけ** — ユーザー自身のプロジェクトの仕様やバグは対象外なので、そちらの話であれば通常通り会話や別skillに任せる。
 
 ## Step 1: 種別と状況をヒアリング
 
@@ -17,7 +17,7 @@ sd-tdd プラグイン自体（`spec-interview` / `task-filing` / `spec-to-tests
 
 最初のメッセージにこれらの情報がすでに含まれているなら、それをそのまま使い、聞き直さない。欠けている項目だけを、まとめて一度に尋ねる。曖昧な訴え（「使いにくい」「イマイチ」など）だけで終わらせず、具体的な状況まで掘り下げること — 具体性がないとissueとして役に立たない。ただし掘り下げは「聞き方を工夫してまとめて聞く」であって、一問一答で一項目ずつ往復することではない。
 
-`spec-interview` と違い、REQ形式の箇条書きに固める必要はない。自然な文章のままでよい — フィードバックは仕様ではなく訴えなので、無理に falsifiable な一文へ切り詰めない。
+仕様書のような箇条書きに固める必要はない。自然な文章のままでよい — フィードバックは仕様ではなく訴えなので、無理に falsifiable な一文へ切り詰めない。
 
 ## Step 2: 重複チェック
 
@@ -44,7 +44,7 @@ gh issue list --repo Yocchi3191/sd-tdd --search "<keywords>" --state all
 `bug`・`enhancement` は標準ラベルとして通常存在する。`feedback`・`usability` は存在しない場合が多いので、なければ先に作る:
 
 ```bash
-gh label create feedback --repo Yocchi3191/sd-tdd --color "c5def5" --description "sd-tdd利用者からのフィードバック"
+gh label create feedback --repo Yocchi3191/sd-tdd --color "c5def5" --description "developmentプラグイン利用者からのフィードバック"
 gh label create usability --repo Yocchi3191/sd-tdd --color "fef2c0" --description "使い勝手・体験に関する指摘"
 ```
 
