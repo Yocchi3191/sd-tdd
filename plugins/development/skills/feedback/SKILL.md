@@ -1,11 +1,11 @@
 ---
 name: feedback
-description: ユーザーがdevelopmentプラグイン自体（submit、review、review-pr、fix-review、test-infra-setup、designなどのskillやスクリプト）について不満・戸惑い・機能要望を口にしたときに使う——自分自身のプロジェクトのコードについての話ではない場合に限る。自然な言い回しにも反応する。例:「developmentのreviewが使いにくい」「submitにこの機能が欲しい」「developmentのここが不便」。developmentへのフィードバックを起票するよう明示的に呼ばれた場合も使う。状況をヒアリングし、Yocchi3191/sd-tddの既存GitHub issueとの重複を確認した上で、ユーザーの明示的な承認を得てから新規issueを作成する（または既存issueにコメントする）——承認を得る前に起票することは決してない。
+description: ユーザーがdevelopmentプラグイン自体（submit、review、review-pr、fix-review、test-infra-setup、designなどのskillやスクリプト）について不満・戸惑い・機能要望を口にしたときに使う——自分自身のプロジェクトのコードについての話ではない場合に限る。自然な言い回しにも反応する。例:「developmentのreviewが使いにくい」「submitにこの機能が欲しい」「developmentのここが不便」。developmentへのフィードバックを起票するよう明示的に呼ばれた場合も使う。状況をヒアリングし、Yocchi3191/yocchi-pluginsの既存GitHub issueとの重複を確認した上で、ユーザーの明示的な承認を得てから新規issueを作成する（または既存issueにコメントする）——承認を得る前に起票することは決してない。
 ---
 
 # Feedback
 
-development プラグイン自体（`submit` / `review` / `review-pr` / `fix-review` / `test-infra-setup` / `design` などのskillやスクリプト）への要望・クレームを受け付け、`Yocchi3191/sd-tdd` リポジトリのGitHub issueとして記録する。**扱うのは development というツール自体へのフィードバックだけ** — ユーザー自身のプロジェクトの仕様やバグは対象外なので、そちらの話であれば通常通り会話や別skillに任せる。
+development プラグイン自体（`submit` / `review` / `review-pr` / `fix-review` / `test-infra-setup` / `design` などのskillやスクリプト）への要望・クレームを受け付け、`Yocchi3191/yocchi-plugins` リポジトリのGitHub issueとして記録する。**扱うのは development というツール自体へのフィードバックだけ** — ユーザー自身のプロジェクトの仕様やバグは対象外なので、そちらの話であれば通常通り会話や別skillに任せる。
 
 ## Step 1: 種別と状況をヒアリング
 
@@ -24,7 +24,7 @@ development プラグイン自体（`submit` / `review` / `review-pr` / `fix-rev
 既存の似たissueがあれば、二重報告や議論の分散を防ぐために先に見つける。
 
 ```bash
-gh issue list --repo Yocchi3191/sd-tdd --search "<keywords>" --state all
+gh issue list --repo Yocchi3191/yocchi-plugins --search "<keywords>" --state all
 ```
 
 類似issueが見つかったら、番号とタイトルを提示し、「既存issueにコメント追加」か「新規issue作成」かを呼び出し元に選んでもらう。見つからなければそのままStep 3へ。
@@ -44,8 +44,8 @@ gh issue list --repo Yocchi3191/sd-tdd --search "<keywords>" --state all
 `bug`・`enhancement` は標準ラベルとして通常存在する。`feedback`・`usability` は存在しない場合が多いので、なければ先に作る:
 
 ```bash
-gh label create feedback --repo Yocchi3191/sd-tdd --color "c5def5" --description "developmentプラグイン利用者からのフィードバック"
-gh label create usability --repo Yocchi3191/sd-tdd --color "fef2c0" --description "使い勝手・体験に関する指摘"
+gh label create feedback --repo Yocchi3191/yocchi-plugins --color "c5def5" --description "developmentプラグイン利用者からのフィードバック"
+gh label create usability --repo Yocchi3191/yocchi-plugins --color "fef2c0" --description "使い勝手・体験に関する指摘"
 ```
 
 すでに存在する場合はこのコマンドはエラーになるだけなので無視してよい。
@@ -57,7 +57,7 @@ gh label create usability --repo Yocchi3191/sd-tdd --color "fef2c0" --descriptio
 新規issue:
 
 ```bash
-gh issue create --repo Yocchi3191/sd-tdd \
+gh issue create --repo Yocchi3191/yocchi-plugins \
   --title "[バグ|機能要望|使い勝手] <title>" \
   --body "$(cat <<'EOF'
 <issue-template.md を埋めた本文>
@@ -69,7 +69,7 @@ EOF
 既存issueへの追記（Step 2で選ばれた場合）:
 
 ```bash
-gh issue comment <N> --repo Yocchi3191/sd-tdd --body "$(cat <<'EOF'
+gh issue comment <N> --repo Yocchi3191/yocchi-plugins --body "$(cat <<'EOF'
 <今回のフィードバック内容>
 EOF
 )"

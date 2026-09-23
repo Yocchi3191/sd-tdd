@@ -1,6 +1,6 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "sd-tdd",
+  "name": "yocchi-plugins",
   "description": "Yocchi3191のClaude Codeプラグイン集",
   "owner": {
     "name": "Yocchi3191"

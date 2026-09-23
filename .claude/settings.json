@@ -2,13 +2,14 @@
   "enabledPlugins": {
     "plugin-dev@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
-    "knowledge@sd-tdd": true
+    "knowledge@yocchi-plugins": true,
+    "development@yocchi-plugins": true
   },
   "extraKnownMarketplaces": {
-    "sd-tdd": {
+    "yocchi-plugins": {
       "source": {
         "source": "git",
-        "url": "https://github.com/Yocchi3191/sd-tdd.git"
+        "url": "https://github.com/Yocchi3191/yocchi-plugins.git"
       },
       "autoUpdate": true
     }
