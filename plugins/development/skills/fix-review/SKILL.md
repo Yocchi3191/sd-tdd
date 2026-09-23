@@ -16,17 +16,24 @@ PRに付いたレビュー指摘に対応する。レビューそのもの（指
 指摘はPR上の3か所に付く。すべて取得する:
 
 ```bash
-gh pr view <N> --json comments,reviews
+gh pr view <N> --json comments
+gh api repos/{owner}/{repo}/pulls/<N>/reviews --paginate
 gh api repos/{owner}/{repo}/pulls/<N>/comments --paginate
 ```
 
 - `comments`: PR全体へのコメント。`review-pr`のレビュー結果もここに入る。
-- `reviews`: 人がレビューを提出したときの本文（Request changesなど）。
+- `pulls/<N>/reviews`: 人がレビューを提出したときの本文（Request changesなど）。
 - `pulls/<N>/comments`: 差分の行に付いたコメント。
 
 `{owner}`・`{repo}`は`gh`が今のリポジトリの値で自動的に埋めるので、そのまま書く。
 
 **どこから先が未対応か:** このskillはStep 6で投稿するコメントの本文の先頭に目印を入れる。対応報告には`<!-- fix-review -->`、行コメントのスレッドへの個別の返信には`<!-- fix-review:reply -->`を使う。`<!-- fix-review -->`を含むコメントのうち最も新しいものの投稿時刻より後に書かれたものだけを、未対応として扱う。`<!-- fix-review -->`付きのコメントが1件も無ければ、すべてが未対応である。投稿者では見分けない — `review-pr`もこのskillも、ユーザーのGitHubアカウントで投稿するため。
+
+比べる時刻は取得元ごとに次を使う:
+
+- `comments`: `createdAt`（目印付きの対応報告の時刻もこれ）
+- `pulls/<N>/reviews`: `submitted_at`
+- `pulls/<N>/comments`: `pull_request_review_id`があれば、そのレビューの`submitted_at`（`pulls/<N>/reviews`の`id`と突き合わせて引く）。無ければ`created_at`。行コメントは書きためてからまとめて提出されることがあり、`created_at`は書いた時刻のままなので、対応報告より前に書いて後から提出されたコメントを取りこぼすため。
 
 拾うのは指摘と質問。目印付きのコメント（どちらの目印も）と、そのどちらとも読めないコメント（お礼、単なる相づちなど）は拾わない。
 
