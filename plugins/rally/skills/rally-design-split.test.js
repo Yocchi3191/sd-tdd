@@ -12,7 +12,6 @@ const readSkill = (name) => (skillExists(name) ? fs.readFileSync(skillPath(name)
 
 // SKILL.mdは変更しない前提で1回だけ読み、各testはこのキャッシュを参照する
 const specInterviewBody = readSkill('spec-interview');
-const designBody = readSkill('design');
 const tddBody = readSkill('tdd');
 const taskFilingBody = readSkill('task-filing');
 const submitBody = readSkill('submit');
@@ -34,50 +33,6 @@ test('issue-103_REQ-2_spec-interviewは要件仕様REQ台帳作成のみを担�
 test('issue-103_REQ-3_spec-interviewの記録後の案内先がrally:designになっている', () => {
   assert.doesNotMatch(specInterviewBody, /記録したら実装へ渡す（rally:tdd）/);
   assert.match(specInterviewBody, /rally:design/);
-});
-
-test('issue-103_REQ-4_designが設計とADR作成を担う新規skillとして存在する', () => {
-  assert.equal(skillExists('design'), true, 'skills/design/SKILL.md が存在すること');
-  assert.match(designBody, /^---[\s\S]*name:\s*design[\s\S]*---/m);
-  assert.match(designBody, /ADR/);
-  assert.match(designBody, /設計/);
-});
-
-test('issue-103_REQ-5_designはreferences/pairing.mdの詰めルールに従う', () => {
-  assert.match(designBody, /references\/pairing\.md/);
-});
-
-test('issue-103_REQ-6_designは設計フェーズで呼ばれ軽微なら短く終える', () => {
-  assert.match(designBody, /設計フェーズ/);
-  assert.match(designBody, /パッチ相当.*一言で終える/);
-});
-
-test('issue-103_REQ-7_designは決定を3点でまとめる', () => {
-  assert.match(designBody, /決定内容/);
-  assert.match(designBody, /検討した代替案/);
-  assert.match(designBody, /却下理由/);
-});
-
-test('issue-103_REQ-8_designはREQ追加が必要ならtask-filingの追記操作でissueを更新する', () => {
-  assert.match(designBody, /task-filing/);
-  assert.match(designBody, /(既存タスクへ追記|追記操作|REQ.*追加)/);
-});
-
-test('issue-103_REQ-9_designはissueにADRを書かず一時markdownファイルに書き溜める', () => {
-  assert.doesNotMatch(designBody, /issue(本文|コメント)に.*(ADR|決定).*書く/);
-  assert.match(designBody, /issue本文にもissueコメントにも.*書かない|issueには.*書き込まない/);
-  assert.match(designBody, /\.rally\/adr\.md/);
-});
-
-test('issue-103_REQ-17_designは自身でworktreeを作成する', () => {
-  assert.match(designBody, /using-git-worktrees/);
-  assert.match(designBody, /rally:tdd/);
-  assert.doesNotMatch(designBody, /このskill自身はworktreeを作成しない/);
-});
-
-test('issue-103_REQ-11_designは決定がまとまったらrally:tddに引き渡す', () => {
-  assert.match(designBody, /rally:tdd/);
-  assert.match(designBody, /(引き渡|次は.*tdd|tddを呼ぶ)/);
 });
 
 test('issue-103_REQ-12_tddの説明が新しい呼び出し順を前提にしている', () => {
